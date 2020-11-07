@@ -32,5 +32,4 @@ export interface CommandCreator {
 	canExecute?: Observable<boolean> | Function;
 	params: unknown | unknown[];
 	isAsync?: boolean;
-	host: unknown;
 }

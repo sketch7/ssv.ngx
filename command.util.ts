@@ -14,7 +14,7 @@ export function isCommand(arg: unknown): arg is ICommand {
 export function isCommandCreator(arg: unknown): arg is CommandCreator {
 	if (arg instanceof Command) {
 		return false;
-	} else if (isAssumedType<CommandCreator>(arg) && arg.execute && arg.host) {
+	} else if (isAssumedType<CommandCreator>(arg) && arg.execute) {
 		return true;
 	}
 	return false;

@@ -8,6 +8,7 @@ import {
 	Inject,
 	Renderer2,
 	ChangeDetectorRef,
+	ViewContainerRef,
 } from "@angular/core";
 import { Subject } from "rxjs";
 import { tap, delay, takeUntil } from "rxjs/operators";
@@ -55,7 +56,7 @@ import { CommandCreator, ICommand } from "./command.model";
  *
  *
  * ```html
- * <button [ssvCommand]="{host: this, execute: removeHero$, canExecute: isValid$, params: [hero, 1337, 'xx']}">Save</button>
+ * <button [ssvCommand]="{execute: removeHero$, canExecute: isValid$, params: [hero, 1337, 'xx']}">Save</button>
  * ```
  *
  */
@@ -63,12 +64,19 @@ import { CommandCreator, ICommand } from "./command.model";
 const SELECTOR = "ssvCommand";
 
 @Directive({
-	selector: `[${SELECTOR}]`,
+	selector: `[${SELECTOR}], [command]`, // todo: @deprecated - remove `[command]` after next major
 	exportAs: "ssvCommand"
 })
 export class CommandDirective implements OnInit, OnDestroy {
 
 	@Input(SELECTOR) commandOrCreator: ICommand | CommandCreator | undefined;
+
+	/** @deprecated Use `commandInput` instead. */
+	@Input("command")
+	get _commandOrCreator(): ICommand | CommandCreator | undefined { return this.commandOrCreator; }
+	set _commandOrCreator(value: ICommand | CommandCreator | undefined) {
+		this.commandOrCreator = value;
+	}
 
 	@Input(`${SELECTOR}Options`)
 	get commandOptions(): CommandOptions { return this._commandOptions; }
@@ -82,7 +90,20 @@ export class CommandDirective implements OnInit, OnDestroy {
 		};
 	}
 
+	/** @deprecated Use `commandOptions` instead. */
+	@Input("commandOptions")
+	get __commandOptions(): CommandOptions { return this.commandOptions; }
+	set __commandOptions(value: CommandOptions) {
+		this.commandOptions = value;
+	}
+
 	@Input(`${SELECTOR}Params`) commandParams: unknown | unknown[];
+	/** @deprecated Use `commandParams` instead. */
+	@Input("commandParams")
+	get _commandParams(): unknown | unknown[] { return this.commandParams; }
+	set _commandParams(value: unknown | unknown[]) {
+		this.commandParams = value;
+	}
 
 	get command(): ICommand { return this._command; }
 	private _command!: ICommand;
@@ -94,6 +115,7 @@ export class CommandDirective implements OnInit, OnDestroy {
 		private renderer: Renderer2,
 		private element: ElementRef,
 		private cdr: ChangeDetectorRef,
+		private viewContainer: ViewContainerRef,
 	) { }
 
 	ngOnInit(): void {
@@ -105,15 +127,14 @@ export class CommandDirective implements OnInit, OnDestroy {
 			this._command = this.commandOrCreator;
 		} else if (isCommandCreator(this.commandOrCreator)) {
 			const isAsync = this.commandOrCreator.isAsync || this.commandOrCreator.isAsync === undefined;
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const hostComponent = (this.viewContainer as any)._view.component;
 
-			// todo: find something like this for ivy (or angular10+)
-			// const hostComponent = (this.viewContainer as any)._view.component;
-
-			const execFn = this.commandOrCreator.execute.bind(this.commandOrCreator.host);
+			const execFn = this.commandOrCreator.execute.bind(hostComponent);
 			this.commandParams = this.commandParams || this.commandOrCreator.params;
 
 			const canExec = this.commandOrCreator.canExecute instanceof Function
-				? this.commandOrCreator.canExecute.bind(this.commandOrCreator.host, this.commandParams)()
+				? this.commandOrCreator.canExecute.bind(hostComponent, this.commandParams)()
 				: this.commandOrCreator.canExecute;
 
 			// console.log("[ssvCommand::init] command creator", {
