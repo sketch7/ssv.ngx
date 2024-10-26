@@ -45,7 +45,7 @@ import { CommandCreator, ICommand } from "./command.model";
  * *NOTE: if you have only 1 argument as an array, it should be enclosed within an array e.g. `[['apple', 'banana']]`,
  * else it will spread and you will `arg1: "apple", arg2: "banana"`*
  *
-	* #### With multi params
+ * #### With multi params
  * ```html
  * <button [ssvCommand]="saveCmd" [ssvCommandParams]="[{id: 1}, 'hello', hero]">Save</button>
  * ```
