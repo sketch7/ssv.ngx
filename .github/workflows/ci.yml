@@ -39,6 +39,7 @@ jobs:
       node-version: "20"
       publishable: ${{ contains(fromJSON('["develop", "master", "workflow"]'), github.ref_name) || endsWith(github.ref_name, '.x') || github.event.inputs.publish == 'true' }}
       force-preid: ${{ github.event.inputs.force-prerelease == 'true' }}
+      preid-branches: "master,workflow"
       version-replace-glob: "libs/**/package.json,libs/**/version.ts"
     secrets:
       npm-auth-token: ${{ secrets.NPM_KEY }}
