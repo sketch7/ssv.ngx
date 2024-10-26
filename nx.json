@@ -24,12 +24,7 @@
     },
     "@nx/eslint:lint": {
       "cache": true,
-      "inputs": [
-        "default",
-        "{workspaceRoot}/.eslintrc.json",
-        "{workspaceRoot}/.eslintignore",
-        "{workspaceRoot}/eslint.config.js"
-      ]
+      "inputs": ["default", "{workspaceRoot}/.eslintrc.json", "{workspaceRoot}/.eslintignore", "{workspaceRoot}/eslint.config.js"]
     },
     "@nx/jest:jest": {
       "cache": true,
@@ -64,5 +59,8 @@
     "@nx/angular:component": {
       "style": "scss"
     }
+  },
+  "release": {
+    "projects": ["libs/*"]
   }
 }
