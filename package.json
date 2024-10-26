@@ -9,9 +9,10 @@
     "lint": "nx run-many -t lint",
     "test": "nx run-many -t test",
     "clean": "rimraf dist",
+    "prepare-release": "nx release --skip-publish",
     "__CI__": "",
     "pre-release-build": "echo TODO: version placeholder as gitaction or script",
-    "release": "npm publish ./dist --access=public"
+    "release": "nx release publish"
   },
   "private": true,
   "dependencies": {
