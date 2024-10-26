@@ -27,8 +27,8 @@ export interface ICommand {
 }
 
 export interface CommandCreator {
-	execute: (...args: any[]) => Observable<unknown> | Promise<unknown> | void;
-	// eslint-disable-next-line @typescript-eslint/ban-types
+	execute: (...args: unknown[]) => Observable<unknown> | Promise<unknown> | void;
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 	canExecute?: Observable<boolean> | Function;
 	params?: unknown | unknown[];
 	isAsync?: boolean;

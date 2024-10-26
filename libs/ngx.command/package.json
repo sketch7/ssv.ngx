@@ -1,9 +1,30 @@
 {
   "name": "@ssv/ngx.command",
-  "version": "0.0.1",
+  "version": "0.0.0",
+  "versionSuffix": "",
+  "description": "Command pattern implementation for angular. Command used to encapsulate information which is needed to perform an action.",
+  "keywords": [
+    "sketch7",
+    "ngx",
+    "angular17",
+    "angular",
+    "ssv",
+    "command",
+    "pattern",
+    "ui"
+  ],
+  "author": "Stephen Lautier <stephen.lautier@outlook.com>",
+  "license": "MIT",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sketch7/ngx.command.git"
+  },
+  "dependencies": {},
   "peerDependencies": {
-    "@angular/common": "^18.2.0",
-    "@angular/core": "^18.2.0"
+    "@angular/core": ">=17.0.0",
+    "@angular/forms": ">=17.0.0",
+    "rxjs": ">=6.0.0"
   },
   "sideEffects": false
 }
