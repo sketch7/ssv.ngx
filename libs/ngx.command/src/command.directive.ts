@@ -5,14 +5,14 @@ import {
 	Input,
 	HostListener,
 	ElementRef,
-	Inject,
 	Renderer2,
 	ChangeDetectorRef,
+	inject,
 } from "@angular/core";
 import { Subject } from "rxjs";
 import { tap, delay, takeUntil } from "rxjs/operators";
 
-import { CommandOptions, COMMAND_CONFIG } from "./config";
+import { CommandOptions, COMMAND_OPTIONS } from "./command.options";
 import { Command } from "./command";
 import { isCommand, isCommandCreator } from "./command.util";
 import { CommandCreator, ICommand } from "./command.model";
@@ -45,7 +45,7 @@ import { CommandCreator, ICommand } from "./command.model";
  * *NOTE: if you have only 1 argument as an array, it should be enclosed within an array e.g. `[['apple', 'banana']]`,
  * else it will spread and you will `arg1: "apple", arg2: "banana"`*
  *
-  * #### With multi params
+	* #### With multi params
  * ```html
  * <button [ssvCommand]="saveCmd" [ssvCommandParams]="[{id: 1}, 'hello', hero]">Save</button>
  * ```
@@ -66,11 +66,17 @@ const NAME_CAMEL = "ssvCommand";
 
 @Directive({
 	selector: `[${NAME_CAMEL}]`,
-	exportAs: NAME_CAMEL
+	exportAs: NAME_CAMEL,
+	standalone: true,
 })
 export class CommandDirective implements OnInit, OnDestroy {
 
 	// readonly id = `${NAME_CAMEL}-${nextUniqueId++}`;
+	private readonly globalOptions = inject(COMMAND_OPTIONS);
+	private readonly renderer = inject(Renderer2);
+	private readonly element = inject(ElementRef);
+	private readonly cdr = inject(ChangeDetectorRef);
+
 
 	@Input(NAME_CAMEL) commandOrCreator: ICommand | CommandCreator | undefined;
 
@@ -81,7 +87,7 @@ export class CommandDirective implements OnInit, OnDestroy {
 			return;
 		}
 		this._commandOptions = {
-			...this.config,
+			...this.globalOptions,
 			...value,
 		};
 	}
@@ -89,16 +95,10 @@ export class CommandDirective implements OnInit, OnDestroy {
 	@Input(`${NAME_CAMEL}Params`) commandParams: unknown | unknown[];
 
 	get command(): ICommand { return this._command; }
-	private _command!: ICommand;
-	private _commandOptions: CommandOptions = this.config;
-	private _destroy$ = new Subject<void>();
 
-	constructor(
-		@Inject(COMMAND_CONFIG) private config: CommandOptions,
-		private renderer: Renderer2,
-		private element: ElementRef,
-		private cdr: ChangeDetectorRef,
-	) { }
+	private _command!: ICommand;
+	private _commandOptions: CommandOptions = this.globalOptions;
+	private _destroy$ = new Subject<void>();
 
 	ngOnInit(): void {
 		// console.log("[ssvCommand::init]", this.config);

@@ -1,4 +1,4 @@
-import { InjectionToken } from "@angular/core";
+import { EnvironmentProviders, InjectionToken, makeEnvironmentProviders } from "@angular/core";
 
 export interface CommandOptions {
 	/**
@@ -18,10 +18,28 @@ export interface CommandOptions {
 	hasDisabledDelay: boolean;
 }
 
-export const COMMAND_DEFAULT_CONFIG = Object.freeze({
+const DEFAULT_OPTIONS = Object.freeze<CommandOptions>({
 	executingCssClass: "executing",
 	handleDisabled: true,
 	hasDisabledDelay: false,
-} as CommandOptions);
+});
 
-export const COMMAND_CONFIG = new InjectionToken<CommandOptions>("command-config");
+export const COMMAND_OPTIONS = new InjectionToken<CommandOptions>("SSV_COMMAND_OPTIONS", {
+	factory: () => DEFAULT_OPTIONS,
+});
+
+export function provideSsvCommandOptions(options: CommandOptions | (() => CommandOptions)): EnvironmentProviders {
+	let opts = typeof options === "function" ? options() : options;
+	opts = opts
+		? {
+			...DEFAULT_OPTIONS,
+			...opts,
+		}
+		: DEFAULT_OPTIONS;
+	return makeEnvironmentProviders([
+		{
+			provide: DEFAULT_OPTIONS,
+			useValue: opts,
+		},
+	]);
+}
