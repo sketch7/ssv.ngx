@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - "*.x"
+      # - "workflow"
     paths-ignore:
       - "**.md"
 
@@ -31,11 +32,13 @@ on:
 jobs:
   package:
     name: Package
-    uses: sketch7/.github/.github/workflows/node-lib.yml@feature/pnpm-nx
+    uses: sketch7/.github/.github/workflows/node-lib.yml@node-libs-v1
     with:
       package-manager: "pnpm"
       node-version: "20"
       publishable: ${{ contains(fromJSON('["develop", "master", "workflow"]'), github.ref_name) || endsWith(github.ref_name, '.x') || github.event.inputs.publish == 'true' }}
       force-preid: ${{ github.event.inputs.force-prerelease == 'true' }}
+      preid-branches: "master,workflow"
+      version-replace-glob: "libs/**/{package.json,version.ts}"
     secrets:
       npm-auth-token: ${{ secrets.NPM_KEY }}
