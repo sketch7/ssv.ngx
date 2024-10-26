@@ -3,7 +3,16 @@
   "version": "0.0.0",
   "packageManager": "pnpm@9.12.2",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "test-app": "nx serve test-app",
+    "build": "nx run-many -t build",
+    "lint": "nx run-many -t lint",
+    "test": "nx run-many -t test",
+    "clean": "rimraf dist",
+    "__CI__": "",
+    "pre-release-build": "echo TODO: version placeholder as gitaction or script",
+    "release": "npm publish ./dist --access=public"
+  },
   "private": true,
   "dependencies": {
     "@angular/animations": "~18.2.0",
