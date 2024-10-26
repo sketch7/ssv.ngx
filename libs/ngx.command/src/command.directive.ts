@@ -77,7 +77,6 @@ export class CommandDirective implements OnInit, OnDestroy {
 	private readonly element = inject(ElementRef);
 	private readonly cdr = inject(ChangeDetectorRef);
 
-
 	@Input(NAME_CAMEL) commandOrCreator: ICommand | CommandCreator | undefined;
 
 	@Input(`${NAME_CAMEL}Options`)
