@@ -6,7 +6,7 @@ import {
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'ssv-ngx.command',
+  selector: 'ssv-ngx-command',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './ngx.command.component.html',
