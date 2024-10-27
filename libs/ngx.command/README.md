@@ -1,7 +1,4 @@
 [projectUri]: https://github.com/sketch7/ngx.command
-[changeLog]: ./CHANGELOG.md
-[releaseWorkflowWiki]: ./docs/RELEASE-WORKFLOW.md
-
 [npm]: https://www.npmjs.com
 [commandpatternwiki]: https://en.wikipedia.org/wiki/Command_pattern
 
@@ -12,10 +9,6 @@
 [Command pattern][commandpatternwiki] implementation for angular. Command's are used to encapsulate information which is needed to perform an action.
 
 Primary usage is to disable a button when an action is executing, or not in a valid state (e.g. busy, invalid), and also to show an activity progress while executing.
-
-**Quick links**
-
-[Change logs][changeLog] | [Project Repository][projectUri]
 
 ## Installation
 
@@ -29,31 +22,18 @@ Choose the version corresponding to your Angular version:
 
  | Angular | library |
  | ------- | ------- |
+ | 17+     | 3.x+    |
  | 10+     | 2.x+    |
  | 4 to 9  | 1.x+    |
 
 
 # Usage
 
-## Register module
-
-```ts
-import { SsvCommandModule } from "@ssv/ngx.command";
-
-@NgModule({
-  imports: [
-    SsvCommandModule
-  ]
-}
-export class AppModule {
-}
-```
-
 ## Command
 In order to start working with Command, you need to create a new instance of it.
 
 ```ts
-import { CommandDirective, Command, CommandAsync, ICommand } from "@ssv/ngx.command";
+import { Command, CommandAsync, ICommand } from "@ssv/ngx.command";
 
 isValid$ = new BehaviorSubject(false);
 
@@ -159,85 +139,27 @@ This will make canExecute respond to `form.valid` and for `form.dirty` - also ca
 ```ts
 import { CommandAsync, canExecuteFromNgForm } from "@ssv/ngx.command";
 
-loginCmd = new CommandAsync(this.login.bind(this), canExecuteFromNgForm(this.form));
+loginCmd = new CommandAsync(x => this.login(), canExecuteFromNgForm(this.form));
 
 // options - disable dirty check
-loginCmd = new CommandAsync(this.login.bind(this), canExecuteFromNgForm(this.form, {
+loginCmd = new CommandAsync(x => this.login(), canExecuteFromNgForm(this.form, {
   dirty: false
 }));
 
 ```
 
 
-## Configure
-In order to configure globally, you can do so as following:
+## Global options
 
 ```ts
-import { SsvCommandModule } from "@ssv/ngx.command";
+import { provideSsvCommandOptions } from "@ssv/ngx.command";
 
-    imports: [
-        SsvCommandModule.forRoot({ executingCssClass: "is-busy" })
-    ],
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideSsvCommandOptions({
+      executingCssClass: "is-busy",
+      hasDisabledDelay: false
+    }),
+  ],
+};
 ```
-
-
-## Getting Started
-
-### Setup Machine for Development
-Install/setup the following:
-
-- NodeJS v18.16.0+
-- Visual Studio Code or similar code editor
-- TypeScript 5.0+
-- Git + SourceTree, SmartGit or similar (optional)
-- Ensure to install **global NPM modules** using the following:
-
-
-```bash
-npm install -g git gulp devtool
-```
-
-
-### Project Setup
-The following process need to be executed in order to get started.
-
-```bash
-npm install
-```
-
-
-### Building the code
-
-```bash
-npm run build
-```
-
-### Running the tests
-
-```bash
-npm test
-```
-
-#### Watch
-Handles compiling of changes.
-
-```bash
-npm start
-```
-
-
-#### Running Continuous Tests
-Spawns test runner and keep watching for changes.
-
-```bash
-npm run tdd
-```
-
-
-### Preparation for Release
-
-- Update changelogs
-- bump version
-
-
-Check out the [release workflow guide][releaseWorkflowWiki] in order to guide you creating a release and publishing it.
