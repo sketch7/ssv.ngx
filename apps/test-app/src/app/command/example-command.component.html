@@ -9,7 +9,8 @@
 	>.
 </p>
 <div class="container">
-	<mat-card *ngIf="true">
+	@if (true) {
+	<mat-card>
 		<mat-card-title>Vanilla</mat-card-title>
 		<mat-card-content>
 			<div
@@ -48,8 +49,8 @@
 			</button>
 		</mat-card-actions>
 	</mat-card>
-
-	<mat-card *ngIf="true">
+	} @if (true) {
+	<mat-card>
 		<mat-card-title>Using Command</mat-card-title>
 		<mat-card-content>
 			<div
@@ -92,64 +93,56 @@
 				Save
 				<small>execute</small>
 			</button>
-
 			<button
 				mat-raised-button
 				color="primary"
 				disabled
 				[ssvCommand]="saveCmd">
-				<i
-					*ngIf="saveCmd.isExecuting"
-					class="ai-circled ai-indicator ai-dark-spin small"></i>
-				Save
+				@if (saveCmd.isExecuting) {
+				<i class="ai-circled ai-indicator ai-dark-spin small"></i>
+				} Save
 				<small>with [ssvCommand]</small>
 			</button>
-
 			<button
 				color="primary"
 				[ssvCommand]="saveCmd">
-				<i
-					*ngIf="saveCmd.isExecuting"
-					class="ai-circled ai-indicator ai-dark-spin small"></i>
-				Save
+				@if (saveCmd.isExecuting) {
+				<i class="ai-circled ai-indicator ai-dark-spin small"></i>
+				} Save
 				<small>with [ssvCommand]</small>
 			</button>
-
 			<button
 				color="primary"
 				[ssvCommand]="saveCmdNoValidation">
-				<i
-					*ngIf="saveCmdNoValidation.isExecuting"
-					class="ai-circled ai-indicator ai-dark-spin small"></i>
-				Save
+				@if (saveCmdNoValidation.isExecuting) {
+				<i class="ai-circled ai-indicator ai-dark-spin small"></i>
+				} Save
 				<small>with [ssvCommand] - no canExecute</small>
 			</button>
-
 			<button
 				mat-raised-button
 				color="primary"
 				disabled
 				[ssvCommand]="saveCmdNoValidation"
 				[ssvCommandOptions]="{ hasDisabledDelay: true }">
-				<i
-					*ngIf="saveCmdNoValidation.isExecuting"
-					class="ai-circled ai-indicator ai-dark-spin small"></i>
-				Save
+				@if (saveCmdNoValidation.isExecuting) {
+				<i class="ai-circled ai-indicator ai-dark-spin small"></i>
+				} Save
 				<small>with [ssvCommand] - no canExecute</small>
 			</button>
-
 			<button
 				mat-raised-button
 				color="primary"
 				[ssvCommand]="saveCmd"
 				[ssvCommandOptions]="{ executingCssClass: 'is-loading' }">
-				<mat-icon *ngIf="saveCmd.isExecuting">
+				@if (saveCmd.isExecuting) {
+				<mat-icon>
 					<mat-progress-spinner
 						mode="indeterminate"
 						color="accent"
 						diameter="20"></mat-progress-spinner>
 				</mat-icon>
-				Save
+				} Save
 				<small>with [options]</small>
 			</button>
 			<button
@@ -161,7 +154,6 @@
 				Save
 				<small>with [handleDisabled]</small>
 			</button>
-
 			<button
 				mat-raised-button
 				color="primary"
@@ -173,8 +165,8 @@
 			</button>
 		</mat-card-actions>
 	</mat-card>
-
-	<mat-card *ngIf="true">
+	} @if (true) {
+	<mat-card>
 		<mat-card-title>Using Command Redux</mat-card-title>
 		<mat-card-content>
 			<div
@@ -217,39 +209,39 @@
 				Save
 				<small>execute</small>
 			</button>
-
 			<button
 				mat-raised-button
 				color="primary"
 				[ssvCommand]="saveReduxCmd">
-				<mat-icon *ngIf="saveReduxCmd.isExecuting">
+				@if (saveReduxCmd.isExecuting) {
+				<mat-icon>
 					<mat-progress-spinner
 						mode="indeterminate"
 						color="accent"
 						diameter="20"></mat-progress-spinner>
 				</mat-icon>
-				Save
+				} Save
 				<small>with [ssvCommand]</small>
 			</button>
-
 			<button
 				mat-raised-button
 				color="primary"
 				[ssvCommand]="saveReduxCmd"
 				[ssvCommandOptions]="{ executingCssClass: 'is-loading' }">
-				<mat-icon *ngIf="saveReduxCmd.isExecuting">
+				@if (saveReduxCmd.isExecuting) {
+				<mat-icon>
 					<mat-progress-spinner
 						mode="indeterminate"
 						color="accent"
 						diameter="20"></mat-progress-spinner>
 				</mat-icon>
-				Save
+				} Save
 				<small>with [options]</small>
 			</button>
 		</mat-card-actions>
 	</mat-card>
-
-	<mat-card *ngIf="true">
+	} @if (true) {
+	<mat-card>
 		<mat-card-title>Within Collection</mat-card-title>
 		<mat-card-content>
 			<div
@@ -263,13 +255,11 @@
 				</button>
 			</div>
 			<div class="form-group collection">
-				<div
-					*ngFor="let hero of heroes"
-					class="collection-item">
+				@for (hero of heroes; track hero) {
+				<div class="collection-item">
 					<div class="hero">
 						{{ hero.name }}
 					</div>
-
 					<div
 						class="action button-group"
 						#actionCmd="ssvCommandRef"
@@ -321,17 +311,17 @@
 						</button>
 					</div>
 				</div>
+				}
 			</div>
 		</mat-card-content>
 	</mat-card>
-
-	<mat-card *ngIf="true">
+	} @if (true) {
+	<mat-card>
 		<mat-card-title>Within Collection CanExecute</mat-card-title>
 		<mat-card-content>
 			<div class="form-group collection">
-				<div
-					*ngFor="let hero of heroes"
-					class="collection-item">
+				@for (hero of heroes; track hero) {
+				<div class="collection-item">
 					<div class="hero">
 						{{ hero.name }}
 					</div>
@@ -345,11 +335,12 @@
 						</button>
 					</div>
 				</div>
+				}
 			</div>
 		</mat-card-content>
 	</mat-card>
-
-	<mat-card *ngIf="true">
+	} @if (true) {
+	<mat-card>
 		<mat-card-title>Command Creator CanExecute</mat-card-title>
 		<mat-card-content>
 			<div
@@ -378,4 +369,5 @@
 			</div>
 		</mat-card-content>
 	</mat-card>
+	}
 </div>
