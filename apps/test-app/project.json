@@ -8,12 +8,16 @@
   "targets": {
     "build": {
       "executor": "@angular-devkit/build-angular:application",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "options": {
         "outputPath": "dist/apps/test-app",
         "index": "apps/test-app/src/index.html",
         "browser": "apps/test-app/src/main.ts",
-        "polyfills": ["zone.js"],
+        "polyfills": [
+          "zone.js"
+        ],
         "tsConfig": "apps/test-app/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
         "assets": [
@@ -22,7 +26,10 @@
             "input": "apps/test-app/public"
           }
         ],
-        "styles": ["apps/test-app/src/styles.scss"],
+        "styles": [
+          "@angular/material/prebuilt-themes/magenta-violet.css",
+          "apps/test-app/src/styles.scss"
+        ],
         "scripts": []
       },
       "configurations": {

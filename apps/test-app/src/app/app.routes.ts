@@ -1,3 +1,7 @@
 import { Route } from '@angular/router';
 
-export const appRoutes: Route[] = [];
+import { ExampleCommandComponent } from "./command/example-command.component";
+
+export const appRoutes: Route[] = [
+	{ path: "", component: ExampleCommandComponent },
+];

@@ -1,8 +1,12 @@
 import { Component, ChangeDetectionStrategy, ChangeDetectorRef, } from "@angular/core";
-import { BehaviorSubject, timer, Observable } from "rxjs";
-import { tap, filter, map, distinctUntilChanged } from "rxjs/operators";
-import { CommandAsync } from "@ssv/ngx.command";
+import { MatCardModule } from '@angular/material/card';
+import {MatButtonModule} from '@angular/material/button';
+import { MatIconModule } from "@angular/material/icon";
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 
+import { BehaviorSubject, timer, Observable, tap, filter, map, distinctUntilChanged } from "rxjs";
+import { CommandAsync, SsvCommandModule } from "@ssv/ngx.command";
+import { CommonModule } from "@angular/common";
 interface Hero {
 	key: string;
 	name: string;
@@ -26,6 +30,15 @@ interface HeroPausedState {
 	templateUrl: "./example-command.component.html",
 	styleUrls: ["./example-command.component.scss"],
 	changeDetection: ChangeDetectionStrategy.OnPush,
+	standalone: true,
+	imports: [
+		CommonModule,
+		MatCardModule,
+		MatIconModule,
+		MatButtonModule,
+		MatProgressSpinnerModule,
+		SsvCommandModule,
+	]
 })
 export class ExampleCommandComponent {
 
