@@ -28,7 +28,7 @@ export const COMMAND_OPTIONS = new InjectionToken<CommandOptions>("SSV_COMMAND_O
 	factory: () => DEFAULT_OPTIONS,
 });
 
-export function provideSsvCommandOptions(options: CommandOptions | (() => CommandOptions)): EnvironmentProviders {
+export function provideSsvCommandOptions(options: Partial<CommandOptions> | (() => Partial<CommandOptions>)): EnvironmentProviders {
 	let opts = typeof options === "function" ? options() : options;
 	opts = opts
 		? {

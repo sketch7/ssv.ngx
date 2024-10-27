@@ -4,6 +4,7 @@
   "packageManager": "pnpm@9.12.2",
   "license": "MIT",
   "scripts": {
+    "start": "npm run test-app",
     "test-app": "nx serve test-app",
     "build": "nx run-many -t build",
     "lint": "nx run-many -t lint",
@@ -17,10 +18,12 @@
   "private": true,
   "dependencies": {
     "@angular/animations": "~18.2.0",
+    "@angular/cdk": "~18.2.10",
     "@angular/common": "~18.2.0",
     "@angular/compiler": "~18.2.0",
     "@angular/core": "~18.2.0",
     "@angular/forms": "~18.2.0",
+    "@angular/material": "~18.2.10",
     "@angular/platform-browser": "~18.2.0",
     "@angular/platform-browser-dynamic": "~18.2.0",
     "@angular/router": "~18.2.0",
@@ -34,6 +37,7 @@
     "@angular/cli": "~18.2.0",
     "@angular/compiler-cli": "~18.2.0",
     "@angular/language-service": "~18.2.0",
+    "@angular/material": "~18.2.10",
     "@eslint/js": "^9.8.0",
     "@nx/angular": "20.0.6",
     "@nx/eslint": "20.0.6",
