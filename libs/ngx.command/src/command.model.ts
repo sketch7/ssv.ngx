@@ -27,7 +27,10 @@ export interface ICommand {
 }
 
 export interface CommandCreator {
-	execute: (...args: unknown[]) => Observable<unknown> | Promise<unknown> | void;
+	// todo: stricter typing
+	// execute: (...args: TParams extends unknown[] ? TParams : [TParams]) => Observable<unknown> | Promise<unknown> | void;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	execute: (...args: any[]) => Observable<unknown> | Promise<unknown> | void;
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 	canExecute?: Observable<boolean> | Function;
 	params?: unknown | unknown[];

@@ -118,7 +118,7 @@ export class ExampleCommandComponent {
 		);
 	}
 
-	pauseHero$(hero: Hero, param2: any, param3: any) {
+	pauseHero$(hero: Hero, param2?: any, param3?: any) {
 		console.log("pauseHero$", { hero, param2, param3, heroes: this.heroes });
 
 		this.updateHeroPause(hero.key, { isPaused: true });
