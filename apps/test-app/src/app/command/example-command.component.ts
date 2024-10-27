@@ -1,24 +1,18 @@
 import { Component, ChangeDetectionStrategy, ChangeDetectorRef, } from "@angular/core";
 import { MatCardModule } from '@angular/material/card';
-import {MatButtonModule} from '@angular/material/button';
+import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from "@angular/material/icon";
-import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { BehaviorSubject, timer, Observable, tap, filter, map, distinctUntilChanged } from "rxjs";
 import { CommandAsync, SsvCommandModule } from "@ssv/ngx.command";
 import { CommonModule } from "@angular/common";
+
 interface Hero {
 	key: string;
 	name: string;
 
 	isInvulnerable?: boolean;
-}
-
-enum Roles {
-	Assassin = 0,
-	Warrior = 1,
-	Specialist = 2,
-	BossFight = 5
 }
 
 interface HeroPausedState {
@@ -107,7 +101,7 @@ export class ExampleCommandComponent {
 		this.isValidHeroRemove$.next(!this.isValidHeroRemove$.value);
 	}
 
-	removeHero$(hero: Hero, param2: any, param3: any) {
+	removeHero$(hero: Hero, param2: unknown, param3: unknown) {
 		console.log("removeHero", { hero, param2, param3, heroes: this.heroes });
 
 		return timer(2000).pipe(
@@ -118,7 +112,7 @@ export class ExampleCommandComponent {
 		);
 	}
 
-	pauseHero$(hero: Hero, param2?: any, param3?: any) {
+	pauseHero$(hero: Hero, param2?: unknown, param3?: unknown) {
 		console.log("pauseHero$", { hero, param2, param3, heroes: this.heroes });
 
 		this.updateHeroPause(hero.key, { isPaused: true });
@@ -128,7 +122,7 @@ export class ExampleCommandComponent {
 		);
 	}
 
-	canPauseHero$(hero: Hero, param2: any, param3: any): Observable<boolean> {
+	canPauseHero$(hero: Hero, param2: unknown, param3: unknown): Observable<boolean> {
 		console.log("canPauseHero$ - factory init", { hero, param2, param3, heroes: this.heroes });
 		return this._pauseState.pipe(
 			tap(x => console.warn(">>>> canPauseHero$ - pauseState emit #1", x, hero)),
