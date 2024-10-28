@@ -43,8 +43,8 @@ export class ExampleCommandComponent {
 	isValidRedux$ = new BehaviorSubject(true);
 	isValidHeroRemove$ = new BehaviorSubject(true);
 
-	saveCmd = new CommandAsync(this.save$.bind(this), this.isValid$);
-	saveCmdNoValidation = new CommandAsync(this.save$.bind(this));
+	saveCmd = new CommandAsync(() => this.save$(), this.isValid$);
+	saveCmdNoValidation = new CommandAsync(() => this.save$());
 	removeHeroCmd = new CommandAsync(this.removeHero$.bind(this), this.isValidHeroRemove$);
 	pauseHeroCmd = new CommandAsync(this.pauseHero$.bind(this), this.isValidHeroRemove$);
 	saveReduxCmd = new CommandAsync(
