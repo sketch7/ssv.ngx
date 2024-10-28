@@ -12,10 +12,10 @@ import {
 import { Subject } from "rxjs";
 import { tap, delay, takeUntil } from "rxjs/operators";
 
-import { CommandOptions, COMMAND_OPTIONS } from "./command.options";
+import { type CommandOptions, COMMAND_OPTIONS } from "./command.options";
 import { Command } from "./command";
 import { isCommand, isCommandCreator } from "./command.util";
-import { CommandCreator, ICommand } from "./command.model";
+import { CommandCreator, type ICommand } from "./command.model";
 
 /**
  * Controls the state of a component in sync with `Command`.

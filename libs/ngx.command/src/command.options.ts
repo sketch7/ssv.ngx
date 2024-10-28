@@ -1,4 +1,4 @@
-import { EnvironmentProviders, InjectionToken, makeEnvironmentProviders } from "@angular/core";
+import { type EnvironmentProviders, InjectionToken, makeEnvironmentProviders } from "@angular/core";
 
 export interface CommandOptions {
 	/**

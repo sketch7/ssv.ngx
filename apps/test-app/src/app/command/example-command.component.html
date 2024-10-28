@@ -255,7 +255,7 @@
 				</button>
 			</div>
 			<div class="form-group collection">
-				@for (hero of heroes; track hero) {
+				@for (hero of heroes; track hero.key) {
 				<div class="collection-item">
 					<div class="hero">
 						{{ hero.name }}
@@ -320,7 +320,7 @@
 		<mat-card-title>Within Collection CanExecute</mat-card-title>
 		<mat-card-content>
 			<div class="form-group collection">
-				@for (hero of heroes; track hero) {
+				@for (hero of heroes; track hero.key) {
 				<div class="collection-item">
 					<div class="hero">
 						{{ hero.name }}

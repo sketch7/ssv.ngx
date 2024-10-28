@@ -13,6 +13,7 @@
     "lib": ["es2020", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
+    "isolatedModules": true,
     "baseUrl": ".",
     "paths": {
       "@ssv/ngx.command": ["libs/ngx.command/src/index.ts"]
