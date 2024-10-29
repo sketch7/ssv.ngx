@@ -43,6 +43,7 @@ export class ExampleCommandComponent {
 	isValidRedux$ = new BehaviorSubject(true);
 	isValidHeroRemove$ = new BehaviorSubject(true);
 	$isValid = signal(false);
+	$containerVisibility = signal(true);
 
 	saveCmd = new CommandAsync(() => this.save$(), this.isValid$);
 	saveSignalCmd = new CommandAsync(() => this.save$(), this.$isValid);
@@ -53,6 +54,8 @@ export class ExampleCommandComponent {
 		this.saveRedux.bind(this),
 		this.isValidRedux$,
 	);
+	containerDestroySaveCmd = new CommandAsync(() => this.save$());
+
 	heroes: Hero[] = [
 		{ key: "rexxar", name: "Rexxar" },
 		{ key: "malthael", name: "Malthael" },
@@ -76,6 +79,7 @@ export class ExampleCommandComponent {
 	constructor(
 		private cdr: ChangeDetectorRef
 	) {
+		// this.containerDestroySaveCmd.autoDestroy = false;
 	}
 
 	save() {
@@ -102,6 +106,10 @@ export class ExampleCommandComponent {
 
 	toggleValidityRemoveHero(): void {
 		this.isValidHeroRemove$.next(!this.isValidHeroRemove$.value);
+	}
+
+	toggleContainer(): void {
+		this.$containerVisibility.update(x => !x);
 	}
 
 	removeHero$(hero: Hero, param2: unknown, param3: unknown) {

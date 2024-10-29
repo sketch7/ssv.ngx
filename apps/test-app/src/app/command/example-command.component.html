@@ -385,5 +385,34 @@
 			</div>
 		</mat-card-content>
 	</mat-card>
+	} @if (true) {
+	<mat-card>
+		<mat-card-title>Container Destroy</mat-card-title>
+		<mat-card-content>
+			<div
+				class="btn-group"
+				role="group">
+				<button
+					mat-flat-button
+					color="primary"
+					(click)="toggleContainer()">
+					{{ $containerVisibility() ? "Hide" : "Show" }} container
+				</button>
+			</div>
+			<div class="form-group collection">
+				@if($containerVisibility()) {
+				<div class="action button-group">
+					<button
+						mat-icon-button
+						color="accent"
+						[ssvCommand]="containerDestroySaveCmd"
+						title="container destroy">
+						<mat-icon>face</mat-icon>
+					</button>
+				</div>
+				}
+			</div>
+		</mat-card-content>
+	</mat-card>
 	}
 </div>
