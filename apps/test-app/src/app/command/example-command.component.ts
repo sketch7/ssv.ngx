@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef, } from "@angular/core";
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, signal, } from "@angular/core";
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from "@angular/material/icon";
@@ -42,8 +42,10 @@ export class ExampleCommandComponent {
 	isValid$ = new BehaviorSubject(false);
 	isValidRedux$ = new BehaviorSubject(true);
 	isValidHeroRemove$ = new BehaviorSubject(true);
+	$isValid = signal(false);
 
 	saveCmd = new CommandAsync(() => this.save$(), this.isValid$);
+	saveSignalCmd = new CommandAsync(() => this.save$(), this.$isValid);
 	saveCmdNoValidation = new CommandAsync(() => this.save$());
 	removeHeroCmd = new CommandAsync(this.removeHero$.bind(this), this.isValidHeroRemove$);
 	pauseHeroCmd = new CommandAsync(this.pauseHero$.bind(this), this.isValidHeroRemove$);
@@ -91,6 +93,7 @@ export class ExampleCommandComponent {
 
 	toggleValidity$(): void {
 		this.isValid$.next(!this.isValid$.value);
+		this.$isValid.update(x => !x);
 	}
 
 	toggleValidityRedux(): void {

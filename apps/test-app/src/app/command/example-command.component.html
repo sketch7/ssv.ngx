@@ -72,6 +72,12 @@
 				</div>
 				<div>
 					<small>
+						<span class="type variable">isValid (signal)</span>
+						<span class="type boolean value">{{ $isValid() }}</span>
+					</small>
+				</div>
+				<div>
+					<small>
 						<span class="type variable">saveCmd.isExecuting</span>
 						<span class="type boolean value">{{ saveCmd.isExecuting }}</span>
 					</small>
@@ -104,12 +110,22 @@
 				<small>with [ssvCommand]</small>
 			</button>
 			<button
+				mat-raised-button
 				color="primary"
 				[ssvCommand]="saveCmd">
 				@if (saveCmd.isExecuting) {
 				<i class="ai-circled ai-indicator ai-dark-spin small"></i>
 				} Save
 				<small>with [ssvCommand]</small>
+			</button>
+			<button
+				mat-raised-button
+				color="primary"
+				[ssvCommand]="saveSignalCmd">
+				@if (saveSignalCmd.isExecuting) {
+				<i class="ai-circled ai-indicator ai-dark-spin small"></i>
+				} Save
+				<small>with [ssvCommand] signal</small>
 			</button>
 			<button
 				color="primary"

@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Observable, combineLatest, Subscription, Subject, BehaviorSubject, of, EMPTY } from "rxjs";
 import { tap, map, filter, switchMap, catchError, finalize, take } from "rxjs/operators";
-import { ICommand } from "./command.model";
+import type { ICommand } from "./command.model";
+import { isSignal, type Signal } from "@angular/core";
+import { toObservable } from "@angular/core/rxjs-interop";
 
 /**
  * Command object used to encapsulate information which is needed to perform an action.
@@ -47,13 +49,13 @@ export class Command implements ICommand {
 	 */
 	constructor(
 		execute: (...args: unknown[]) => unknown,
-		canExecute$?: Observable<boolean>,
+		canExecute$?: Signal<boolean> | Observable<boolean>,
 		isAsync?: boolean,
 	) {
 		if (canExecute$) {
 			this.canExecute$ = combineLatest([
 				this._isExecuting$,
-				canExecute$
+				isSignal(canExecute$) ? toObservable(canExecute$) : canExecute$
 			]).pipe(
 				map(([isExecuting, canExecuteResult]) => {
 					// console.log("[command::combineLatest$] update!", { isExecuting, canExecuteResult });
@@ -162,7 +164,7 @@ export class CommandAsync extends Command {
 
 	constructor(
 		execute: (...args: any[]) => Observable<unknown> | Promise<unknown>,
-		canExecute$?: Observable<boolean>,
+		canExecute$?: Signal<boolean> | Observable<boolean>,
 	) {
 		super(execute, canExecute$, true);
 	}
