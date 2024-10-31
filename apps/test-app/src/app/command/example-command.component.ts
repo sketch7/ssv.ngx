@@ -39,23 +39,22 @@ export class ExampleCommandComponent {
 	isValid = true;
 	isExecuting = false;
 
-	isValid$ = new BehaviorSubject(false);
-	isValidRedux$ = new BehaviorSubject(true);
-	isValidHeroRemove$ = new BehaviorSubject(true);
-	$isValid = signal(false);
-	$containerVisibility = signal(true);
+	readonly isValid$ = new BehaviorSubject(false);
+	readonly isValidRedux$ = new BehaviorSubject(true);
+	readonly isValidHeroRemove$ = new BehaviorSubject(true);
+	readonly $isValid = signal(false);
+	readonly $containerVisibility = signal(true);
 
-	saveCmd = new CommandAsync(() => this.save$(), this.isValid$);
-	saveSignalCmd = new CommandAsync(() => this.save$(), this.$isValid);
-	saveCmdNoValidation = new CommandAsync(() => this.save$());
-	removeHeroCmd = new CommandAsync(this.removeHero$.bind(this), this.isValidHeroRemove$);
-	pauseHeroCmd = new CommandAsync(this.pauseHero$.bind(this), this.isValidHeroRemove$);
-	saveReduxCmd = new CommandAsync(
+	readonly saveCmd = new CommandAsync(() => this.save$(), this.isValid$);
+	readonly saveSignalCmd = new CommandAsync(() => this.save$(), this.$isValid);
+	readonly saveCmdNoValidation = new CommandAsync(() => this.save$());
+	readonly removeHeroCmd = new CommandAsync(this.removeHero$.bind(this), this.isValidHeroRemove$);
+	readonly pauseHeroCmd = new CommandAsync(this.pauseHero$.bind(this), this.isValidHeroRemove$);
+	readonly saveReduxCmd = new CommandAsync(
 		this.saveRedux.bind(this),
 		this.isValidRedux$,
 	);
-	// containerDestroySaveCmd = new CommandAsync(() => this.save$());
-	containerDestroySaveCmd = createCommandAsync(() => this.save$());
+	readonly containerDestroySaveCmd = createCommandAsync(() => this.save$());
 
 	heroes: Hero[] = [
 		{ key: "rexxar", name: "Rexxar" },

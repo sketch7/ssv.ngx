@@ -14,6 +14,9 @@
 
 - move library repo + migrate to nx
 
+### BREAKING CHANGES
+
+- **command:** remove `SsvCommandModule.forRoot` use `provideSsvCommandOptions` instead
 
 ## 3.0.0-dev.1 (2024-10-26)
 
