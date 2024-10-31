@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef, signal, } from "@angular/core";
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, signal, inject, DestroyRef, } from "@angular/core";
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from "@angular/material/icon";
@@ -76,9 +76,13 @@ export class ExampleCommandComponent {
 	private _state = new BehaviorSubject({ isLoading: false });
 	private _pauseState = new BehaviorSubject<HeroPausedState>({});
 
-	constructor(
-		private cdr: ChangeDetectorRef
-	) {
+	private readonly cdr = inject(ChangeDetectorRef);
+	private readonly destroyRef = inject(DestroyRef);
+
+	constructor() {
+		this.destroyRef.onDestroy(() => {
+			console.warn("destroyRef.onDestroy");
+		});
 		// this.containerDestroySaveCmd.autoDestroy = false;
 	}
 
