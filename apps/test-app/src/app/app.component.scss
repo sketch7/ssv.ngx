@@ -1,7 +1,4 @@
 .app {
-	// &__nav {
-	//
-	// }
 	display: flex;
 	flex-flow: column;
 	height: 100vh;
@@ -26,10 +23,10 @@
 	&__content {
 		display: flex;
 		flex: 1 1 auto;
+		padding: 15px;
 	}
 
 	&__footer {
-		background-color: #f8f9fa;
 		text-align: center;
 		width: 100%;
 	}
