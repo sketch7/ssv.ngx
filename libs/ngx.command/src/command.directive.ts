@@ -9,8 +9,7 @@ import {
 	ChangeDetectorRef,
 	inject,
 } from "@angular/core";
-import { Subject } from "rxjs";
-import { tap, delay, takeUntil } from "rxjs/operators";
+import { Subject, tap, delay, takeUntil } from "rxjs";
 
 import { type CommandOptions, COMMAND_OPTIONS } from "./command.options";
 import { Command } from "./command";

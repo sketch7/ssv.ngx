@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Observable, combineLatest, Subscription, Subject, BehaviorSubject, of, EMPTY } from "rxjs";
-import { tap, map, filter, switchMap, catchError, finalize, take } from "rxjs/operators";
+import {
+	Observable, combineLatest, Subscription, Subject, BehaviorSubject, of, EMPTY,
+	tap, map, filter, switchMap, catchError, finalize, take,
+ } from "rxjs";
 import type { ICommand } from "./command.model";
 import { DestroyRef, inject, isSignal, type Signal } from "@angular/core";
 import { toObservable } from "@angular/core/rxjs-interop";
@@ -9,16 +11,27 @@ export type ExecuteFn = (...args: any[]) => unknown;
 export type ExecuteAsyncFn = (...args: any[]) => Observable<unknown> | Promise<unknown>;
 export type CanExecute = Signal<boolean> | Observable<boolean>;
 
-/** Creates an async command. Must be used within an injection context.
+/** Creates an async {@link Command}. Must be used within an injection context.
  * NOTE: this auto injects `DestroyRef` and handles auto destroy. {@link ICommand.autoDestroy} should not be used.
  */
 export function createCommandAsync(
 	execute: ExecuteAsyncFn,
 	canExecute$?: CanExecute,
-): CommandAsync {
+): Command {
+	return createCommand(execute, canExecute$, true);
+}
+
+/** Creates a {@link Command}. Must be used within an injection context.
+ * NOTE: this auto injects `DestroyRef` and handles auto destroy. {@link ICommand.autoDestroy} should not be used.
+ */
+export function createCommand(
+	execute: ExecuteFn,
+	canExecute$?: CanExecute,
+	isAsync?: boolean,
+): Command {
 	const destroyRef = inject(DestroyRef);
 
-	const cmd = new CommandAsync(execute, canExecute$);
+	const cmd = new Command(execute, canExecute$, isAsync);
 	cmd.autoDestroy = false;
 
 	destroyRef.onDestroy(() => {
