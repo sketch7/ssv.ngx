@@ -1,10 +1,43 @@
-<app-nav></app-nav>
-<main
-	role="main"
-	class="container">
-	<router-outlet></router-outlet>
-</main>
-<footer>
+<!-- <app-nav></app-nav> -->
+
+<mat-toolbar
+	color="primary"
+	class="app__navbar">
+	<a
+		mat-button
+		routerLink="/"
+		>ssv.ngx</a
+	>
+	<span class="app__spacer"></span>
+	<button
+		mat-icon-button
+		(click)="sidenav.toggle()">
+		<mat-icon>menu</mat-icon>
+	</button>
+</mat-toolbar>
+
+<mat-sidenav-container class="app__sidenav-container">
+	<mat-sidenav
+		#sidenav
+		mode="side"
+		opened
+		class="app__sidenav">
+		<mat-nav-list>
+			@for (link of links; track link.path) {
+			<a
+				mat-list-item
+				[routerLink]="link.path">
+				{{ link.title }}
+			</a>
+			}
+		</mat-nav-list>
+	</mat-sidenav>
+	<mat-sidenav-content>
+		<router-outlet></router-outlet>
+	</mat-sidenav-content>
+</mat-sidenav-container>
+
+<footer class="app__footer">
 	<div class="container">
 		<p class="app__author">
 			&copy; Made with
@@ -20,7 +53,7 @@
 					>sketch7</a
 				>
 			</strong>
-			2022.
+			2024.
 		</p>
 	</div>
 </footer>

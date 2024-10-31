@@ -1,0 +1,13 @@
+.app {
+	// &__nav {
+	//
+	// }
+
+	&__spacer {
+		flex: 1 1 auto;
+	}
+
+	&__sidenav.mat-drawer {
+		width: 250px;
+	}
+}
