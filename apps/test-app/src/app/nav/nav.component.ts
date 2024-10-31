@@ -1,15 +1,10 @@
-import {
-	Component,
-	OnInit,
-	OnDestroy,
-	Renderer2,
-	ElementRef,
-	ViewChild,
-	inject,
-	ChangeDetectionStrategy,
-} from "@angular/core";
-import { DOCUMENT, NgClass } from "@angular/common";
+import { Component, ChangeDetectionStrategy, ViewEncapsulation } from "@angular/core";
 import { RouterModule } from "@angular/router";
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+
 
 export function isHtmlLinkElement(
 	element: Element,
@@ -28,13 +23,17 @@ interface LinkItem {
 	templateUrl: "./nav.component.html",
 	styleUrls: ["./nav.component.scss"],
 	changeDetection: ChangeDetectionStrategy.OnPush,
+	encapsulation: ViewEncapsulation.None,
 	standalone: true,
 	imports: [
 		RouterModule,
-		NgClass,
+		MatToolbarModule,
+		MatMenuModule,
+		MatIconModule,
+		MatButtonModule,
 	]
 })
-export class NavComponent implements OnInit, OnDestroy {
+export class NavComponent {
 
 	links: LinkItem[] = [
 		// { path: ["/"], title: "Home", activeOptions: { exact: true } },
@@ -45,42 +44,5 @@ export class NavComponent implements OnInit, OnDestroy {
 	// appVersion = this.appInfo.version;
 	// appEnv = this.appInfo.environment;
 	// isDebug = this.appInfo.isDebug;
-
-	isMenuOpened = false;
-	@ViewChild("menu", { static: true }) menuElementRef: ElementRef | undefined;
-
-	private domClickListener$$!: () => void;
-
-	private readonly document = inject(DOCUMENT, { optional: true });
-	private readonly renderer = inject(Renderer2);
-
-	ngOnInit(): void {
-		this.domClickListener$$ = this.renderer.listen(
-			this.document,
-			"click",
-			this.onBodyClick.bind(this),
-		);
-	}
-
-	ngOnDestroy(): void {
-		this.domClickListener$$();
-	}
-
-	onBodyClick(event: Event): void {
-		if (!this.menuElementRef || !this.isMenuOpened) {
-			return;
-		}
-
-		if (
-			event.target === this.menuElementRef.nativeElement ||
-			this.menuElementRef.nativeElement.contains(event.target as Node)
-		) {
-			const target = event.target as Element;
-			if (!isHtmlLinkElement(target)) {
-				return;
-			}
-		}
-		this.isMenuOpened = false;
-	}
 
 }
