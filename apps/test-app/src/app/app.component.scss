@@ -2,6 +2,9 @@
 	// &__nav {
 	//
 	// }
+	display: flex;
+	flex-flow: column;
+	height: 100vh;
 
 	&__spacer {
 		flex: 1 1 auto;
@@ -9,5 +12,29 @@
 
 	&__sidenav.mat-drawer {
 		width: 250px;
+	}
+
+	&__sidenav-container {
+		flex: 1;
+	}
+
+	&__content-container {
+		display: flex;
+		flex-flow: column;
+		min-height: 100%;
+	}
+	&__content {
+		display: flex;
+		flex: 1 1 auto;
+	}
+
+	&__footer {
+		background-color: #f8f9fa;
+		text-align: center;
+		width: 100%;
+	}
+
+	&__footer-content {
+		padding: 12px;
 	}
 }
