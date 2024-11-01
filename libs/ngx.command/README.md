@@ -3,7 +3,6 @@
 [commandpatternwiki]: https://en.wikipedia.org/wiki/Command_pattern
 
 # @ssv/ngx.command
-[![CI](https://github.com/sketch7/ngx.command/actions/workflows/ci.yml/badge.svg)](https://github.com/sketch7/ngx.command/actions/workflows/ci.yml)
 [![npm version](https://badge.fury.io/js/%40ssv%2Fngx.command.svg)](https://badge.fury.io/js/%40ssv%2Fngx.command)
 
 [Command pattern][commandpatternwiki] implementation for angular. Command's are used to encapsulate information which is needed to perform an action.
