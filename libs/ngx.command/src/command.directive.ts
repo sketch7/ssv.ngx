@@ -99,7 +99,7 @@ export class CommandDirective implements OnInit, OnDestroy {
 	private _destroy$ = new Subject<void>();
 
 	ngOnInit(): void {
-		// console.log("[ssvCommand::init]", this.config);
+		// console.log("[ssvCommand::init]", this.globalOptions);
 		if (!this.commandOrCreator) {
 			throw new Error(`${NAME_CAMEL}: [${NAME_CAMEL}] should be defined!`);
 		} else if (isCommand(this.commandOrCreator)) {
