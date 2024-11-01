@@ -1,6 +1,5 @@
 import { AbstractControl, AbstractControlDirective, FormControlStatus } from "@angular/forms";
-import { Observable, of } from "rxjs";
-import { map, distinctUntilChanged, startWith, delay } from "rxjs/operators";
+import { Observable, of, map, distinctUntilChanged, startWith, delay } from "rxjs";
 
 import { CommandCreator, ICommand } from "./command.model";
 import { Command } from "./command";

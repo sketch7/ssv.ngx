@@ -1,0 +1,50 @@
+@use "@app/colors";
+@use "@app/vars";
+
+// todo: use mat colors
+
+.app {
+	display: flex;
+	flex-flow: column;
+	height: 100vh;
+
+	&__navbar {
+		&.mat-toolbar {
+			background-color: colors.$concrete;
+		}
+	}
+
+	&__spacer {
+		flex: 1 1 auto;
+	}
+
+	&__sidenav.mat-drawer {
+		width: 250px;
+		background-color: colors.$concrete;
+	}
+
+	&__sidenav-container {
+		flex: 1;
+	}
+
+	&__content-container {
+		display: flex;
+		flex-flow: column;
+		min-height: 100%;
+	}
+	&__content {
+		display: flex;
+		flex: 1 1 auto;
+		padding: 15px;
+	}
+
+	&__footer {
+		background-color: colors.$concrete;
+		text-align: center;
+		width: 100%;
+	}
+
+	&__footer-content {
+		padding: 12px;
+	}
+}

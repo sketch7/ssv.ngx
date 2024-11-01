@@ -1,11 +1,11 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef, } from "@angular/core";
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, signal, inject, DestroyRef, } from "@angular/core";
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from "@angular/material/icon";
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { BehaviorSubject, timer, Observable, tap, filter, map, distinctUntilChanged } from "rxjs";
-import { CommandAsync, SsvCommandModule } from "@ssv/ngx.command";
+import { CommandAsync, createCommandAsync, SsvCommandModule } from "@ssv/ngx.command";
 import { CommonModule } from "@angular/common";
 
 interface Hero {
@@ -39,18 +39,23 @@ export class ExampleCommandComponent {
 	isValid = true;
 	isExecuting = false;
 
-	isValid$ = new BehaviorSubject(false);
-	isValidRedux$ = new BehaviorSubject(true);
-	isValidHeroRemove$ = new BehaviorSubject(true);
+	readonly isValid$ = new BehaviorSubject(false);
+	readonly isValidRedux$ = new BehaviorSubject(true);
+	readonly isValidHeroRemove$ = new BehaviorSubject(true);
+	readonly $isValid = signal(false);
+	readonly $containerVisibility = signal(true);
 
-	saveCmd = new CommandAsync(() => this.save$(), this.isValid$);
-	saveCmdNoValidation = new CommandAsync(() => this.save$());
-	removeHeroCmd = new CommandAsync(this.removeHero$.bind(this), this.isValidHeroRemove$);
-	pauseHeroCmd = new CommandAsync(this.pauseHero$.bind(this), this.isValidHeroRemove$);
-	saveReduxCmd = new CommandAsync(
+	readonly saveCmd = new CommandAsync(() => this.save$(), this.isValid$);
+	readonly saveSignalCmd = new CommandAsync(() => this.save$(), this.$isValid);
+	readonly saveCmdNoValidation = new CommandAsync(() => this.save$());
+	readonly removeHeroCmd = new CommandAsync(this.removeHero$.bind(this), this.isValidHeroRemove$);
+	readonly pauseHeroCmd = new CommandAsync(this.pauseHero$.bind(this), this.isValidHeroRemove$);
+	readonly saveReduxCmd = new CommandAsync(
 		this.saveRedux.bind(this),
 		this.isValidRedux$,
 	);
+	readonly containerDestroySaveCmd = createCommandAsync(() => this.save$());
+
 	heroes: Hero[] = [
 		{ key: "rexxar", name: "Rexxar" },
 		{ key: "malthael", name: "Malthael" },
@@ -71,9 +76,14 @@ export class ExampleCommandComponent {
 	private _state = new BehaviorSubject({ isLoading: false });
 	private _pauseState = new BehaviorSubject<HeroPausedState>({});
 
-	constructor(
-		private cdr: ChangeDetectorRef
-	) {
+	private readonly cdr = inject(ChangeDetectorRef);
+	private readonly destroyRef = inject(DestroyRef);
+
+	constructor() {
+		this.destroyRef.onDestroy(() => {
+			console.warn("destroyRef.onDestroy");
+		});
+		// this.containerDestroySaveCmd.autoDestroy = false;
 	}
 
 	save() {
@@ -91,6 +101,7 @@ export class ExampleCommandComponent {
 
 	toggleValidity$(): void {
 		this.isValid$.next(!this.isValid$.value);
+		this.$isValid.update(x => !x);
 	}
 
 	toggleValidityRedux(): void {
@@ -99,6 +110,10 @@ export class ExampleCommandComponent {
 
 	toggleValidityRemoveHero(): void {
 		this.isValidHeroRemove$.next(!this.isValidHeroRemove$.value);
+	}
+
+	toggleContainer(): void {
+		this.$containerVisibility.update(x => !x);
 	}
 
 	removeHero$(hero: Hero, param2: unknown, param3: unknown) {

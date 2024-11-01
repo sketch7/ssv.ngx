@@ -24,8 +24,23 @@
           {
             "glob": "**/*",
             "input": "apps/test-app/public"
+          },
+          {
+            "input": "apps/test-app/src/assets",
+            "ignore": [
+              "**/styles/**/*",
+              "**/icons/**/*.svg"
+            ],
+            "glob": "**/*",
+            "output": "/assets"
           }
         ],
+        "stylePreprocessorOptions": {
+          "includePaths": [
+            "./node_modules",
+            "apps/test-app/src/assets/styles"
+          ]
+        },
         "styles": [
           // "@angular/material/prebuilt-themes/magenta-violet.css",
           "@angular/material/prebuilt-themes/azure-blue.css",

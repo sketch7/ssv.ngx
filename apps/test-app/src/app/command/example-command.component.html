@@ -2,7 +2,7 @@
 <p>
 	Experimental area to test out
 	<a
-		href="https://github.com/sketch7/ngx.command"
+		href="https://github.com/sketch7/ssv.ngx/tree/master/libs/ngx.command"
 		target="_blank"
 		rel="noopener">
 		<strong>&#64;ssv&#47;ngx.command</strong></a
@@ -72,6 +72,12 @@
 				</div>
 				<div>
 					<small>
+						<span class="type variable">isValid (signal)</span>
+						<span class="type boolean value">{{ $isValid() }}</span>
+					</small>
+				</div>
+				<div>
+					<small>
 						<span class="type variable">saveCmd.isExecuting</span>
 						<span class="type boolean value">{{ saveCmd.isExecuting }}</span>
 					</small>
@@ -104,12 +110,22 @@
 				<small>with [ssvCommand]</small>
 			</button>
 			<button
+				mat-raised-button
 				color="primary"
 				[ssvCommand]="saveCmd">
 				@if (saveCmd.isExecuting) {
 				<i class="ai-circled ai-indicator ai-dark-spin small"></i>
 				} Save
 				<small>with [ssvCommand]</small>
+			</button>
+			<button
+				mat-raised-button
+				color="primary"
+				[ssvCommand]="saveSignalCmd">
+				@if (saveSignalCmd.isExecuting) {
+				<i class="ai-circled ai-indicator ai-dark-spin small"></i>
+				} Save
+				<small>with [ssvCommand] signal</small>
 			</button>
 			<button
 				color="primary"
@@ -366,6 +382,35 @@
 						<mat-icon>face</mat-icon>
 					</button>
 				</div>
+			</div>
+		</mat-card-content>
+	</mat-card>
+	} @if (true) {
+	<mat-card>
+		<mat-card-title>Container Destroy</mat-card-title>
+		<mat-card-content>
+			<div
+				class="btn-group"
+				role="group">
+				<button
+					mat-flat-button
+					color="primary"
+					(click)="toggleContainer()">
+					{{ $containerVisibility() ? "Hide" : "Show" }} container
+				</button>
+			</div>
+			<div class="form-group collection">
+				@if($containerVisibility()) {
+				<div class="action button-group">
+					<button
+						mat-icon-button
+						color="accent"
+						[ssvCommand]="containerDestroySaveCmd"
+						title="container destroy">
+						<mat-icon>face</mat-icon>
+					</button>
+				</div>
+				}
 			</div>
 		</mat-card-content>
 	</mat-card>

@@ -1,8 +1,8 @@
+export { SsvCommandModule } from "./command.module";
+export { provideSsvCommandOptions, COMMAND_OPTIONS, type CommandOptions } from "./command.options";
 export * from "./command";
-export * from "./command.directive";
-export * from "./command-ref.directive";
-export * from "./command.util";
+export { CommandDirective } from "./command.directive";
+export { CommandRefDirective } from "./command-ref.directive";
+export { type CanExecuteFormOptions, isCommand, isCommandCreator, canExecuteFromNgForm } from "./command.util";
 export type { CommandCreator, ICommand } from "./command.model";
-export * from "./command.options";
-export * from "./module";
-export * from "./version";
+export { VERSION } from "./version";

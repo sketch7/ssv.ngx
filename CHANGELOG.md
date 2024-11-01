@@ -1,3 +1,23 @@
+## 3.0.0 (2024-11-01)
+
+### 🚀 Features
+
+- **command:** add `createCommand`/`createCommandAsync` which handles auto destroy with `DestroyRef` 
+- **command:** canExecute signal support
+- **deps:** update angular 17
+
+### Refactor
+
+- **deps:** rxjs remove `"rxjs/operators`
+
+### Chore
+
+- move library repo + migrate to nx
+
+### BREAKING CHANGES
+
+- **command:** remove `SsvCommandModule.forRoot` use `provideSsvCommandOptions` instead
+
 ## 3.0.0-dev.1 (2024-10-26)
 
 ### 🚀 Features
@@ -27,9 +47,12 @@
 - **directive:** fix when using in an on push component ([#5](https://github.com/sketch7/ssv.ngx/pull/5))
 - **directive:** wrap vars in if, as sometimes might not initialize and they will throw ([#11](https://github.com/sketch7/ssv.ngx/pull/11))
 - **util:** `canExecuteFromNgForm` initial value will now emit ([#16](https://github.com/sketch7/ssv.ngx/pull/16))
-- **utils:** `canExecuteFromNgForm` add delay to cater for pristine changes ([#63](https://github.com/sketch7/ssv.ngx/pull/63))
+- **util:** `canExecuteFromNgForm` add delay to cater for pristine changes ([#63](https://github.com/sketch7/ssv.ngx/pull/63))
 
 ### ❤️  Thank You
 
 - Konstantin  Kuptsov
 - Stephen Lautier @stephenlautier
+
+## PRE 3.X Command Changelogs
+https://github.com/sketch7/ngx.command/blob/master/CHANGELOG.md
