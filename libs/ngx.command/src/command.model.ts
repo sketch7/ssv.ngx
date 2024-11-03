@@ -1,14 +1,24 @@
-import { Observable } from "rxjs";
+import type { Observable } from "rxjs";
+import type { Signal } from "@angular/core";
 
 export interface ICommand {
 	/** Determines whether the command is currently executing, as a snapshot value. */
 	readonly isExecuting: boolean;
-	/** Determines whether the command is currently executing, as an observable. */
-	readonly isExecuting$: Observable<boolean>;
+
+	/** Determines whether the command is currently executing, as a signal. */
+	readonly $isExecuting: Signal<boolean>;
+
+	// /** Determines whether the command is currently executing, as an observable. */
+	// readonly isExecuting$: Observable<boolean>;
+
 	/** Determines whether the command can execute or not, as a snapshot value. */
 	readonly canExecute: boolean;
-	/** Determines whether the command can execute or not, as an observable. */
-	readonly canExecute$: Observable<boolean>;
+
+	/** Determines whether the command can execute or not, as a signal. */
+	readonly $canExecute: Signal<boolean>;
+
+	// /** Determines whether the command can execute or not, as an observable. */
+	// readonly canExecute$: Observable<boolean>;
 
 	/** Determines whether to auto destroy when having 0 subscribers (defaults to `true`). */
 	autoDestroy: boolean;
