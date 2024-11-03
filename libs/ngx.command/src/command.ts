@@ -3,13 +3,9 @@ import {
 	Observable, Subscription, Subject, of, EMPTY,
 	tap, filter, switchMap, catchError, finalize, take,
 } from "rxjs";
-import type { ICommand } from "./command.model";
+import type { CanExecute, ExecuteAsyncFn, ExecuteFn, ICommand } from "./command.model";
 import { computed, DestroyRef, inject, isSignal, signal, type Signal } from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
-
-export type ExecuteFn = (...args: any[]) => unknown;
-export type ExecuteAsyncFn = (...args: any[]) => Observable<unknown> | Promise<unknown>;
-export type CanExecute = Signal<boolean> | Observable<boolean>;
 
 /** Creates an async {@link Command}. Must be used within an injection context.
  * NOTE: this auto injects `DestroyRef` and handles auto destroy. {@link ICommand.autoDestroy} should not be used.

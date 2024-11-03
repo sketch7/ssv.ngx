@@ -1,6 +1,10 @@
 import type { Observable } from "rxjs";
 import type { Signal } from "@angular/core";
 
+export type ExecuteFn = (...args: any[]) => unknown;
+export type ExecuteAsyncFn = (...args: any[]) => Observable<unknown> | Promise<unknown>;
+export type CanExecute = Signal<boolean> | Observable<boolean>;
+
 export interface ICommand {
 	/** Determines whether the command is currently executing, as a snapshot value. */
 	readonly isExecuting: boolean;
@@ -41,8 +45,8 @@ export interface CommandCreator {
 	// execute: (...args: TParams extends unknown[] ? TParams : [TParams]) => Observable<unknown> | Promise<unknown> | void;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	execute: (...args: any[]) => Observable<unknown> | Promise<unknown> | void;
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-	canExecute?: Observable<boolean> | Function;
+	// CanExecute | ((...args: any[]) => CanExecute);
+	canExecute?: CanExecute | Function;
 	params?: unknown | unknown[];
 	isAsync?: boolean;
 	host: unknown;

@@ -2,14 +2,17 @@ import {
 	Directive,
 	OnInit,
 	OnDestroy,
-	Input,
 	HostListener,
 	ElementRef,
 	Renderer2,
 	ChangeDetectorRef,
 	inject,
+	effect,
+	input,
+	Injector,
+	runInInjectionContext,
+	computed,
 } from "@angular/core";
-import { Subject, tap, delay, takeUntil } from "rxjs";
 
 import { type CommandOptions, COMMAND_OPTIONS } from "./command.options";
 import { Command } from "./command";
@@ -75,112 +78,105 @@ export class CommandDirective implements OnInit, OnDestroy {
 	private readonly renderer = inject(Renderer2);
 	private readonly element = inject(ElementRef);
 	private readonly cdr = inject(ChangeDetectorRef);
+	private readonly injector = inject(Injector);
 
-	@Input(NAME_CAMEL) commandOrCreator: ICommand | CommandCreator | undefined;
-
-	@Input(`${NAME_CAMEL}Options`)
-	get commandOptions(): CommandOptions { return this._commandOptions; }
-	set commandOptions(value: Partial<CommandOptions>) {
-		if (value === this._commandOptions) {
-			return;
+	readonly commandOrCreator = input<ICommand | CommandCreator | undefined>(undefined, { alias: `ssvCommand` });
+	readonly ssvCommandOptions = input<Partial<CommandOptions>>(this.globalOptions);
+	readonly commandOptions = computed<CommandOptions>(() => {
+		const value = this.ssvCommandOptions();
+		if (value === this.globalOptions) {
+			return this.globalOptions;
 		}
-		this._commandOptions = {
+		return {
 			...this.globalOptions,
 			...value,
 		};
-	}
-
-	@Input(`${NAME_CAMEL}Params`) commandParams: unknown | unknown[];
+	});
+	readonly ssvCommandParams = input<unknown | unknown[]>(undefined);
+	readonly commandParams = computed<unknown | unknown[]>(() => this.ssvCommandParams() || this.creatorParams);
+	private creatorParams: unknown | unknown[] = [];
 
 	get command(): ICommand { return this._command; }
 
 	private _command!: ICommand;
-	private _commandOptions: CommandOptions = this.globalOptions;
-	private _destroy$ = new Subject<void>();
+
+	constructor() {
+		effect(() => {
+			const canExecute = this._command.$canExecute();
+			this.trySetDisabled(!canExecute);
+			// console.log("[ssvCommand::canExecute$]", { canExecute: x });
+			this.cdr.markForCheck();
+		});
+		effect(() => {
+			// console.log("[ssvCommand::isExecuting$]", x, this.commandOptions);
+			if (this._command.$isExecuting()) {
+				this.renderer.addClass(
+					this.element.nativeElement,
+					this.commandOptions().executingCssClass
+				);
+			} else {
+				this.renderer.removeClass(
+					this.element.nativeElement,
+					this.commandOptions().executingCssClass
+				);
+			}
+		});
+	}
 
 	ngOnInit(): void {
+		const commandOrCreator = this.commandOrCreator();
 		// console.log("[ssvCommand::init]", this.globalOptions);
-		if (!this.commandOrCreator) {
+		if (!commandOrCreator) {
 			throw new Error(`${NAME_CAMEL}: [${NAME_CAMEL}] should be defined!`);
-		} else if (isCommand(this.commandOrCreator)) {
-			this._command = this.commandOrCreator;
-		} else if (isCommandCreator(this.commandOrCreator)) {
-			const isAsync = this.commandOrCreator.isAsync || this.commandOrCreator.isAsync === undefined;
+		} else if (isCommand(commandOrCreator)) {
+			this._command = commandOrCreator;
+		} else if (isCommandCreator(commandOrCreator)) {
+			const isAsync = commandOrCreator.isAsync || commandOrCreator.isAsync === undefined;
+			this.creatorParams = commandOrCreator.params;
 
 			// todo: find something like this for ivy (or angular10+)
 			// const hostComponent = (this.viewContainer as any)._view.component;
 
-			const execFn = this.commandOrCreator.execute.bind(this.commandOrCreator.host);
-			this.commandParams = this.commandParams || this.commandOrCreator.params;
+			const execFn = commandOrCreator.execute.bind(commandOrCreator.host);
+			const params = this.commandParams();
 
-			const canExec = this.commandOrCreator.canExecute instanceof Function
-				? this.commandOrCreator.canExecute.bind(this.commandOrCreator.host, this.commandParams)()
-				: this.commandOrCreator.canExecute;
+			const canExec = commandOrCreator.canExecute instanceof Function
+				? commandOrCreator.canExecute.bind(commandOrCreator.host, params)()
+				: commandOrCreator.canExecute;
 
 			// console.log("[ssvCommand::init] command creator", {
-			// 	firstParam: this.commandParams ? this.commandParams[0] : null,
-			// 	params: this.commandParams
+			// 	firstParam: params ? params[0] : null,
+			// 	params
 			// });
-			this._command = new Command(execFn, canExec, isAsync);
+			// todo: pass injector instead
+			runInInjectionContext(this.injector, () => {
+				this._command = new Command(execFn, canExec, isAsync);
+			});
 		} else {
 			throw new Error(`${NAME_CAMEL}: [${NAME_CAMEL}] is not defined properly!`);
 		}
 
 		this._command.subscribe();
-		this._command.canExecute$.pipe(
-			this.commandOptions.hasDisabledDelay
-				? delay(1)
-				: tap(() => { /* stub */ }),
-			tap(x => {
-				this.trySetDisabled(!x);
-				// console.log("[ssvCommand::canExecute$]", { canExecute: x });
-				this.cdr.markForCheck();
-			}),
-			takeUntil(this._destroy$),
-		).subscribe();
-
-		if (this._command.isExecuting$) {
-			this._command.isExecuting$.pipe(
-				tap(x => {
-					// console.log("[ssvCommand::isExecuting$]", x, this.commandOptions);
-					if (x) {
-						this.renderer.addClass(
-							this.element.nativeElement,
-							this.commandOptions.executingCssClass
-						);
-					} else {
-						this.renderer.removeClass(
-							this.element.nativeElement,
-							this.commandOptions.executingCssClass
-						);
-					}
-				}),
-				takeUntil(this._destroy$),
-			).subscribe();
-		}
 	}
 
 	@HostListener("click")
 	onClick(): void {
-		// console.log("[ssvCommand::onClick]", this.commandParams);
-		if (Array.isArray(this.commandParams)) {
-			this._command.execute(...this.commandParams);
+		const commandParams = this.commandParams();
+		// console.log("[ssvCommand::onClick]", commandParams);
+		if (Array.isArray(commandParams)) {
+			this._command.execute(...commandParams);
 		} else {
-			this._command.execute(this.commandParams);
+			this._command.execute(commandParams);
 		}
 	}
 
 	ngOnDestroy(): void {
 		// console.log("[ssvCommand::destroy]");
-		this._destroy$.next();
-		this._destroy$.complete();
-		if (this._command) {
-			this._command.unsubscribe();
-		}
+		this._command?.unsubscribe();
 	}
 
 	private trySetDisabled(disabled: boolean) {
-		if (this.commandOptions.handleDisabled) {
+		if (this.commandOptions().handleDisabled) {
 			// console.warn(">>>> disabled", { id: this.id, disabled });
 			this.renderer.setProperty(this.element.nativeElement, "disabled", disabled);
 		}
