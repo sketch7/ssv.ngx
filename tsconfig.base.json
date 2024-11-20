@@ -16,7 +16,8 @@
     "isolatedModules": true,
     "baseUrl": ".",
     "paths": {
-      "@ssv/ngx.command": ["libs/ngx.command/src/index.ts"]
+      "@ssv/ngx.command": ["libs/ngx.command/src/index.ts"],
+      "@ssv/ngx.ux": ["libs/ngx.ux/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
