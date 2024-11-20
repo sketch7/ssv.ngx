@@ -1,5 +1,5 @@
 {
-  "name": "ngx.ux",
+  "name": "@ssv/ngx.ux",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/ngx.ux/src",
   "prefix": "ssv",
