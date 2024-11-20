@@ -5,6 +5,7 @@
 - **command:** add `createCommand`/`createCommandAsync` which handles auto destroy with `DestroyRef` 
 - **command:** canExecute signal support
 - **deps:** update angular 17
+- **ux viewport:** add module `SsvUxViewportModule`
 
 ### Refactor
 

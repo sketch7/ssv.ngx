@@ -1,4 +1,5 @@
 export * from "./viewport-data/index";
+export { SsvUxViewportModule } from "./viewport.module";
 
 export { SsvViewportMatcherVarDirective, SsvViewportMatcherVarContext } from "./viewport-matcher-var.directive";
 export { SsvViewportMatcherDirective, SsvViewportMatcherContext } from "./viewport-matcher.directive";

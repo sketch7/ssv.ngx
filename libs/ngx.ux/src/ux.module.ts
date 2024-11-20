@@ -1,15 +1,11 @@
 import { NgModule } from "@angular/core";
 
-import { SsvViewportMatcherDirective, SsvViewportMatcherVarDirective } from "./viewport/index";
-import { ViewportDataPipe } from "./viewport/viewport-data/viewport-data.pipe";
+import { SsvUxViewportModule } from "./viewport/viewport.module";
 
 const EXPORTED_IMPORTS = [
-	SsvViewportMatcherDirective,
-	SsvViewportMatcherVarDirective,
-	ViewportDataPipe,
+	SsvUxViewportModule,
 ];
 
-// todo: create module for Viewport
 @NgModule({
 	imports: [EXPORTED_IMPORTS],
 	exports: [EXPORTED_IMPORTS]

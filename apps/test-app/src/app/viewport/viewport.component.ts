@@ -13,7 +13,7 @@ import {
 	ViewportDataConfig,
 	ViewportDataService,
 	ViewportDataMatchStrategy,
-	SsvUxModule
+	SsvUxViewportModule
 } from "@ssv/ngx.ux";
 import { JsonPipe } from "@angular/common";
 
@@ -24,7 +24,7 @@ import { JsonPipe } from "@angular/common";
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	standalone: true,
 	imports: [
-		SsvUxModule,
+		SsvUxViewportModule,
 		JsonPipe,
 	]
 })
