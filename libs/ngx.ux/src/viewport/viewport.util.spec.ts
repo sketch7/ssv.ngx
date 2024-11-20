@@ -1,5 +1,3 @@
-import _ from "lodash";
-
 import { EnumDictionary } from "../internal/internal.model";
 import {
 	isViewportConditionMatch as isViewportConditionMatch_,
@@ -41,7 +39,7 @@ describe("Viewport utils", () => {
 	describe("given default breakpoints", () => {
 
 		it("should match ViewportSizeType definition", () => {
-			const result = _.reduce(UX_VIEWPORT_DEFAULT_BREAKPOINTS, (r, _value, key) => {
+			const result = Object.keys(UX_VIEWPORT_DEFAULT_BREAKPOINTS).reduce((r, key) => {
 				const idx = ViewportSizeType[key as unknown as ViewportSizeType];
 
 				expect(idx).not.toBeUndefined();
