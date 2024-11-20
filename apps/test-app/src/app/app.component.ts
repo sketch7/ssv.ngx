@@ -1,7 +1,5 @@
 import { ChangeDetectionStrategy, Component, ViewEncapsulation } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { NxWelcomeComponent } from './nx-welcome.component';
-// import { NgxCommandComponent } from "@ssv/ngx.command";
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
@@ -18,7 +16,6 @@ interface LinkItem {
 @Component({
 	standalone: true,
 	imports: [
-		NxWelcomeComponent,
 		RouterModule,
 		MatToolbarModule,
 		MatSidenavModule,
