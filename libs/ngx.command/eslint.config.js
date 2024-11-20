@@ -1,42 +1,42 @@
-const nx = require('@nx/eslint-plugin');
-const baseConfig = require('../../eslint.config.js');
+const nx = require("@nx/eslint-plugin");
+const baseConfig = require("../../eslint.config.js");
 
 module.exports = [
 	...baseConfig,
 	{
-		files: ['**/*.json'],
+		files: ["**/*.json"],
 		rules: {
-			'@nx/dependency-checks': ['error', { ignoredFiles: ['{projectRoot}/eslint.config.{js,cjs,mjs}'] }],
+			"@nx/dependency-checks": ["error", { ignoredFiles: ["{projectRoot}/eslint.config.{js,cjs,mjs}"] }],
 		},
-		languageOptions: { parser: require('jsonc-eslint-parser') },
+		languageOptions: { parser: require("jsonc-eslint-parser") },
 	},
-	...nx.configs['flat/angular'],
-	...nx.configs['flat/angular-template'],
+	...nx.configs["flat/angular"],
+	...nx.configs["flat/angular-template"],
 	{
-		files: ['**/*.ts'],
+		files: ["**/*.ts"],
 		rules: {
-			'@angular-eslint/directive-selector': [
-				'error',
+			"@angular-eslint/directive-selector": [
+				"error",
 				{
-					type: 'attribute',
-					prefix: 'ssv',
-					style: 'camelCase',
+					type: "attribute",
+					prefix: "ssv",
+					style: "camelCase",
 				},
 			],
-			'@angular-eslint/component-selector': [
-				'error',
+			"@angular-eslint/component-selector": [
+				"error",
 				{
-					type: 'element',
-					prefix: 'ssv',
-					style: 'kebab-case',
+					type: "element",
+					prefix: "ssv",
+					style: "kebab-case",
 				},
 			],
-			'@angular-eslint/directive-selector': 'off',
-			'@angular-eslint/no-input-rename': 'off',
+			"@angular-eslint/directive-selector": "off",
+			"@angular-eslint/no-input-rename": "off",
 		},
 	},
 	{
-		files: ['**/*.html'],
+		files: ["**/*.html"],
 		// Override or add rules here
 		rules: {},
 	},

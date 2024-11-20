@@ -1,4 +1,4 @@
-import { InjectionToken, Injectable, Inject } from "@angular/core";
+import { InjectionToken, Injectable, inject } from "@angular/core";
 
 export const WINDOW = new InjectionToken<Window>("Window");
 
@@ -7,11 +7,7 @@ export const WINDOW = new InjectionToken<Window>("Window");
 })
 export class WindowRef {
 
-	constructor(
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-		@Inject(WINDOW) private window: any
-	) {
-	}
+	private readonly window = inject(WINDOW);
 
 	/** Window underlying native object. */
 	get native(): Window {

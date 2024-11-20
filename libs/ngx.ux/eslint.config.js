@@ -5,7 +5,9 @@ module.exports = [
 	...baseConfig,
 	{
 		files: ["**/*.json"],
-		rules: { "@nx/dependency-checks": ["error", { ignoredFiles: ["{projectRoot}/eslint.config.{js,cjs,mjs}"] }] },
+		rules: {
+			"@nx/dependency-checks": ["error", { ignoredFiles: ["{projectRoot}/eslint.config.{js,cjs,mjs}"] }],
+		},
 		languageOptions: { parser: require("jsonc-eslint-parser") },
 	},
 	...nx.configs["flat/angular"],
@@ -29,6 +31,8 @@ module.exports = [
 					style: "kebab-case",
 				},
 			],
+			"@angular-eslint/directive-selector": "off",
+			"@angular-eslint/no-input-rename": "off",
 		},
 	},
 	{
