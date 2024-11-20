@@ -28,20 +28,6 @@ Choose the version corresponding to your Angular version:
 
 # Usage
 
-## Register module
-
-```ts
-import { SsvUxModule } from "@ssv/ngx.ux";
-
-@NgModule({
-  imports: [
-    SsvUxModule
-  ]
-}
-export class AppModule {
-}
-```
-
 ## Viewport
 Provides utilities to handle responsiveness easier based on the viewport (view size)
 
@@ -154,10 +140,14 @@ Since in SSR there is no way to know the client viewport size, we should at leas
 The basic implementation allows to provide a device type `mobile`, `tablet` or `desktop` and there are static sizes for those.
 
 ```ts
-import { UX_VIEWPORT_SSR_DEVICE } from "@ssv/ngx.ux";
+import { withViewportSsrDevice } from "@ssv/ngx.ux";
 
 const deviceType = deviceTypeFromServer;
-{ provide: UX_VIEWPORT_SSR_DEVICE, useValue: deviceType },
+export const appConfig: ApplicationConfig = {
+  providers: [
+    withViewportSsrDevice(deviceType)
+  ]
+}
 ```
 
 The default implementation can also be replaced by implementing a small class as following:
@@ -173,11 +163,10 @@ export class SuperViewportServerSizeService {
 
 import { ViewportServerSizeService } from "@ssv/ngx.ux";
 
-@NgModule( {
+export const appConfig: ApplicationConfig = {
   providers: [
     { provide: ViewportServerSizeService, useClass: SuperViewportServerSizeService }
   ]
-}) export class AppModule {
 }
 ```
 
@@ -187,7 +176,7 @@ You can configure the existing resize polling speed and as well as provide your 
 
 ### Custom Breakpoints
 ```ts
-import { SsvUxModule, generateViewportSizeType } from "@ssv/ngx.ux";
+import { provideSsvUxViewportOptions, generateViewportSizeType } from "@ssv/ngx.ux";
 
 const breakpoints = { // custom breakpoints - key/width
   smallest: 500,
@@ -200,29 +189,25 @@ const breakpoints = { // custom breakpoints - key/width
   uhd: 3840
 };
 
-  imports: [
-    SsvUxModule.forRoot({
-      viewport: {
-        resizePollingSpeed: 66, // optional - defaults to 33
-        breakpoints // provide the custom breakpoints
-      }
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideSsvUxViewportOptions({
+      resizePollingSpeed: 66, // optional - defaults to 33
+      breakpoints // provide the custom breakpoints
     }),
-  ],
-```
 
-### Override existing Breakpoints
-```ts
-import { SsvUxModule, UX_VIEWPORT_DEFAULT_BREAKPOINTS } from "@ssv/ngx.ux";
-
-  imports: [
-    SsvUxModule.forRoot({
-      viewport: {
+    // override existing breakpoints
+    provideSsvUxViewportOptions(defaults => {
+      return {
         breakpoints: {
-          ...UX_VIEWPORT_DEFAULT_BREAKPOINTS, // use breakpoints provided with library
-          xxlarge1: 2000, // override xxlarge1
-          uhd: 3840 // add new breakpoint
+          ...defaults.breakpoints,
+          small: 1000,
         }
-      }
+      };
     }),
-  ],
+  ]
+}
+
+
+
 ```

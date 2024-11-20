@@ -19,7 +19,7 @@ const viewportSizeSSR: Record<DeviceType, ViewportSize> = {
 	},
 };
 
-export const UX_VIEWPORT_SSR_DEVICE = new InjectionToken<DeviceType>("@ssv/ngx.ux-config/viewport/ssr-device", {
+export const VIEWPORT_SSR_DEVICE = new InjectionToken<DeviceType>("UX_VIEWPORT_SSR_DEVICE", {
 	factory: () => DeviceType.desktop,
 });
 
@@ -28,7 +28,7 @@ export const UX_VIEWPORT_SSR_DEVICE = new InjectionToken<DeviceType>("@ssv/ngx.u
 })
 export class ViewportServerSizeService {
 
-	private readonly deviceType = inject(UX_VIEWPORT_SSR_DEVICE);
+	private readonly deviceType = inject(VIEWPORT_SSR_DEVICE);
 
 	get(): ViewportSize {
 		return viewportSizeSSR[this.deviceType] || viewportSizeSSR[DeviceType.desktop];

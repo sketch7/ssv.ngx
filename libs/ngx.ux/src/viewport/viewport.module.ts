@@ -1,7 +1,8 @@
 import { NgModule } from "@angular/core";
 
-import { SsvViewportMatcherDirective, SsvViewportMatcherVarDirective } from "./index";
 import { ViewportDataPipe } from "./viewport-data/viewport-data.pipe";
+import { SsvViewportMatcherVarDirective } from "./viewport-matcher-var.directive";
+import { SsvViewportMatcherDirective } from "./viewport-matcher.directive";
 
 const EXPORTED_IMPORTS = [
 	SsvViewportMatcherDirective,

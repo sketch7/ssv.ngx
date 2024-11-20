@@ -5,7 +5,7 @@ import { ViewportSizeTypeInfo } from "../viewport.model";
 import { ViewportService } from "../viewport.service";
 import { matchViewportData, ViewportDataConfig, ViewportDataMatchStrategy } from "./viewport-data-matcher";
 import { generateViewportRulesRangeFromDataMatcher, ViewportDataRule } from "./viewport-data.utils";
-import { UX_OPTIONS } from "../../ux.options";
+import { VIEWPORT_OPTIONS } from "../viewport.options";
 
 @Injectable({
 	providedIn: "root",
@@ -13,12 +13,12 @@ import { UX_OPTIONS } from "../../ux.options";
 export class ViewportDataService {
 
 	private readonly viewport = inject(ViewportService);
-	private readonly config = inject(UX_OPTIONS);
+	private readonly config = inject(VIEWPORT_OPTIONS);
 
 	/** Get data for match. */
 	get<T>(
 		dataConfig: ViewportDataConfig<T>,
-		strategy: ViewportDataMatchStrategy = this.config.viewport.defaultDataMatchStrategy,
+		strategy: ViewportDataMatchStrategy = this.config.defaultDataMatchStrategy,
 		sizeType: ViewportSizeTypeInfo = this.viewport.sizeTypeSnapshot
 	): T | undefined {
 		return matchViewportData(dataConfig, sizeType, strategy, this.viewport.sizeTypes, this.viewport.sizeTypeMap);
@@ -35,7 +35,7 @@ export class ViewportDataService {
 	/** Generate rules based on strategies for data. */
 	generateRules<T>(
 		dataConfig: ViewportDataConfig<T>,
-		strategy: ViewportDataMatchStrategy = this.config.viewport.defaultDataMatchStrategy,
+		strategy: ViewportDataMatchStrategy = this.config.defaultDataMatchStrategy,
 	): ViewportDataRule<T>[] {
 		return generateViewportRulesRangeFromDataMatcher(
 			dataConfig,

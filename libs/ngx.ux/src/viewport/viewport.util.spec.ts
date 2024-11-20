@@ -7,7 +7,7 @@ import {
 	getSizeTypeInfo,
 } from "./viewport.util";
 import { ComparisonOperation, ViewportMatchConditions, ViewportSizeType, ViewportSizeTypeInfo } from "./viewport.model";
-import { UX_VIEWPORT_DEFAULT_BREAKPOINTS } from "./viewport.const";
+import { UX_VIEWPORT_DEFAULT_BREAKPOINTS } from "./viewport.options";
 
 export enum TestViewportSizeType {
 	xsmall = 0,

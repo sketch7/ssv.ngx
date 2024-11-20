@@ -1,4 +1,4 @@
-## 3.0.0 (2024-11-20)
+## 3.0.0 (2024-11-21)
 
 ### 🚀 Features
 
@@ -6,6 +6,7 @@
 - **command:** canExecute signal support
 - **deps:** update angular 17
 - **ux viewport:** add module `SsvUxViewportModule`
+- **ux viewport:** add `withViewportSsrDevice` to set `UX_VIEWPORT_SSR_DEVICE`
 
 ### Refactor
 
@@ -20,7 +21,10 @@
 ### BREAKING CHANGES
 
 - **command:** remove `SsvCommandModule.forRoot` use `provideSsvCommandOptions` instead
-- **command:** remove `SsvUxModule.forRoot` use `provideSsvUxOptions` instead
+- **viewport:** remove `SsvUxModule.forRoot` use `provideSsvUxViewportOptions` instead
+- **viewport:** remove `UX_VIEWPORT_DEFAULT_BREAKPOINTS` (can be accessed via provide see README)
+- **viewport:** remove `UX_OPTIONS` - replaced with `VIEWPORT_OPTIONS`
+- **viewport:** rename `UX_VIEWPORT_SSR_DEVICE` to `VIEWPORT_SSR_DEVICE`
 
 ## 3.0.0-dev.1 (2024-10-26)
 

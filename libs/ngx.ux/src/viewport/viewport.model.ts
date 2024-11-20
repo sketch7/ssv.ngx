@@ -1,6 +1,3 @@
-import { Dictionary } from "../internal/internal.model";
-import { ViewportDataMatchStrategy } from "./viewport-data";
-
 /**
  * The indices of each breakpoint provided based on the `UX_VIEWPORT_DEFAULT_BREAKPOINTS`.
  * @see UX_VIEWPORT_DEFAULT_BREAKPOINTS
@@ -32,19 +29,6 @@ export enum DeviceType {
 	desktop = "desktop",
 	mobile = "mobile",
 	tablet = "tablet"
-}
-
-export interface UxViewportOptions {
-	/** Polling speed on resizing (in milliseconds). e.g. the higher the number the longer it takes to recalculate. */
-	resizePollingSpeed: number;
-
-	/** Breakpoints to use. Key needs to match the size type and the value the width threshold.
-	 * e.g. given width '1000' and `medium` is set to '992' => `large`.
-	 */
-	breakpoints: Dictionary<number>;
-
-	/** Default data match strategy to use. */
-	defaultDataMatchStrategy: ViewportDataMatchStrategy;
 }
 
 export interface ViewportSize {

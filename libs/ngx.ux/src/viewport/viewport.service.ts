@@ -17,7 +17,7 @@ import { WindowRef } from "../platform/window";
 import { ViewportServerSizeService } from "./viewport-server-size.service";
 import { generateViewportSizeTypeInfoList, generateViewportSizeTypeInfoRefs, getSizeTypeInfo } from "./viewport.util";
 import type { Dictionary } from "../internal/internal.model";
-import { UX_OPTIONS } from "../ux.options";
+import { VIEWPORT_OPTIONS } from "./viewport.options";
 
 @Injectable({
 	providedIn: "root",
@@ -59,8 +59,8 @@ export class ViewportService {
 		private windowRef: WindowRef,
 		private viewportServerSize: ViewportServerSizeService,
 	) {
-		const config = inject(UX_OPTIONS);
-		this._sizeTypes = generateViewportSizeTypeInfoList(config.viewport.breakpoints);
+		const config = inject(VIEWPORT_OPTIONS);
+		this._sizeTypes = generateViewportSizeTypeInfoList(config.breakpoints);
 		this._sizeTypeMap = generateViewportSizeTypeInfoRefs(this._sizeTypes);
 
 		if (windowRef.hasNative) {
@@ -70,7 +70,7 @@ export class ViewportService {
 			);
 
 			this.resize$ = this.resizeSnap$.pipe(
-				auditTime(config.viewport.resizePollingSpeed),
+				auditTime(config.resizePollingSpeed),
 				share(),
 			);
 		} else {
