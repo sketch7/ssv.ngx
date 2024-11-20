@@ -39,6 +39,7 @@ export class AppComponent {
 	links: LinkItem[] = [
 		// { path: ["/"], title: "Home", activeOptions: { exact: true } },
 		{ path: ["/command"], title: "Command" },
+		{ path: ["/ux-viewport"], title: "UX Viewport" },
 	];
 
 }
