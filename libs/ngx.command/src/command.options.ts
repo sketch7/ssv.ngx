@@ -28,18 +28,22 @@ export const COMMAND_OPTIONS = new InjectionToken<CommandOptions>("SSV_COMMAND_O
 	factory: () => DEFAULT_OPTIONS,
 });
 
-export function provideSsvCommandOptions(options: Partial<CommandOptions> | (() => Partial<CommandOptions>)): EnvironmentProviders {
-	let opts = typeof options === "function" ? options() : options;
-	opts = opts
-		? {
-			...DEFAULT_OPTIONS,
-			...opts,
-		}
-		: DEFAULT_OPTIONS;
+export function provideSsvCommandOptions(
+	options: Partial<CommandOptions> | ((defaults: Readonly<CommandOptions>) => Partial<CommandOptions>)
+): EnvironmentProviders {
 	return makeEnvironmentProviders([
 		{
-			provide: DEFAULT_OPTIONS,
-			useValue: opts,
+			provide: COMMAND_OPTIONS,
+			useFactory: () => {
+				let opts = typeof options === "function" ? options(DEFAULT_OPTIONS) : options;
+				opts = opts
+					? {
+						...DEFAULT_OPTIONS,
+						...opts,
+					}
+					: DEFAULT_OPTIONS;
+				return opts;
+			},
 		},
 	]);
 }
