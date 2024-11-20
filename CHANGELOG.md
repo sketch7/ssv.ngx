@@ -57,3 +57,6 @@
 
 ## PRE 3.X Command Changelogs
 https://github.com/sketch7/ngx.command/blob/master/CHANGELOG.md
+
+## PRE 3.X UX Changelogs
+https://github.com/sketch7/ngx.ux/blob/master/CHANGELOG.md
