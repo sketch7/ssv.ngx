@@ -1,5 +1,5 @@
+export { SsvUxModule } from "./ux.module";
+export { provideSsvUxOptions, UX_OPTIONS, type UxOptions } from "./ux.options";
 export * from "./viewport/index";
 
-export * from "./config";
-export * from "./module";
-export * from "./version";
+export { VERSION } from "./version";

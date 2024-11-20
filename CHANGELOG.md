@@ -9,6 +9,7 @@
 ### Refactor
 
 - **deps:** rxjs remove `"rxjs/operators`
+- **all:** convert all components to standalone
 
 ### Chore
 
@@ -18,6 +19,7 @@
 ### BREAKING CHANGES
 
 - **command:** remove `SsvCommandModule.forRoot` use `provideSsvCommandOptions` instead
+- **command:** remove `SsvUxModule.forRoot` use `provideSsvUxOptions` instead
 
 ## 3.0.0-dev.1 (2024-10-26)
 

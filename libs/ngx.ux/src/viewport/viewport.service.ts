@@ -12,12 +12,12 @@ import {
 	auditTime,
 } from "rxjs";
 
-import { UX_CONFIG } from "../config";
 import { ViewportSizeTypeInfo, ViewportSize } from "./viewport.model";
 import { WindowRef } from "../platform/window";
 import { ViewportServerSizeService } from "./viewport-server-size.service";
 import { generateViewportSizeTypeInfoList, generateViewportSizeTypeInfoRefs, getSizeTypeInfo } from "./viewport.util";
 import type { Dictionary } from "../internal/internal.model";
+import { UX_OPTIONS } from "../ux.options";
 
 @Injectable({
 	providedIn: "root",
@@ -59,7 +59,7 @@ export class ViewportService {
 		private windowRef: WindowRef,
 		private viewportServerSize: ViewportServerSizeService,
 	) {
-		const config = inject(UX_CONFIG);
+		const config = inject(UX_OPTIONS);
 		this._sizeTypes = generateViewportSizeTypeInfoList(config.viewport.breakpoints);
 		this._sizeTypeMap = generateViewportSizeTypeInfoRefs(this._sizeTypes);
 

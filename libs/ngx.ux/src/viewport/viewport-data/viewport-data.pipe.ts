@@ -4,10 +4,11 @@ import { Pipe, PipeTransform, OnDestroy, ChangeDetectorRef } from "@angular/core
 import { ViewportDataConfig, ViewportDataMatchStrategy, ViewportDataMatchStrategyLiteral } from "./viewport-data-matcher";
 import { ViewportDataService } from "./viewport-data.service";
 
- 
+
 @Pipe({
 	name: "ssvViewportData",
-	pure: false
+	pure: false,
+	standalone: true,
 })
 export class ViewportDataPipe implements PipeTransform, OnDestroy {
 

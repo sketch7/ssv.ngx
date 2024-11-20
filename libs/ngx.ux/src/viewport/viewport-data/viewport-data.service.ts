@@ -1,11 +1,11 @@
 import { inject, Injectable } from "@angular/core";
 import { Observable, distinctUntilChanged, map } from "rxjs";
-import { UX_CONFIG } from "../../config";
 
 import { ViewportSizeTypeInfo } from "../viewport.model";
 import { ViewportService } from "../viewport.service";
 import { matchViewportData, ViewportDataConfig, ViewportDataMatchStrategy } from "./viewport-data-matcher";
 import { generateViewportRulesRangeFromDataMatcher, ViewportDataRule } from "./viewport-data.utils";
+import { UX_OPTIONS } from "../../ux.options";
 
 @Injectable({
 	providedIn: "root",
@@ -13,7 +13,7 @@ import { generateViewportRulesRangeFromDataMatcher, ViewportDataRule } from "./v
 export class ViewportDataService {
 
 	private readonly viewport = inject(ViewportService);
-	private readonly config = inject(UX_CONFIG);
+	private readonly config = inject(UX_OPTIONS);
 
 	/** Get data for match. */
 	get<T>(

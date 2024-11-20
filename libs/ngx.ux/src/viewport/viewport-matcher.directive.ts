@@ -30,6 +30,7 @@ export class SsvViewportMatcherContext implements ViewportMatchConditions {
 @Directive({
 	selector: "[ssvViewportMatcher]",
 	exportAs: "ssvViewportMatcher",
+	standalone: true,
 })
 export class SsvViewportMatcherDirective implements OnInit, OnDestroy {
 

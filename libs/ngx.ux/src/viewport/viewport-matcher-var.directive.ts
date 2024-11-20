@@ -29,6 +29,7 @@ export class SsvViewportMatcherVarContext {
 
 @Directive({
 	selector: `[${NAME_CAMEL}]`,
+	standalone: true,
 })
 export class SsvViewportMatcherVarDirective implements OnInit, OnDestroy {
 
