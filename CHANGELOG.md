@@ -1,4 +1,4 @@
-## 3.0.0 (2024-11-01)
+## 3.0.0 (2024-11-20)
 
 ### 🚀 Features
 
@@ -12,7 +12,8 @@
 
 ### Chore
 
-- move library repo + migrate to nx
+- move `@ssv/ngx.command` library repo + migrate to nx
+- move `@ssv/ngx.ux` library repo + migrate to nx
 
 ### BREAKING CHANGES
 

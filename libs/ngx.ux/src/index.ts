@@ -1,1 +1,5 @@
-export * from "./lib/ngx.ux/ngx.ux.component";
+export * from "./viewport/index";
+
+export * from "./config";
+export * from "./module";
+export * from "./version";

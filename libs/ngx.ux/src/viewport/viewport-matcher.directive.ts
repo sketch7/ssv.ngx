@@ -9,8 +9,7 @@ import {
 	TemplateRef,
 	ChangeDetectorRef,
 } from "@angular/core";
-import { Subscription, Subject } from "rxjs";
-import { tap, filter, pairwise, startWith } from "rxjs/operators";
+import { Subscription, Subject, tap, filter, pairwise, startWith } from "rxjs";
 
 import { ViewportService } from "./viewport.service";
 import {

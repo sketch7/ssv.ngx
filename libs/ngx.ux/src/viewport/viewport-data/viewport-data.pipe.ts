@@ -1,11 +1,10 @@
-import { Subscription } from "rxjs";
-import { tap } from "rxjs/operators";
+import { Subscription, tap } from "rxjs";
 import { Pipe, PipeTransform, OnDestroy, ChangeDetectorRef } from "@angular/core";
 
 import { ViewportDataConfig, ViewportDataMatchStrategy, ViewportDataMatchStrategyLiteral } from "./viewport-data-matcher";
 import { ViewportDataService } from "./viewport-data.service";
 
-/* eslint-disable @angular-eslint/no-pipe-impure */
+ 
 @Pipe({
 	name: "ssvViewportData",
 	pure: false

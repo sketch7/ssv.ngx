@@ -1,6 +1,8 @@
-import { Injectable, Inject } from "@angular/core";
-import { Observable, fromEvent, of } from "rxjs";
+import { Injectable, inject } from "@angular/core";
 import {
+	Observable,
+	fromEvent,
+	of,
 	map,
 	tap,
 	distinctUntilChanged,
@@ -8,14 +10,14 @@ import {
 	share,
 	shareReplay,
 	auditTime,
-} from "rxjs/operators";
+} from "rxjs";
 
-import { UxOptions, UX_CONFIG } from "../config";
+import { UX_CONFIG } from "../config";
 import { ViewportSizeTypeInfo, ViewportSize } from "./viewport.model";
 import { WindowRef } from "../platform/window";
 import { ViewportServerSizeService } from "./viewport-server-size.service";
 import { generateViewportSizeTypeInfoList, generateViewportSizeTypeInfoRefs, getSizeTypeInfo } from "./viewport.util";
-import { Dictionary } from "../internal/internal.model";
+import type { Dictionary } from "../internal/internal.model";
 
 @Injectable({
 	providedIn: "root",
@@ -56,8 +58,8 @@ export class ViewportService {
 	constructor(
 		private windowRef: WindowRef,
 		private viewportServerSize: ViewportServerSizeService,
-		@Inject(UX_CONFIG) config: UxOptions,
 	) {
+		const config = inject(UX_CONFIG);
 		this._sizeTypes = generateViewportSizeTypeInfoList(config.viewport.breakpoints);
 		this._sizeTypeMap = generateViewportSizeTypeInfoRefs(this._sizeTypes);
 

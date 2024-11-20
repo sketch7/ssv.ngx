@@ -1,7 +1,6 @@
-import { Inject, Injectable } from "@angular/core";
-import { Observable } from "rxjs";
-import { distinctUntilChanged, map } from "rxjs/operators";
-import { UX_CONFIG, UxOptions } from "../../config";
+import { inject, Injectable } from "@angular/core";
+import { Observable, distinctUntilChanged, map } from "rxjs";
+import { UX_CONFIG } from "../../config";
 
 import { ViewportSizeTypeInfo } from "../viewport.model";
 import { ViewportService } from "../viewport.service";
@@ -13,11 +12,8 @@ import { generateViewportRulesRangeFromDataMatcher, ViewportDataRule } from "./v
 })
 export class ViewportDataService {
 
-	constructor(
-		private viewport: ViewportService,
-		@Inject(UX_CONFIG) private config: UxOptions,
-	) {
-	}
+	private readonly viewport = inject(ViewportService);
+	private readonly config = inject(UX_CONFIG);
 
 	/** Get data for match. */
 	get<T>(

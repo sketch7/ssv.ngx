@@ -1,5 +1,5 @@
-import { Dictionary } from "../../internal/internal.model";
-import { ViewportSizeTypeInfo } from "../viewport.model";
+import type { Dictionary } from "../../internal/internal.model";
+import type { ViewportSizeTypeInfo } from "../viewport.model";
 
 export type ViewportDataConfig<TValue = unknown, TData = Dictionary<TValue>> = TData & {
 	default?: TValue
@@ -158,7 +158,7 @@ function closestMatch<T>(
 	let downIndex = currentSizeType.type;
 	let upIndex = currentSizeType.type;
 
-	// eslint-disable-next-line @typescript-eslint/prefer-for-of
+	 
 	for (let index = 0; index < sizeTypes.length; index++) {
 		for (const idx of isSmallerFirst ? [--downIndex, ++upIndex] : [++upIndex, --downIndex]) {
 			const sizeType = sizeTypes[idx];

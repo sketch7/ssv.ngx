@@ -7,8 +7,7 @@ import {
 	ViewContainerRef,
 	EmbeddedViewRef,
 } from "@angular/core";
-import { combineLatest, ReplaySubject, Subject } from "rxjs";
-import { tap, map, takeUntil } from "rxjs/operators";
+import { combineLatest, ReplaySubject, Subject, tap, map, takeUntil } from "rxjs";
 
 import { ViewportService } from "./viewport.service";
 import {
