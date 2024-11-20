@@ -1,9 +1,9 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
-import { provideRouter } from '@angular/router';
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { ApplicationConfig, provideZoneChangeDetection } from "@angular/core";
+import { provideRouter } from "@angular/router";
+import { provideAnimationsAsync } from "@angular/platform-browser/animations/async";
 import { provideSsvCommandOptions } from "@ssv/ngx.command";
 
-import { appRoutes } from './app.routes';
+import { appRoutes } from "./app.routes";
 
 export const appConfig: ApplicationConfig = {
 	providers: [

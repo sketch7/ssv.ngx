@@ -1,4 +1,5 @@
 const nx = require("@nx/eslint-plugin");
+const stylisticTs = require("@stylistic/eslint-plugin-ts");
 
 module.exports = [
 	...nx.configs["flat/base"],
@@ -36,5 +37,20 @@ module.exports = [
 		files: ["**/*.json"],
 		rules: { "@nx/dependency-checks": ["error", { ignoredFiles: ["{projectRoot}/eslint.config.{js,cjs,mjs}"] }] },
 		languageOptions: { parser: require("jsonc-eslint-parser") },
+	},
+	{
+		files: ["**/*.ts", "**/*.tsx"],
+		plugins: {
+			"@stylistic/ts": stylisticTs,
+		},
+		rules: {
+			"@stylistic/ts/quotes": [
+				"error",
+				"double",
+				{
+					allowTemplateLiterals: true,
+				},
+			],
+		},
 	},
 ];

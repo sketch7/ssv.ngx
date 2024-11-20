@@ -1,4 +1,4 @@
-import { Route } from '@angular/router';
+import { Route } from "@angular/router";
 
 import { ExampleCommandComponent } from "./command/example-command.component";
 import { HomeComponent } from "./home/home.component";
