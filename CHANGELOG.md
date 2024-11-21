@@ -62,8 +62,6 @@
 - Konstantin  Kuptsov
 - Stephen Lautier @stephenlautier
 
-## PRE 3.X Command Changelogs
-https://github.com/sketch7/ngx.command/blob/master/CHANGELOG.md
-
-## PRE 3.X UX Changelogs
-https://github.com/sketch7/ngx.ux/blob/master/CHANGELOG.md
+## Pre 3.x changelog
+- [ngx.command](https://github.com/sketch7/ngx.command/blob/master/CHANGELOG.md)
+- [ngx.ux](https://github.com/sketch7/ngx.ux/blob/master/CHANGELOG.md)
