@@ -146,6 +146,11 @@ const deviceType = deviceTypeFromServer;
 export const appConfig: ApplicationConfig = {
   providers: [
     withViewportSsrDevice(deviceType)
+    // or
+    provideSsvUxViewportOptions(
+      {},
+      withViewportSsrDevice(deviceType)
+    )
   ]
 }
 ```
