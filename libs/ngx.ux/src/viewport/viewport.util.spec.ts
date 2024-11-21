@@ -1,4 +1,3 @@
-import { EnumDictionary } from "../internal/internal.model";
 import {
 	isViewportConditionMatch as isViewportConditionMatch_,
 	generateViewportSizeTypeInfoList,
@@ -18,7 +17,7 @@ export enum TestViewportSizeType {
 	fullHd = 5,
 }
 
-const breakpoints: EnumDictionary<keyof typeof TestViewportSizeType, number> = {
+const breakpoints: Record<keyof typeof TestViewportSizeType, number> = {
 	xsmall: 450,
 	small: 767,
 	medium: 992,
@@ -27,7 +26,7 @@ const breakpoints: EnumDictionary<keyof typeof TestViewportSizeType, number> = {
 	fullHd: 1920,
 };
 const sizeTypes = generateViewportSizeTypeInfoList(breakpoints);
-const sizeRefs = generateViewportSizeTypeInfoRefs(sizeTypes) as EnumDictionary<keyof typeof TestViewportSizeType, ViewportSizeTypeInfo>;
+const sizeRefs = generateViewportSizeTypeInfoRefs(sizeTypes) as Record<keyof typeof TestViewportSizeType, ViewportSizeTypeInfo>;
 
 const isViewportConditionMatch = (
 	evaluateSize: ViewportSizeTypeInfo,

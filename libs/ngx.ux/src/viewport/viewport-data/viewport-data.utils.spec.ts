@@ -1,4 +1,3 @@
-import { EnumDictionary } from "../../internal/internal.model";
 import { generateViewportSizeTypeInfoList, generateViewportSizeTypeInfoRefs, } from "../viewport.util";
 import { ViewportSizeTypeInfo } from "../viewport.model";
 import {
@@ -7,9 +6,9 @@ import {
 import { TestViewportSizeType } from "../viewport.util.spec";
 import { ViewportDataConfig, ViewportDataMatchStrategy } from "./viewport-data-matcher";
 
-type TestViewportDataConfig<T> = ViewportDataConfig<T, Partial<EnumDictionary<keyof typeof TestViewportSizeType, T>>>;
+type TestViewportDataConfig<T> = ViewportDataConfig<T, Partial<Record<keyof typeof TestViewportSizeType, T>>>;
 
-const breakpoints: EnumDictionary<keyof typeof TestViewportSizeType, number> = {
+const breakpoints: Record<keyof typeof TestViewportSizeType, number> = {
 	xsmall: 450,
 	small: 767,
 	medium: 992,
@@ -19,7 +18,7 @@ const breakpoints: EnumDictionary<keyof typeof TestViewportSizeType, number> = {
 };
 
 const sizeTypes = generateViewportSizeTypeInfoList(breakpoints);
-const sizeRefs = generateViewportSizeTypeInfoRefs(sizeTypes) as EnumDictionary<keyof typeof TestViewportSizeType, ViewportSizeTypeInfo>;
+const sizeRefs = generateViewportSizeTypeInfoRefs(sizeTypes) as Record<keyof typeof TestViewportSizeType, ViewportSizeTypeInfo>;
 
 const generateViewportRulesRangeFromDataMatcher = <T>(
 	dataConfig: ViewportDataConfig<T>,
