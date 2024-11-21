@@ -1,4 +1,3 @@
-[projectUri]: https://github.com/sketch7/ngx.command
 [npm]: https://www.npmjs.com
 [commandpatternwiki]: https://en.wikipedia.org/wiki/Command_pattern
 

@@ -11,3 +11,4 @@ Choose the version corresponding to your Angular version:
  | 4 to 9  | 1.x+    |
 
 - [@ssv/ngx.command](./libs/ngx.command/README.md)
+- [@ssv/ngx.ux](./libs/ngx.ux/README.md)
