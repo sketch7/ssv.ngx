@@ -1,8 +1,8 @@
-@import "@app/vars";
+@use "@app/vars";
 
-$var-boolean-value-color: $azure-radiance;
-$var-object-value-color: $azure-radiance;
-$var-string-value-color: $antique-brass;
+$var-boolean-value-color: vars.$azure-radiance;
+$var-object-value-color: vars.$azure-radiance;
+$var-string-value-color: vars.$antique-brass;
 $var-prop-color: #9cdcfe;
 $var-code-font: "consolas";
 
@@ -74,7 +74,7 @@ fieldset {
 
 .matcher-dummy-container {
 	display: block;
-	background: rgba($black, 0.4);
+	background: rgba(vars.$black, 0.4);
 	padding: 1em;
 	margin: 0.5em;
 
