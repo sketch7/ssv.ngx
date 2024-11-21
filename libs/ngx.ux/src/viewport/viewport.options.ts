@@ -40,7 +40,8 @@ export const VIEWPORT_OPTIONS = new InjectionToken<UxViewportOptions>("SSV_UX_VI
 });
 
 export function provideSsvUxViewportOptions(
-	options: Partial<UxViewportOptions> | ((defaults: Readonly<UxViewportOptions>) => Partial<UxViewportOptions>)
+	options: Partial<UxViewportOptions> | ((defaults: Readonly<UxViewportOptions>) => Partial<UxViewportOptions>),
+	...features: EnvironmentProviders[]
 ): EnvironmentProviders {
 	return makeEnvironmentProviders([
 		{
@@ -56,6 +57,7 @@ export function provideSsvUxViewportOptions(
 				return opts;
 			},
 		},
+		...features,
 	]);
 }
 

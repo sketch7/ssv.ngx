@@ -17,12 +17,13 @@ export const appConfig: ApplicationConfig = {
 			hasDisabledDelay: false
 		}),
 
-		// withViewportSsrDevice(() => DeviceType.mobile),
 		provideSsvUxViewportOptions({
 			// breakpoints: {
 			// 	small: 1000,
 			// }
-		}),
+		},
+		//  withViewportSsrDevice(() => DeviceType.mobile)
+		),
 		// provideSsvUxViewportOptions(defaults => {
 		// 	return {
 		// 		breakpoints: {
