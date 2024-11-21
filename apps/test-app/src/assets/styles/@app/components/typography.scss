@@ -1,9 +1,10 @@
-@import "../vars";
+@use "../vars";
+
 
 body {
 	// color: $body-text-color;
 	// font-family: $base-font-family;
-	font-size: $base-font-size;
+	// font-size: vars.$base-font-size;
 }
 
 h1,
@@ -13,11 +14,11 @@ h4,
 h5,
 h6 {
 	// color: $heading-color;
-	font-family: $heading-font-family;
+	font-family: vars.$heading-font-family;
 }
 
 h1 {
-	font-size: $font-size-xl;
+	font-size: vars.$font-size-xl;
 	font-weight: 300;
 	line-height: 1;
 	letter-spacing: -0.04em;
@@ -41,7 +42,7 @@ h3 {
 }
 
 a {
-	color: $link-color;
+	color: vars.$link-color;
 	text-shadow: none;
 	text-decoration: none;
 	outline: 0 !important;
@@ -49,7 +50,7 @@ a {
 	&:active,
 	&:focus,
 	&:hover {
-		color: $link-hover-color;
+		color: vars.$link-hover-color;
 	}
 }
 
@@ -73,7 +74,7 @@ strong {
 }
 
 .text-accent {
-	color: $accent-color;
+	color: vars.$accent-color;
 }
 
 a {
@@ -81,13 +82,13 @@ a {
 		&:active,
 		&:focus,
 		&:hover {
-			color: $accent-highlight-color;
+			color: vars.$accent-highlight-color;
 		}
 	}
 }
 
 input {
-	font-size: $base-font-size;
+	font-size: vars.$base-font-size;
 }
 
 .text {
