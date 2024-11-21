@@ -1,12 +1,10 @@
-import { ChangeDetectionStrategy, Component, ViewEncapsulation } from '@angular/core';
-import { RouterModule } from '@angular/router';
-import { NxWelcomeComponent } from './nx-welcome.component';
-// import { NgxCommandComponent } from "@ssv/ngx.command";
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatListModule } from '@angular/material/list';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
+import { ChangeDetectionStrategy, Component, ViewEncapsulation } from "@angular/core";
+import { RouterModule } from "@angular/router";
+import { MatToolbarModule } from "@angular/material/toolbar";
+import { MatSidenavModule } from "@angular/material/sidenav";
+import { MatListModule } from "@angular/material/list";
+import { MatIconModule } from "@angular/material/icon";
+import { MatButtonModule } from "@angular/material/button";
 
 interface LinkItem {
 	title: string;
@@ -18,7 +16,6 @@ interface LinkItem {
 @Component({
 	standalone: true,
 	imports: [
-		NxWelcomeComponent,
 		RouterModule,
 		MatToolbarModule,
 		MatSidenavModule,
@@ -26,19 +23,20 @@ interface LinkItem {
 		MatIconModule,
 		MatButtonModule,
 	],
-	selector: 'app-root',
-	host: { class: 'app' },
-	templateUrl: './app.component.html',
-	styleUrl: './app.component.scss',
+	selector: "app-root",
+	host: { class: "app" },
+	templateUrl: "./app.component.html",
+	styleUrl: "./app.component.scss",
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	encapsulation: ViewEncapsulation.None,
 })
 export class AppComponent {
-	title = 'test-app';
+	title = "test-app";
 
 	links: LinkItem[] = [
 		// { path: ["/"], title: "Home", activeOptions: { exact: true } },
 		{ path: ["/command"], title: "Command" },
+		{ path: ["/ux-viewport"], title: "UX Viewport" },
 	];
 
 }

@@ -1,8 +1,8 @@
 import { Component, ChangeDetectionStrategy, ChangeDetectorRef, signal, inject, DestroyRef, } from "@angular/core";
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from "@angular/material/card";
+import { MatButtonModule } from "@angular/material/button";
 import { MatIconModule } from "@angular/material/icon";
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 
 import { BehaviorSubject, timer, Observable, tap, filter, map, distinctUntilChanged } from "rxjs";
 import { CommandAsync, createCommandAsync, SsvCommandModule } from "@ssv/ngx.command";

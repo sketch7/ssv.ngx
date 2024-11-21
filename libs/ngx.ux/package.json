@@ -1,16 +1,18 @@
 {
-  "name": "@ssv/ngx.command",
+  "name": "@ssv/ngx.ux",
   "version": "0.0.0-PLACEHOLDER",
   "versionSuffix": "",
-  "description": "Command pattern implementation for angular. Command used to encapsulate information which is needed to perform an action.",
+  "description": "UX essentials for building apps, utilities which enables you writing richer apps easier.",
   "keywords": [
     "sketch7",
     "ngx",
     "angular",
     "ssv",
-    "command",
-    "pattern",
-    "ui"
+    "ux",
+    "ui",
+    "viewport",
+    "uiutils",
+    "cdk"
   ],
   "author": "Stephen Lautier <stephen.lautier@outlook.com>",
   "license": "MIT",
@@ -22,7 +24,6 @@
   "dependencies": {},
   "peerDependencies": {
     "@angular/core": ">=17.0.0",
-    "@angular/forms": ">=17.0.0",
     "rxjs": ">=6.0.0"
   },
   "sideEffects": false

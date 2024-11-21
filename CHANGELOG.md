@@ -1,22 +1,30 @@
-## 3.0.0 (2024-11-01)
+## 3.0.0 (2024-11-21)
 
 ### 🚀 Features
 
 - **command:** add `createCommand`/`createCommandAsync` which handles auto destroy with `DestroyRef` 
 - **command:** canExecute signal support
 - **deps:** update angular 17
+- **ux viewport:** add module `SsvUxViewportModule`
+- **ux viewport:** add `withViewportSsrDevice` to set `UX_VIEWPORT_SSR_DEVICE`
 
 ### Refactor
 
 - **deps:** rxjs remove `"rxjs/operators`
+- **all:** convert all components to standalone
 
 ### Chore
 
-- move library repo + migrate to nx
+- move `@ssv/ngx.command` library repo + migrate to nx
+- move `@ssv/ngx.ux` library repo + migrate to nx
 
 ### BREAKING CHANGES
 
 - **command:** remove `SsvCommandModule.forRoot` use `provideSsvCommandOptions` instead
+- **viewport:** remove `SsvUxModule.forRoot` use `provideSsvUxViewportOptions` instead
+- **viewport:** remove `UX_VIEWPORT_DEFAULT_BREAKPOINTS` (can be accessed via provide see README)
+- **viewport:** remove `UX_OPTIONS` - replaced with `VIEWPORT_OPTIONS`
+- **viewport:** rename `UX_VIEWPORT_SSR_DEVICE` to `VIEWPORT_SSR_DEVICE`
 
 ## 3.0.0-dev.1 (2024-10-26)
 
@@ -54,5 +62,6 @@
 - Konstantin  Kuptsov
 - Stephen Lautier @stephenlautier
 
-## PRE 3.X Command Changelogs
-https://github.com/sketch7/ngx.command/blob/master/CHANGELOG.md
+## Pre 3.x changelog
+- [ngx.command](https://github.com/sketch7/ngx.command/blob/master/CHANGELOG.md)
+- [ngx.ux](https://github.com/sketch7/ngx.ux/blob/master/CHANGELOG.md)
