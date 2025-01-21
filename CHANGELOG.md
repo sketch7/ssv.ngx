@@ -24,6 +24,7 @@
 - **viewport:** remove `SsvUxModule.forRoot` use `provideSsvUxViewportOptions` instead
 - **viewport:** remove `UX_VIEWPORT_DEFAULT_BREAKPOINTS` (can be accessed via provide see README)
 - **viewport:** remove `UX_OPTIONS` - replaced with `VIEWPORT_OPTIONS`
+- **viewport:** remove `MODULE_CONFIG_DATA` replaced with `VIEWPORT_OPTIONS` (without `viewport: {}`)
 - **viewport:** rename `UX_VIEWPORT_SSR_DEVICE` to `VIEWPORT_SSR_DEVICE`
 
 ## 3.0.0-dev.1 (2024-10-26)
