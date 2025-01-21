@@ -14,28 +14,29 @@ export type CanExecute = Signal<boolean> | Observable<boolean>;
 /** Creates an async {@link Command}. Must be used within an injection context.
  * NOTE: this auto injects `DestroyRef` and handles auto destroy. {@link ICommand.autoDestroy} should not be used.
  */
-export function createCommandAsync(
+export function commandAsync(
 	execute: ExecuteAsyncFn,
 	canExecute$?: CanExecute,
 ): Command {
-	return createCommand(execute, canExecute$, true);
+	return command(execute, canExecute$, true);
 }
 
 /** Creates a {@link Command}. Must be used within an injection context.
  * NOTE: this auto injects `DestroyRef` and handles auto destroy. {@link ICommand.autoDestroy} should not be used.
  */
-export function createCommand(
+export function command(
 	execute: ExecuteFn,
 	canExecute$?: CanExecute,
 	isAsync?: boolean,
 ): Command {
+	// todo: add injector/destroyRef to the command (needs overload)
 	const destroyRef = inject(DestroyRef);
 
 	const cmd = new Command(execute, canExecute$, isAsync);
 	cmd.autoDestroy = false;
 
 	destroyRef.onDestroy(() => {
-		// console.warn("[createCommandAsync::destroy]");
+		// console.warn("[command::destroy]");
 		cmd.destroy();
 	});
 	return cmd;
