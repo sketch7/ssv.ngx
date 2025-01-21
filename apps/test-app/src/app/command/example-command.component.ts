@@ -5,7 +5,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 
 import { BehaviorSubject, timer, Observable, tap, filter, map, distinctUntilChanged } from "rxjs";
-import { CommandAsync, createCommandAsync, SsvCommandModule } from "@ssv/ngx.command";
+import { CommandAsync, commandAsync, SsvCommandModule } from "@ssv/ngx.command";
 import { CommonModule } from "@angular/common";
 
 interface Hero {
@@ -54,7 +54,7 @@ export class ExampleCommandComponent {
 		this.saveRedux.bind(this),
 		this.isValidRedux$,
 	);
-	readonly containerDestroySaveCmd = createCommandAsync(() => this.save$());
+	readonly containerDestroySaveCmd = commandAsync(() => this.save$());
 
 	heroes: Hero[] = [
 		{ key: "rexxar", name: "Rexxar" },

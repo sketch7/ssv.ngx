@@ -31,18 +31,15 @@ Choose the version corresponding to your Angular version:
 In order to start working with Command, you need to create a new instance of it.
 
 ```ts
-import { Command, CommandAsync, ICommand } from "@ssv/ngx.command";
+import { command, commandAsync } from "@ssv/ngx.command";
 
 isValid$ = new BehaviorSubject(false);
 
-// use `CommandAsync` when execute function returns an observable/promise OR else 3rd argument must be true.
-saveCmd = new Command(() => this.save()), this.isValid$);
+// non async
+saveCmd = command(() => this.save()), this.isValid$);
 
-// using CommandAsync
-saveCmd = new CommandAsync(() => Observable.timer(2000), this.isValid$);
-
-// using ICommand interface
-saveCmd: ICommand = new CommandAsync(() => Observable.timer(2000), this.isValid$);
+// async - returns an observable/promise.
+saveCmd = commandAsync(() => Observable.timer(2000), this.isValid$);
 ```
 
 ## Command Attribute (Directive)
@@ -135,12 +132,12 @@ In order to use with `NgForm` easily, you can use the following utility method.
 This will make canExecute respond to `form.valid` and for `form.dirty` - also can optionally disable validity or dirty.
 
 ```ts
-import { CommandAsync, canExecuteFromNgForm } from "@ssv/ngx.command";
+import { commandAsync, canExecuteFromNgForm } from "@ssv/ngx.command";
 
-loginCmd = new CommandAsync(x => this.login(), canExecuteFromNgForm(this.form));
+loginCmd = commandAsync(x => this.login(), canExecuteFromNgForm(this.form));
 
 // options - disable dirty check
-loginCmd = new CommandAsync(x => this.login(), canExecuteFromNgForm(this.form, {
+loginCmd = commandAsync(x => this.login(), canExecuteFromNgForm(this.form, {
   dirty: false
 }));
 
