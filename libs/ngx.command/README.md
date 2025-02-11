@@ -33,13 +33,19 @@ In order to start working with Command, you need to create a new instance of it.
 ```ts
 import { command, commandAsync } from "@ssv/ngx.command";
 
-isValid$ = new BehaviorSubject(false);
+const isValid = signal(false);
+const isValid$ = new BehaviorSubject(false);
 
 // non async
-saveCmd = command(() => this.save()), this.isValid$);
+saveCmd = command(() => this.save(), isValid);
 
 // async - returns an observable/promise.
-saveCmd = commandAsync(() => Observable.timer(2000), this.isValid$);
+saveCmd = commandAsync(() => Observable.timer(2000), isValid);
+
+// can execute diff ways
+saveCmd = command(() => this.save(), isValid); // signal
+saveCmd = command(() => this.save(), () => isValid()); // reactive fn (signal)
+saveCmd = command(() => this.save(), isValid$); // rx
 ```
 
 ## Command Attribute (Directive)
