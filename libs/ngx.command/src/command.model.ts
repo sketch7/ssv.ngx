@@ -3,7 +3,7 @@ import type { Signal } from "@angular/core";
 
 export type ExecuteFn = (...args: any[]) => unknown;
 export type ExecuteAsyncFn = (...args: any[]) => Observable<unknown> | Promise<unknown>;
-export type CanExecute = Signal<boolean> | Observable<boolean>;
+export type CanExecute = (() => boolean) | Signal<boolean> | Observable<boolean>;
 
 export interface ICommand {
 	/** Determines whether the command is currently executing, as a snapshot value. */
