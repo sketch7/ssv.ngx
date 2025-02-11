@@ -2,14 +2,21 @@
 import {
 	Observable, combineLatest, Subscription, Subject, BehaviorSubject, of, EMPTY,
 	tap, map, filter, switchMap, catchError, finalize, take,
- } from "rxjs";
+} from "rxjs";
 import type { ICommand } from "./command.model";
-import { DestroyRef, inject, isSignal, type Signal } from "@angular/core";
+import { assertInInjectionContext, computed, DestroyRef, inject, Injector, isSignal, type Signal } from "@angular/core";
 import { toObservable } from "@angular/core/rxjs-interop";
 
 export type ExecuteFn = (...args: any[]) => unknown;
 export type ExecuteAsyncFn = (...args: any[]) => Observable<unknown> | Promise<unknown>;
-export type CanExecute = Signal<boolean> | Observable<boolean>;
+export type CanExecute = (() => boolean) | Signal<boolean> | Observable<boolean>;
+
+export interface CommandCreateOptions {
+	isAsync: boolean,
+	injector?: Injector;
+}
+
+const COMMAND_ASYNC_DEFAULT_OPTIONS: CommandCreateOptions = { isAsync: true };
 
 /** Creates an async {@link Command}. Must be used within an injection context.
  * NOTE: this auto injects `DestroyRef` and handles auto destroy. {@link ICommand.autoDestroy} should not be used.
@@ -17,8 +24,9 @@ export type CanExecute = Signal<boolean> | Observable<boolean>;
 export function commandAsync(
 	execute: ExecuteAsyncFn,
 	canExecute$?: CanExecute,
+	opts?: Omit<CommandCreateOptions, "isAsync">,
 ): Command {
-	return command(execute, canExecute$, true);
+	return command(execute, canExecute$, opts ? { ...opts, ...COMMAND_ASYNC_DEFAULT_OPTIONS } : COMMAND_ASYNC_DEFAULT_OPTIONS);
 }
 
 /** Creates a {@link Command}. Must be used within an injection context.
@@ -27,11 +35,14 @@ export function commandAsync(
 export function command(
 	execute: ExecuteFn,
 	canExecute$?: CanExecute,
-	isAsync?: boolean,
+	opts?: CommandCreateOptions,
 ): Command {
-	// todo: add injector/destroyRef to the command (needs overload)
-	const destroyRef = inject(DestroyRef);
-
+	if (!opts?.injector) {
+		assertInInjectionContext(command);
+	}
+	const injector = opts?.injector ?? inject(Injector);
+	const isAsync = opts?.isAsync ?? false;
+	const destroyRef = injector.get(DestroyRef);
 	const cmd = new Command(execute, canExecute$, isAsync);
 	cmd.autoDestroy = false;
 
@@ -44,6 +55,7 @@ export function command(
 
 /**
  * Command object used to encapsulate information which is needed to perform an action.
+ * @deprecated Use {@link command} or {@link commandAsync} instead.
  */
 export class Command implements ICommand {
 
@@ -88,11 +100,15 @@ export class Command implements ICommand {
 		execute: ExecuteFn,
 		canExecute$?: CanExecute,
 		isAsync?: boolean,
+		injector?: Injector,
 	) {
 		if (canExecute$) {
+			const canExecute = typeof canExecute$ === "function"
+				? computed(canExecute$)
+				: canExecute$;
 			this.canExecute$ = combineLatest([
 				this._isExecuting$,
-				isSignal(canExecute$) ? toObservable(canExecute$) : canExecute$
+				isSignal(canExecute) ? toObservable(canExecute, { injector }) : canExecute
 			]).pipe(
 				map(([isExecuting, canExecuteResult]) => {
 					// console.log("[command::combineLatest$] update!", { isExecuting, canExecuteResult });
@@ -196,6 +212,7 @@ export class Command implements ICommand {
 /**
  * Async Command object used to encapsulate information which is needed to perform an action,
  * which takes an execute function as Observable/Promise.
+ * @deprecated Use {@link commandAsync} instead.
  */
 export class CommandAsync extends Command {
 
