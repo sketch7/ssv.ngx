@@ -1,9 +1,10 @@
-## 3.0.0 (2025-01-21)
+## 3.0.0 (2025-02-11)
 
 ### 🚀 Features
 
 - **command:** add `command`/`commandAsync` which handles auto destroy with `DestroyRef` 
-- **command:** canExecute signal support
+- **command:** canExecute signal support/reactive function e.g. signal based
+- **command:** deprecated `Command` and `CommandAsync`
 - **deps:** update angular 17
 - **ux viewport:** add module `SsvUxViewportModule`
 - **ux viewport:** add `withViewportSsrDevice` to set `UX_VIEWPORT_SSR_DEVICE`
