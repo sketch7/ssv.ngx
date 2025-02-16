@@ -1,3 +1,13 @@
+## 3.1.0 (2025-02-16)
+
+### 🚀 Features
+
+- **command:** add `canExecuteFromSignals`
+
+### 🩹 Fixes
+
+- **command:** change `canExecuteFromNgForm` to use pristine/status events which handles state more accurately
+
 ## 3.0.0 (2025-02-11)
 
 ### 🚀 Features

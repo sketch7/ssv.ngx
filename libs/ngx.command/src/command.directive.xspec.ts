@@ -1,4 +1,4 @@
-// import {Observable} from "rxjs/Observable";
+// import {of} from "rxjs";
 // import {inject, addProviders, async} from "@angular/core/testing";
 // import {TestComponentBuilder, ComponentFixture} from "@angular/compiler/testing";
 // import {Component, provide} from "@angular/core";
@@ -12,7 +12,7 @@
 // 	]
 // })
 // class TestContainer {
-// 	saveCmd = new Command(() => Observable.of("yey").delay(2000), null, true);
+// 	saveCmd = new Command(() => of("yey").delay(2000), null, true);
 // }
 
 // @Component({

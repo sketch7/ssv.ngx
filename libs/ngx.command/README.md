@@ -43,8 +43,8 @@ saveCmd = command(() => this.save(), isValid);
 saveCmd = commandAsync(() => Observable.timer(2000), isValid);
 
 // can execute diff ways
-saveCmd = command(() => this.save(), isValid); // signal
 saveCmd = command(() => this.save(), () => isValid()); // reactive fn (signal)
+saveCmd = command(() => this.save(), isValid); // signal
 saveCmd = command(() => this.save(), isValid$); // rx
 ```
 
@@ -133,12 +133,12 @@ Command creator ref, directive which allows creating Command in the template and
 
 ## Utils
 
-### canExecuteFromNgForm
+### canExecuteFromNgForm/canExecuteFromSignals
 In order to use with `NgForm` easily, you can use the following utility method.
 This will make canExecute respond to `form.valid` and for `form.dirty` - also can optionally disable validity or dirty.
 
 ```ts
-import { commandAsync, canExecuteFromNgForm } from "@ssv/ngx.command";
+import { commandAsync, canExecuteFromNgForm, canExecuteFromSignals } from "@ssv/ngx.command";
 
 loginCmd = commandAsync(x => this.login(), canExecuteFromNgForm(this.form));
 
@@ -147,6 +147,8 @@ loginCmd = commandAsync(x => this.login(), canExecuteFromNgForm(this.form, {
   dirty: false
 }));
 
+// similar functionality using custom signals (or form which provide signals)
+loginCmd = commandAsync(x => this.login(), canExecuteFromSignals({dirty: $dirty, valid: $valid}));
 ```
 
 
