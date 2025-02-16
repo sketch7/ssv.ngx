@@ -55,7 +55,7 @@ export function command(
 
 /**
  * Command object used to encapsulate information which is needed to perform an action.
- * @deprecated Use {@link command} or {@link commandAsync} instead.
+ * @deprecated Use {@link command} or {@link commandAsync} instead for creating instances.
  */
 export class Command implements ICommand {
 
