@@ -33,13 +33,19 @@ In order to start working with Command, you need to create a new instance of it.
 ```ts
 import { command, commandAsync } from "@ssv/ngx.command";
 
-isValid$ = new BehaviorSubject(false);
+const isValid = signal(false);
+const isValid$ = new BehaviorSubject(false);
 
 // non async
-saveCmd = command(() => this.save()), this.isValid$);
+saveCmd = command(() => this.save(), isValid);
 
 // async - returns an observable/promise.
-saveCmd = commandAsync(() => Observable.timer(2000), this.isValid$);
+saveCmd = commandAsync(() => Observable.timer(2000), isValid);
+
+// can execute diff ways
+saveCmd = command(() => this.save(), () => isValid()); // reactive fn (signal)
+saveCmd = command(() => this.save(), isValid); // signal
+saveCmd = command(() => this.save(), isValid$); // rx
 ```
 
 ## Command Attribute (Directive)
@@ -127,12 +133,12 @@ Command creator ref, directive which allows creating Command in the template and
 
 ## Utils
 
-### canExecuteFromNgForm
+### canExecuteFromNgForm/canExecuteFromSignals
 In order to use with `NgForm` easily, you can use the following utility method.
 This will make canExecute respond to `form.valid` and for `form.dirty` - also can optionally disable validity or dirty.
 
 ```ts
-import { commandAsync, canExecuteFromNgForm } from "@ssv/ngx.command";
+import { commandAsync, canExecuteFromNgForm, canExecuteFromSignals } from "@ssv/ngx.command";
 
 loginCmd = commandAsync(x => this.login(), canExecuteFromNgForm(this.form));
 
@@ -141,6 +147,8 @@ loginCmd = commandAsync(x => this.login(), canExecuteFromNgForm(this.form, {
   dirty: false
 }));
 
+// similar functionality using custom signals (or form which provide signals)
+loginCmd = commandAsync(x => this.login(), canExecuteFromSignals({dirty: $dirty, valid: $valid}));
 ```
 
 

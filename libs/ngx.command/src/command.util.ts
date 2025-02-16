@@ -1,8 +1,9 @@
-import { AbstractControl, AbstractControlDirective, FormControlStatus } from "@angular/forms";
-import { Observable, of, map, distinctUntilChanged, startWith, delay } from "rxjs";
+import { AbstractControl, PristineChangeEvent, StatusChangeEvent } from "@angular/forms";
+import { Observable, map, distinctUntilChanged, startWith, filter, combineLatest, of } from "rxjs";
 
 import { CommandCreator, ICommand } from "./command.model";
 import { Command } from "./command";
+import { type Signal, computed } from "@angular/core";
 
 /** Determines whether the arg object is of type `Command`. */
 export function isCommand(arg: unknown): arg is ICommand {
@@ -27,22 +28,53 @@ export interface CanExecuteFormOptions {
 	dirty?: boolean;
 }
 
-/** Get form is valid as an observable. */
+const CAN_EXECUTE_FORM_OPTIONS_DEFAULTS = Object.freeze<CanExecuteFormOptions>({
+	validity: true,
+	dirty: true,
+})
+
+/** Get can execute from form validity/pristine as an observable. */
 export function canExecuteFromNgForm(
-	form: AbstractControl | AbstractControlDirective,
+	form: AbstractControl,
 	options?: CanExecuteFormOptions
 ): Observable<boolean> {
-	const opts: CanExecuteFormOptions = { validity: true, dirty: true, ...options };
+	const opts: CanExecuteFormOptions = options ?
+		{ ...CAN_EXECUTE_FORM_OPTIONS_DEFAULTS, ...options }
+		: CAN_EXECUTE_FORM_OPTIONS_DEFAULTS;
 
-	return form.statusChanges
-		? (form.statusChanges as Observable<FormControlStatus>).pipe( // todo: remove cast when working correctly
-			delay(0),
-			startWith(form.valid),
-			map(() => !!(!opts.validity || form.valid) && !!(!opts.dirty || form.dirty)),
+	const pristine$ = opts.dirty
+		? form.events.pipe(
+			filter(x => x instanceof PristineChangeEvent),
+			map(x => x.pristine),
 			distinctUntilChanged(),
-		)
-		: of(true);
+			startWith(form.pristine),
+		) : of(true);
+
+	const valid$ = opts.validity
+		? form.events.pipe(
+			filter(x => x instanceof StatusChangeEvent),
+			map(x => x.status === "VALID"),
+			distinctUntilChanged(),
+			startWith(form.pristine),
+		) : of(true);
+
+	return combineLatest([pristine$, valid$]).pipe(
+		map(([pristine, valid]) => !!(!opts.validity || valid) && !!(!opts.dirty || !pristine)),
+		distinctUntilChanged(),
+	);
 }
+
+/** Can executed based on valid/dirty signal inputs. */
+export function canExecuteFromSignals(
+	signals: { valid: Signal<boolean>, dirty: Signal<boolean> },
+	options?: CanExecuteFormOptions
+): Signal<boolean> {
+	const opts: CanExecuteFormOptions = options ?
+		{ ...CAN_EXECUTE_FORM_OPTIONS_DEFAULTS, ...options }
+		: CAN_EXECUTE_FORM_OPTIONS_DEFAULTS;
+	return computed(() => !!(!opts.validity || signals.valid()) && !!(!opts.dirty || signals.dirty()));
+}
+
 
 function isAssumedType<T = Record<string, unknown>>(x: unknown): x is Partial<T> {
 	return x !== null && typeof x === "object";
