@@ -55,7 +55,7 @@ export function canExecuteFromNgForm(
 			filter(x => x instanceof StatusChangeEvent),
 			map(x => x.status === "VALID"),
 			distinctUntilChanged(),
-			startWith(form.pristine),
+			startWith(form.valid),
 		) : of(true);
 
 	return combineLatest([pristine$, valid$]).pipe(
