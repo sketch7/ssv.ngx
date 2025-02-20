@@ -1,3 +1,9 @@
+## 3.1.1 (2025-02-20)
+
+### 🩹 Fixes
+
+- **command:** fix `canExecuteFromNgForm` initial valid
+
 ## 3.1.0 (2025-02-16)
 
 ### 🚀 Features
