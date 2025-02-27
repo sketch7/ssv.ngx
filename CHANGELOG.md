@@ -1,3 +1,9 @@
+## 3.1.2 (2025-02-27)
+
+### 🩹 Fixes
+
+- **command:** `canExecuteFromNgForm` validity when form is already initialized
+
 ## 3.1.1 (2025-02-20)
 
 ### 🩹 Fixes
