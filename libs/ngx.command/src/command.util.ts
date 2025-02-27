@@ -1,5 +1,5 @@
 import { AbstractControl, PristineChangeEvent, StatusChangeEvent } from "@angular/forms";
-import { Observable, map, distinctUntilChanged, startWith, filter, combineLatest, of } from "rxjs";
+import { Observable, map, distinctUntilChanged, filter, combineLatest, of, defer, concat } from "rxjs";
 
 import { CommandCreator, ICommand } from "./command.model";
 import { Command } from "./command";
@@ -42,21 +42,26 @@ export function canExecuteFromNgForm(
 		{ ...CAN_EXECUTE_FORM_OPTIONS_DEFAULTS, ...options }
 		: CAN_EXECUTE_FORM_OPTIONS_DEFAULTS;
 
+
 	const pristine$ = opts.dirty
-		? form.events.pipe(
-			filter(x => x instanceof PristineChangeEvent),
-			map(x => x.pristine),
-			distinctUntilChanged(),
-			startWith(form.pristine),
-		) : of(true);
+		? concat(
+			defer(() => of(form.pristine)),
+			form.events.pipe(
+				filter(x => x instanceof PristineChangeEvent),
+				map(x => x.pristine),
+			)
+		).pipe(distinctUntilChanged(),)
+		: of(true);
 
 	const valid$ = opts.validity
-		? form.events.pipe(
-			filter(x => x instanceof StatusChangeEvent),
-			map(x => x.status === "VALID"),
-			distinctUntilChanged(),
-			startWith(form.valid),
-		) : of(true);
+		? concat(
+			defer(() => of(form.valid)),
+			form.events.pipe(
+				filter(x => x instanceof StatusChangeEvent),
+				map(x => x.status === "VALID"),
+			)
+		).pipe(distinctUntilChanged(),)
+		: of(true);
 
 	return combineLatest([pristine$, valid$]).pipe(
 		map(([pristine, valid]) => !!(!opts.validity || valid) && !!(!opts.dirty || !pristine)),
