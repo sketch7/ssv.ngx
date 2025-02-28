@@ -7,6 +7,7 @@
   },
   "license": "MIT",
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "start": "npm run test-app",
     "test-app": "nx serve test-app",
     "build": "nx run-many -t build",

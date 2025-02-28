@@ -83,8 +83,9 @@
 
 ### ❤️  Thank You
 
+- [Kurt Aquilina](https://github.com/kurtaqui)
 - Konstantin  Kuptsov
-- Stephen Lautier @stephenlautier
+- [Stephen Lautier @stephenlautier](https://github.com/stephenlautier)
 
 ## Pre 3.x changelog
 - [ngx.command](https://github.com/sketch7/ngx.command/blob/master/CHANGELOG.md)

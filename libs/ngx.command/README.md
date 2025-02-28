@@ -63,7 +63,9 @@ Generally used on a `<button>` as below.
 
 <!-- using isExecuting + showing spinner -->
 <button [ssvCommand]="saveCmd">
-  <i *ngIf="saveCmd.isExecuting" class="ai-circled ai-indicator ai-dark-spin small"></i>
+  @if(saveCmd.isExecuting) {
+    <i class="ai-circled ai-indicator ai-dark-spin small"></i>
+  }
   Save
 </button>
 ```
@@ -119,7 +121,7 @@ It can also be used as below without the command attribute.
 Command creator ref, directive which allows creating Command in the template and associate it to a command (in order to share executions).
 
 ```html
-<div *ngFor="let hero of heroes">
+@for (hero of heroes; track hero.key) {
   <div #actionCmd="ssvCommandRef" [ssvCommandRef]="{host: this, execute: removeHero$, canExecute: isValid$}" class="button-group">
     <button [ssvCommand]="actionCmd.command" [ssvCommandParams]="hero">
       Remove
@@ -128,7 +130,7 @@ Command creator ref, directive which allows creating Command in the template and
       Remove
     </button>
   </div>
-</div>
+}
 ```
 
 ## Utils
