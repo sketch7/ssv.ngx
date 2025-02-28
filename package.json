@@ -1,12 +1,13 @@
 {
   "name": "@ssv/ngx",
-  "version": "3.1.0",
+  "version": "3.1.2",
   "packageManager": "pnpm@9.14.2",
   "volta": {
     "node": "20.18.1"
   },
   "license": "MIT",
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "start": "npm run test-app",
     "test-app": "nx serve test-app",
     "build": "nx run-many -t build",

@@ -1,3 +1,15 @@
+## 3.1.2 (2025-02-27)
+
+### 🩹 Fixes
+
+- **command:** `canExecuteFromNgForm` validity when form is already initialized
+
+## 3.1.1 (2025-02-20)
+
+### 🩹 Fixes
+
+- **command:** fix `canExecuteFromNgForm` initial valid
+
 ## 3.1.0 (2025-02-16)
 
 ### 🚀 Features
@@ -71,8 +83,9 @@
 
 ### ❤️  Thank You
 
+- [Kurt Aquilina](https://github.com/kurtaqui)
 - Konstantin  Kuptsov
-- Stephen Lautier @stephenlautier
+- [Stephen Lautier @stephenlautier](https://github.com/stephenlautier)
 
 ## Pre 3.x changelog
 - [ngx.command](https://github.com/sketch7/ngx.command/blob/master/CHANGELOG.md)
