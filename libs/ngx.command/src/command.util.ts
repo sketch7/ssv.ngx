@@ -42,7 +42,6 @@ export function canExecuteFromNgForm(
 		{ ...CAN_EXECUTE_FORM_OPTIONS_DEFAULTS, ...options }
 		: CAN_EXECUTE_FORM_OPTIONS_DEFAULTS;
 
-
 	const pristine$ = opts.dirty
 		? concat(
 			defer(() => of(form.pristine)),
