@@ -21,6 +21,7 @@ const viewportSizeSSR: Record<DeviceType, ViewportSize> = {
 
 export const VIEWPORT_SSR_DEVICE = new InjectionToken<DeviceType>("UX_VIEWPORT_SSR_DEVICE", {
 	factory: () => DeviceType.desktop,
+	providedIn: "platform",
 });
 
 @Injectable({
