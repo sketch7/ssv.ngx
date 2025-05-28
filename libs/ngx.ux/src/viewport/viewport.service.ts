@@ -1,5 +1,5 @@
-import { Injectable, inject, signal } from "@angular/core";
-import { takeUntilDestroyed, toObservable } from "@angular/core/rxjs-interop";
+import { Injectable, Signal, inject, signal } from "@angular/core";
+import { takeUntilDestroyed, toObservable, toSignal } from "@angular/core/rxjs-interop";
 import {
 	Observable,
 	fromEvent,
@@ -10,6 +10,7 @@ import {
 	share,
 	shareReplay,
 	auditTime,
+	of,
 } from "rxjs";
 
 import { ViewportSizeTypeInfo, ViewportSize } from "./viewport.model";
@@ -34,10 +35,10 @@ export class ViewportService {
 	readonly sizeTypeMap = generateViewportSizeTypeInfoRefs(this.sizeTypes);
 
 	/** Viewport size signal (which is also throttled). */
-	readonly viewportSize = signal<ViewportSize>(this.#viewportServerSize.get())
+	readonly viewportSize: Signal<ViewportSize>;
 
 	/** Viewport size type signal (which is also throttled). */
-	readonly sizeType = signal<ViewportSizeTypeInfo>(getSizeTypeInfo(this.viewportSize().width, this.sizeTypes));
+	readonly sizeType: Signal<ViewportSizeTypeInfo>;
 
 	/** Window resize observable. */
 	readonly resizeSnap$: Observable<ViewportSize>;
@@ -73,7 +74,7 @@ export class ViewportService {
 				share(),
 			);
 		} else {
-			this.resizeSnap$ = this.resize$ = toObservable(this.viewportSize);
+			this.resizeSnap$ = this.resize$ = of(this.#viewportServerSize.get());
 		}
 		const size = this.getViewportSize();
 
@@ -96,20 +97,8 @@ export class ViewportService {
 		this.sizeType$ = sizeTypeFn(this.size$);
 		this.sizeTypeSnap$ = sizeTypeFn(this.sizeSnap$);
 
-		const setViewportSize$ = this.size$.pipe(
-			tap(size => this.viewportSize.set(size)),
-			takeUntilDestroyed(),
-		);
-
-		const setSizeType$ = this.sizeTypeSnap$.pipe(
-			tap(size => this.sizeType.set(size)),
-			takeUntilDestroyed(),
-		);
-
-		[
-			setViewportSize$,
-			setSizeType$
-		].forEach((obs$: Observable<unknown>) => obs$.subscribe());
+		this.viewportSize = toSignal(this.size$) as Signal<ViewportSize>;
+		this.sizeType = toSignal(this.sizeTypeSnap$) as Signal<ViewportSizeTypeInfo>;
 	}
 
 	/** Returns the current viewport size */
