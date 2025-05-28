@@ -1,8 +1,8 @@
-import { Injectable, inject } from "@angular/core";
+import { Injectable, inject, signal } from "@angular/core";
+import { takeUntilDestroyed, toObservable } from "@angular/core/rxjs-interop";
 import {
 	Observable,
 	fromEvent,
-	of,
 	map,
 	tap,
 	distinctUntilChanged,
@@ -16,13 +16,28 @@ import { ViewportSizeTypeInfo, ViewportSize } from "./viewport.model";
 import { WindowRef } from "../platform/window";
 import { ViewportServerSizeService } from "./viewport-server-size.service";
 import { generateViewportSizeTypeInfoList, generateViewportSizeTypeInfoRefs, getSizeTypeInfo } from "./viewport.util";
-import type { Dictionary } from "../internal/internal.model";
 import { VIEWPORT_OPTIONS } from "./viewport.options";
 
 @Injectable({
 	providedIn: "root",
 })
 export class ViewportService {
+
+	readonly #viewportServerSize = inject(ViewportServerSizeService);
+	readonly #windowRef = inject(WindowRef);
+	readonly #config = inject(VIEWPORT_OPTIONS);
+
+	/** Viewport size types list ordered by type, smallest to largest. */
+	readonly sizeTypes = generateViewportSizeTypeInfoList(this.#config.breakpoints);
+
+	/** Size types refs of the generated viewport size type info. */
+	readonly sizeTypeMap = generateViewportSizeTypeInfoRefs(this.sizeTypes);
+
+	/** Viewport size signal (which is also throttled). */
+	readonly viewportSize = signal<ViewportSize>(this.#viewportServerSize.get())
+
+	/** Viewport size type signal (which is also throttled). */
+	readonly sizeType = signal<ViewportSizeTypeInfo>(getSizeTypeInfo(this.viewportSize().width, this.sizeTypes));
 
 	/** Window resize observable. */
 	readonly resizeSnap$: Observable<ViewportSize>;
@@ -37,7 +52,7 @@ export class ViewportService {
 	readonly sizeTypeSnap$: Observable<ViewportSizeTypeInfo>;
 
 	/** Viewport size type snapshot of the last value. (Prefer use `sizeType$` observable when possible.) */
-	get sizeTypeSnapshot(): ViewportSizeTypeInfo { return this._sizeTypeSnapshot; }
+	get sizeTypeSnapshot(): ViewportSizeTypeInfo { return this.sizeType(); }
 
 	/** Viewport size observable (which is also throttled). */
 	readonly size$: Observable<ViewportSize>;
@@ -45,39 +60,22 @@ export class ViewportService {
 	/** Viewport size observable. */
 	readonly sizeSnap$: Observable<ViewportSize>;
 
-	/** Size types refs of the generated viewport size type info. */
-	get sizeTypeMap(): Dictionary<ViewportSizeTypeInfo> { return this._sizeTypeMap; }
-
-	/** Viewport size types list ordered by type, smallest to largest. */
-	get sizeTypes(): ViewportSizeTypeInfo[] { return this._sizeTypes; }
-
-	private _sizeTypeMap: Dictionary<ViewportSizeTypeInfo>;
-	private _sizeTypes: ViewportSizeTypeInfo[];
-	private _sizeTypeSnapshot: ViewportSizeTypeInfo;
-
 	constructor(
-		private windowRef: WindowRef,
-		private viewportServerSize: ViewportServerSizeService,
 	) {
-		const config = inject(VIEWPORT_OPTIONS);
-		this._sizeTypes = generateViewportSizeTypeInfoList(config.breakpoints);
-		this._sizeTypeMap = generateViewportSizeTypeInfoRefs(this._sizeTypes);
-
-		if (windowRef.hasNative) {
-			this.resizeSnap$ = fromEvent<Event>(window, "resize").pipe(
+		if (this.#windowRef.hasNative) {
+			this.resizeSnap$ = fromEvent<Event>(this.#windowRef.native, "resize").pipe(
 				map(() => this.getViewportSize()),
 				share()
 			);
 
 			this.resize$ = this.resizeSnap$.pipe(
-				auditTime(config.resizePollingSpeed),
+				auditTime(this.#config.resizePollingSpeed),
 				share(),
 			);
 		} else {
-			this.resizeSnap$ = this.resize$ = of(viewportServerSize.get());
+			this.resizeSnap$ = this.resize$ = toObservable(this.viewportSize);
 		}
 		const size = this.getViewportSize();
-		this._sizeTypeSnapshot = getSizeTypeInfo(size.width, this.sizeTypes);
 
 		const sizeFn = (obs$: Observable<ViewportSize>) => obs$.pipe(
 			startWith(size),
@@ -92,31 +90,45 @@ export class ViewportService {
 			distinctUntilChanged((a, b) => a.width === b.width),
 			map(x => getSizeTypeInfo(x.width, this.sizeTypes)),
 			distinctUntilChanged(),
-			tap(x => this._sizeTypeSnapshot = x),
 			shareReplay(1),
 		);
 
 		this.sizeType$ = sizeTypeFn(this.size$);
 		this.sizeTypeSnap$ = sizeTypeFn(this.sizeSnap$);
+
+		const setViewportSize$ = this.size$.pipe(
+			tap(size => this.viewportSize.set(size)),
+			takeUntilDestroyed(),
+		);
+
+		const setSizeType$ = this.sizeTypeSnap$.pipe(
+			tap(size => this.sizeType.set(size)),
+			takeUntilDestroyed(),
+		);
+
+		[
+			setViewportSize$,
+			setSizeType$
+		].forEach((obs$: Observable<unknown>) => obs$.subscribe());
 	}
 
 	/** Returns the current viewport size */
 	private getViewportSize(): ViewportSize {
-		if (!this.windowRef.hasNative) {
-			return this.viewportServerSize.get();
+		if (!this.#windowRef.hasNative) {
+			return this.#viewportServerSize.get();
 		}
 
 		const ua = navigator.userAgent.toLowerCase();
 		if (ua.indexOf("safari") !== -1 && ua.indexOf("chrome") === -1) { // safari subtracts the scrollbar width
 			return {
-				width: this.windowRef.native.document.documentElement.clientWidth,
-				height: this.windowRef.native.document.documentElement.clientHeight,
+				width: this.#windowRef.native.document.documentElement.clientWidth,
+				height: this.#windowRef.native.document.documentElement.clientHeight,
 			};
 		}
 
 		return {
-			width: this.windowRef.native.innerWidth,
-			height: this.windowRef.native.innerHeight,
+			width: this.#windowRef.native.innerWidth,
+			height: this.#windowRef.native.innerHeight,
 		};
 	}
 
