@@ -97,8 +97,8 @@ export class ViewportService {
 		this.sizeType$ = sizeTypeFn(this.size$);
 		this.sizeTypeSnap$ = sizeTypeFn(this.sizeSnap$);
 
-		this.viewportSize = toSignal(this.size$) as Signal<ViewportSize>;
-		this.sizeType = toSignal(this.sizeTypeSnap$) as Signal<ViewportSizeTypeInfo>;
+		this.viewportSize = toSignal(this.size$, { initialValue: size });
+		this.sizeType = toSignal(this.sizeTypeSnap$, { initialValue: getSizeTypeInfo(size.width, this.sizeTypes) });
 	}
 
 	/** Returns the current viewport size */
