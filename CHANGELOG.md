@@ -1,12 +1,8 @@
-## 4.0.0 (2025-05-28)
+## 3.2.0 (2025-06-05)
 
 ### 🚀 Features
 
 - **ux viewport:** `ViewportService` exposes `viewportSize` and `sizeType` as signals
-
-### BREAKING CHANGES
-
-- **ux viewport:** `sizeTypeMap` and `sizeTypes` changed from `getter` to `readonly` props
 
 ## 3.1.3 (2025-03-04)
 
