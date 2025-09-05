@@ -1,3 +1,15 @@
+## 3.2.0 (2025-06-05)
+
+### 🚀 Features
+
+- **ux viewport:** `ViewportService` exposes `viewportSize` and `sizeType` as signals
+
+## 3.1.3 (2025-03-04)
+
+### 🩹 Fixes
+
+- **ux viewport:** `VIEWPORT_SSR_DEVICE` provide in platform
+
 ## 3.1.2 (2025-02-27)
 
 ### 🩹 Fixes
