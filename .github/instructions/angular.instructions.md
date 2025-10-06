@@ -8,11 +8,12 @@ applyTo: '**/*.ts, **/*.html, **/*.scss, **/*.css'
 Instructions for generating high-quality Angular applications with TypeScript, using Angular Signals for state management, adhering to Angular best practices as outlined at https://angular.dev.
 
 ## Project Context
-- Latest Angular version (use standalone components by default)
-- TypeScript for type safety
+- Latest Angular version 20+ (use standalone components by default)
+- TypeScript 5.8+ for type safety and Angular 20 compatibility
 - Angular CLI for project setup and scaffolding
 - Follow Angular Style Guide (https://angular.dev/style-guide)
 - Use Angular Material or other modern UI libraries for consistent styling (if specified)
+- Zone.js 0.15+ for Angular 20 compatibility
 
 ## Development Standards
 
@@ -32,7 +33,7 @@ Instructions for generating high-quality Angular applications with TypeScript, u
 
 ### Component Design
 - Follow Angular's component lifecycle hooks best practices
-- When using Angular >= 19, Use `input()` `output()`, `viewChild()`, `viewChildren()`, `contentChild()` and `viewChildren()` functions instead of decorators; otherwise use decorators
+- When using Angular >= 20, Use `input()` `output()`, `viewChild()`, `viewChildren()`, `contentChild()` and `viewChildren()` functions instead of decorators; otherwise use decorators
 - Leverage Angular's change detection strategy (default or `OnPush` for performance)
 - Keep templates clean and logic in component classes or services
 - Use Angular directives and pipes for reusable functionality
@@ -74,8 +75,9 @@ Instructions for generating high-quality Angular applications with TypeScript, u
 - Implement server-side rendering (SSR) or static site generation (SSG) with Angular Universal (if specified)
 
 ### Testing
-- Write unit tests for components, services, and pipes using Jasmine and Karma
+- Write unit tests for components, services, and pipes using Jest 30+ and jest-preset-angular 15+
 - Use Angular's `TestBed` for component testing with mocked dependencies
+- Note: jest-preset-angular v15+ no longer requires importing 'jest-preset-angular/setup-jest'
 - Test signal-based state updates using Angular's testing utilities
 - Write end-to-end tests with Cypress or Playwright (if specified)
 - Mock HTTP requests using `HttpClientTestingModule`

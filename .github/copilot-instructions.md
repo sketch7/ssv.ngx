@@ -7,7 +7,7 @@ This codebase is an Nx workspace for Angular utility libraries focused on UX pat
 This is a monorepo containing two main Angular libraries:
 
 - `@ssv/ngx.command` - Command pattern implementation for Angular
-- `@ssv/ngx.ux` - UX utilities, primarily viewport management
+- `@ssv/ngx.ux` - UX utilities, primarily viewport management\n\n**Current Stack:**\n- Angular 20.3.3\n- TypeScript 5.8.3\n- Nx 21.6.3\n- RxJS 7.8.2\n- Zone.js 0.15.1\n- Jest 30.2.0 with jest-preset-angular 15.0.2\n\n### Library Structure
 
 ### Library Structure
 

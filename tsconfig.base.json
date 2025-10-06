@@ -5,20 +5,29 @@
     "sourceMap": true,
     "declaration": false,
     "moduleResolution": "node",
-    "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
     "target": "es2015",
     "module": "esnext",
-    "lib": ["es2020", "dom"],
+    "lib": [
+      "es2020",
+      "dom"
+    ],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "isolatedModules": true,
     "baseUrl": ".",
     "paths": {
-      "@ssv/ngx.command": ["libs/ngx.command/src/index.ts"],
-      "@ssv/ngx.ux": ["libs/ngx.ux/src/index.ts"]
+      "@ssv/ngx.command": [
+        "libs/ngx.command/src/index.ts"
+      ],
+      "@ssv/ngx.ux": [
+        "libs/ngx.ux/src/index.ts"
+      ]
     }
   },
-  "exclude": ["node_modules", "tmp"]
+  "exclude": [
+    "node_modules",
+    "tmp"
+  ]
 }
