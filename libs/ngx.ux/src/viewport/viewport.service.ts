@@ -1,10 +1,9 @@
-import { Injectable, Signal, inject, signal } from "@angular/core";
-import { takeUntilDestroyed, toObservable, toSignal } from "@angular/core/rxjs-interop";
+import { Injectable, Signal, inject } from "@angular/core";
+import { toSignal } from "@angular/core/rxjs-interop";
 import {
 	Observable,
 	fromEvent,
 	map,
-	tap,
 	distinctUntilChanged,
 	startWith,
 	share,

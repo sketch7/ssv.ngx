@@ -1,12 +1,4 @@
-import {
-	OnInit,
-	OnDestroy,
-	Directive,
-	Input,
-	TemplateRef,
-	ViewContainerRef,
-	EmbeddedViewRef,
-} from "@angular/core";
+import { OnInit, OnDestroy, Directive, Input, TemplateRef, ViewContainerRef, EmbeddedViewRef, inject } from "@angular/core";
 import { combineLatest, ReplaySubject, Subject, tap, map, takeUntil } from "rxjs";
 
 import { ViewportService } from "./viewport.service";
@@ -32,6 +24,9 @@ export class SsvViewportMatcherVarContext {
 	standalone: true,
 })
 export class SsvViewportMatcherVarDirective implements OnInit, OnDestroy {
+	#viewport = inject(ViewportService);
+	#viewContainer = inject(ViewContainerRef);
+	#templateRef = inject<TemplateRef<SsvViewportMatcherVarContext>>(TemplateRef);
 
 	private _matchConditions: ViewportMatchConditions = {};
 	private _context = new SsvViewportMatcherVarContext();
@@ -55,17 +50,10 @@ export class SsvViewportMatcherVarDirective implements OnInit, OnDestroy {
 		this._update$.next();
 	}
 
-	constructor(
-		private viewport: ViewportService,
-		private viewContainer: ViewContainerRef,
-		private templateRef: TemplateRef<SsvViewportMatcherVarContext>,
-	) {
-	}
-
 	ngOnInit(): void {
 		this.updateView();
-		combineLatest([this.viewport.sizeType$, this._update$]).pipe(
-			map(([sizeType]) => isViewportConditionMatch(sizeType, this._matchConditions, this.viewport.sizeTypeMap)),
+		combineLatest([this.#viewport.sizeType$, this._update$]).pipe(
+			map(([sizeType]) => isViewportConditionMatch(sizeType, this._matchConditions, this.#viewport.sizeTypeMap)),
 			tap(x => this._context.$implicit = x),
 			tap(() => this._viewRef.markForCheck()),
 			takeUntil(this._destroy$),
@@ -78,8 +66,8 @@ export class SsvViewportMatcherVarDirective implements OnInit, OnDestroy {
 	}
 
 	private updateView(): void {
-		this.viewContainer.clear();
-		this._viewRef = this.viewContainer.createEmbeddedView(this.templateRef, this._context);
+		this.#viewContainer.clear();
+		this._viewRef = this.#viewContainer.createEmbeddedView(this.#templateRef, this._context);
 	}
 
 }

@@ -1,14 +1,4 @@
-import {
-	OnInit,
-	OnDestroy,
-	Directive,
-	Renderer2,
-	ViewContainerRef,
-	Input,
-	EmbeddedViewRef,
-	TemplateRef,
-	ChangeDetectorRef,
-} from "@angular/core";
+import { OnInit, OnDestroy, Directive, Renderer2, ViewContainerRef, Input, EmbeddedViewRef, TemplateRef, ChangeDetectorRef, inject } from "@angular/core";
 import { Subscription, Subject, tap, filter, pairwise, startWith } from "rxjs";
 
 import { ViewportService } from "./viewport.service";
@@ -33,6 +23,10 @@ export class SsvViewportMatcherContext implements ViewportMatchConditions {
 	standalone: true,
 })
 export class SsvViewportMatcherDirective implements OnInit, OnDestroy {
+	#viewport = inject(ViewportService);
+	#renderer = inject(Renderer2);
+	#viewContainer = inject(ViewContainerRef);
+	#cdr = inject(ChangeDetectorRef);
 
 	sizeInfo: ViewportSizeTypeInfo | undefined;
 
@@ -79,13 +73,9 @@ export class SsvViewportMatcherDirective implements OnInit, OnDestroy {
 		}
 	}
 
-	constructor(
-		private viewport: ViewportService,
-		private renderer: Renderer2,
-		private viewContainer: ViewContainerRef,
-		private cdr: ChangeDetectorRef,
-		templateRef: TemplateRef<SsvViewportMatcherContext>,
-	) {
+	constructor() {
+		const templateRef = inject<TemplateRef<SsvViewportMatcherContext>>(TemplateRef);
+
 		this._thenTemplateRef = templateRef;
 	}
 
@@ -99,11 +89,11 @@ export class SsvViewportMatcherDirective implements OnInit, OnDestroy {
 				// tap(x => console.log(">>> ssvViewportMatcher - updating...", x)),
 				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				tap(() => this._updateView(this.sizeInfo!)),
-				tap(() => this.cdr.markForCheck())
+				tap(() => this.#cdr.markForCheck())
 			)
 			.subscribe();
 
-		this.sizeType$$ = this.viewport.sizeType$
+		this.sizeType$$ = this.#viewport.sizeType$
 			.pipe(
 				// tap(x => console.log("ssvViewportMatcher - sizeType changed", x)),
 				tap(x => this.sizeInfo = x),
@@ -111,7 +101,7 @@ export class SsvViewportMatcherDirective implements OnInit, OnDestroy {
 			)
 			.subscribe();
 
-		this.cssClass$$ = this.viewport.sizeType$
+		this.cssClass$$ = this.#viewport.sizeType$
 			.pipe(
 				startWith<ViewportSizeTypeInfo | undefined>(undefined),
 				filter(() => !!(this._thenViewRef || this._elseViewRef)),
@@ -125,9 +115,9 @@ export class SsvViewportMatcherDirective implements OnInit, OnDestroy {
 						return;
 					}
 					if (prev) {
-						this.renderer.removeClass(el, `ssv-vp-size--${prev.name}`);
+						this.#renderer.removeClass(el, `ssv-vp-size--${prev.name}`);
 					}
-					this.renderer.addClass(el, `ssv-vp-size--${curr?.name}`);
+					this.#renderer.addClass(el, `ssv-vp-size--${curr?.name}`);
 				}),
 			)
 			.subscribe();
@@ -140,13 +130,13 @@ export class SsvViewportMatcherDirective implements OnInit, OnDestroy {
 	}
 
 	private _updateView(sizeInfo: ViewportSizeTypeInfo) {
-		if (isViewportConditionMatch(sizeInfo, this._context, this.viewport.sizeTypeMap)) {
+		if (isViewportConditionMatch(sizeInfo, this._context, this.#viewport.sizeTypeMap)) {
 			if (!this._thenViewRef) {
-				this.viewContainer.clear();
+				this.#viewContainer.clear();
 				this._elseViewRef = null;
 
 				if (this._thenTemplateRef) {
-					this._thenViewRef = this.viewContainer.createEmbeddedView(
+					this._thenViewRef = this.#viewContainer.createEmbeddedView(
 						this._thenTemplateRef,
 						this._context,
 					);
@@ -154,11 +144,11 @@ export class SsvViewportMatcherDirective implements OnInit, OnDestroy {
 			}
 		} else {
 			if (!this._elseViewRef) {
-				this.viewContainer.clear();
+				this.#viewContainer.clear();
 				this._thenViewRef = null;
 
 				if (this._elseTemplateRef) {
-					this._elseViewRef = this.viewContainer.createEmbeddedView(
+					this._elseViewRef = this.#viewContainer.createEmbeddedView(
 						this._elseTemplateRef,
 						this._context,
 					);
