@@ -15,9 +15,7 @@
         "outputPath": "dist/apps/test-app",
         "index": "apps/test-app/src/index.html",
         "browser": "apps/test-app/src/main.ts",
-        "polyfills": [
-          "zone.js"
-        ],
+        "polyfills": [],
         "tsConfig": "apps/test-app/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
         "assets": [

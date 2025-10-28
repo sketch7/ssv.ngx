@@ -41,9 +41,6 @@ importers:
       rxjs:
         specifier: ~7.8.2
         version: 7.8.2
-      zone.js:
-        specifier: ~0.15.0
-        version: 0.15.1
     devDependencies:
       '@angular-devkit/build-angular':
         specifier: ~20.3.7
@@ -17836,4 +17833,5 @@ snapshots:
 
   zod@3.25.76: {}
 
-  zone.js@0.15.1: {}
+  zone.js@0.15.1:
+    optional: true
