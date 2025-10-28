@@ -1,10 +1,4 @@
-import {
-	Component,
-	ChangeDetectionStrategy,
-	OnInit,
-	OnDestroy,
-	ChangeDetectorRef,
-} from "@angular/core";
+import { Component, ChangeDetectionStrategy, OnInit, OnDestroy, ChangeDetectorRef, inject } from "@angular/core";
 import { Observable, Subject, tap } from "rxjs";
 import {
 	ViewportSizeTypeInfo,
@@ -29,6 +23,10 @@ import { JsonPipe } from "@angular/common";
 	]
 })
 export class ViewportComponent implements OnInit, OnDestroy {
+	#viewport = inject(ViewportService);
+	#viewportData = inject(ViewportDataService);
+	#cdr = inject(ChangeDetectorRef);
+
 
 	sizeInfo: ViewportSizeTypeInfo | undefined;
 	size: ViewportSize | undefined;
@@ -42,25 +40,19 @@ export class ViewportComponent implements OnInit, OnDestroy {
 
 	private readonly _destroy$ = new Subject<void>();
 
-	constructor(
-		private viewport: ViewportService,
-		private viewportData: ViewportDataService,
-		private cdr: ChangeDetectorRef,
-	) { }
-
 	ngOnInit(): void {
-		const sizeType$ = this.viewport.sizeType$.pipe(
+		const sizeType$ = this.#viewport.sizeType$.pipe(
 			tap(x => console.log("Viewport - size info changed", x)),
 			tap(x => this.sizeInfo = x),
-			tap(() => this.cdr.markForCheck()),
+			tap(() => this.#cdr.markForCheck()),
 		);
-		const size$ = this.viewport.size$.pipe(
+		const size$ = this.#viewport.size$.pipe(
 			tap(x => console.log("Viewport - size changed", x)),
 			tap(x => this.size = x),
-			tap(() => this.cdr.markForCheck()),
+			tap(() => this.#cdr.markForCheck()),
 		);
 
-		const viewportData$ = this.viewportData.get$(this.dataConfig, ViewportDataMatchStrategy.smaller).pipe(
+		const viewportData$ = this.#viewportData.get$(this.dataConfig, ViewportDataMatchStrategy.smaller).pipe(
 			tap(x => console.log("Viewport - data changed", x)),
 		);
 
