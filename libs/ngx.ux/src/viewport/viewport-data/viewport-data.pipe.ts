@@ -1,5 +1,5 @@
 import { Subscription, tap } from "rxjs";
-import { Pipe, PipeTransform, OnDestroy, ChangeDetectorRef } from "@angular/core";
+import { Pipe, PipeTransform, OnDestroy, ChangeDetectorRef, inject } from "@angular/core";
 
 import { ViewportDataConfig, ViewportDataMatchStrategy, ViewportDataMatchStrategyLiteral } from "./viewport-data-matcher";
 import { ViewportDataService } from "./viewport-data.service";
@@ -11,18 +11,14 @@ import { ViewportDataService } from "./viewport-data.service";
 	standalone: true,
 })
 export class ViewportDataPipe implements PipeTransform, OnDestroy {
+	#viewportData = inject(ViewportDataService);
+	#cdr = inject(ChangeDetectorRef);
 
 	private markForTransform = true;
 	private value: unknown;
 	private data: ViewportDataConfig | undefined;
 	private strategy: ViewportDataMatchStrategyLiteral | undefined;
 	private data$$ = Subscription.EMPTY;
-
-	constructor(
-		private viewportData: ViewportDataService,
-		private cdr: ChangeDetectorRef
-	) {
-	}
 
 	transform(data: ViewportDataConfig, strategy: ViewportDataMatchStrategyLiteral): unknown {
 		if (!this.markForTransform && data === this.data && strategy === this.strategy) {
@@ -32,11 +28,11 @@ export class ViewportDataPipe implements PipeTransform, OnDestroy {
 		this.strategy = strategy;
 
 		this.data$$.unsubscribe();
-		this.data$$ = this.viewportData.get$(data, ViewportDataMatchStrategy[strategy]).pipe(
+		this.data$$ = this.#viewportData.get$(data, ViewportDataMatchStrategy[strategy]).pipe(
 			tap(value => {
 				this.markForTransform = true;
 				this.value = value;
-				this.cdr.markForCheck();
+				this.#cdr.markForCheck();
 			}),
 		).subscribe();
 
