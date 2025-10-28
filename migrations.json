@@ -1,48 +1,25 @@
 {
   "migrations": [
     {
-      "version": "20.0.0",
-      "description": "Replaces usages of the deprecated InjectFlags enum",
-      "factory": "./bundles/inject-flags.cjs#migrate",
-      "package": "@angular/core",
-      "name": "inject-flags"
+      "version": "22.0.0-beta.1",
+      "description": "Updates release version config based on the breaking changes in Nx v22",
+      "implementation": "./src/migrations/update-22-0-0/release-version-config-changes",
+      "package": "nx",
+      "name": "22-0-0-release-version-config-changes"
     },
     {
-      "version": "20.0.0",
-      "description": "Replaces usages of the deprecated TestBed.get method with TestBed.inject",
-      "factory": "./bundles/test-bed-get.cjs#migrate",
-      "package": "@angular/core",
-      "name": "test-bed-get"
+      "version": "22.0.0-beta.2",
+      "description": "Consolidates releaseTag* options into nested releaseTag object structure",
+      "implementation": "./src/migrations/update-22-0-0/consolidate-release-tag-config",
+      "package": "nx",
+      "name": "22-0-0-consolidate-release-tag-config"
     },
     {
-      "version": "20.0.0",
-      "description": "Converts the entire application to block control flow syntax",
-      "factory": "./bundles/control-flow-migration.cjs#migrate",
-      "optional": true,
-      "package": "@angular/core",
-      "name": "control-flow-migration"
-    },
-    {
-      "version": "20.0.0",
-      "description": "Moves imports of `DOCUMENT` from `@angular/common` to `@angular/core`",
-      "factory": "./bundles/document-core.cjs#migrate",
-      "package": "@angular/core",
-      "name": "document-core"
-    },
-    {
-      "version": "20.2.0",
-      "description": "Replaces usages of the deprecated Router.getCurrentNavigation method with the Router.currentNavigation signal",
-      "factory": "./bundles/router-current-navigation.cjs#migrate",
-      "optional": true,
-      "package": "@angular/core",
-      "name": "router-current-navigation"
-    },
-    {
-      "version": "20.3.0",
-      "description": "Adds `BootstrapContext` to `bootstrapApplication` calls in `main.server.ts` to support server rendering.",
-      "factory": "./bundles/add-bootstrap-context-to-server-main.cjs#migrate",
-      "package": "@angular/core",
-      "name": "add-bootstrap-context-to-server-main"
+      "version": "22.0.0-beta.0",
+      "description": "Remove the deprecated `external` and `externalBuildTargets` options from the `@nx/js:swc` and `@nx/js:tsc` executors.",
+      "factory": "./src/migrations/update-22-0-0/remove-external-options-from-js-executors",
+      "package": "@nx/js",
+      "name": "remove-external-options-from-js-executors"
     }
   ]
 }
