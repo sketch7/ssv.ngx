@@ -1,111 +1,241 @@
 # GitHub Copilot Instructions
 
-This codebase is an Nx workspace for Angular utility libraries focused on UX patterns and command management.
+Nx monorepo for publishable Angular utility libraries (`@ssv/ngx.command` and `@ssv/ngx.ux`) built with Angular 20+, TypeScript 5.9, and Jest 30.
 
-## Architecture Overview
+## Architecture & Structure
 
-This is a monorepo containing two main Angular libraries:
+**Monorepo Layout:**
 
-- `@ssv/ngx.command` - Command pattern implementation for Angular
-- `@ssv/ngx.ux` - UX utilities, primarily viewport management\n\n**Current Stack:**\n- Angular 20.3.3\n- TypeScript 5.8.3\n- Nx 21.6.3\n- RxJS 7.8.2\n- Zone.js 0.15.1\n- Jest 30.2.0 with jest-preset-angular 15.0.2\n\n### Library Structure
+- `libs/ngx.command/` - Command pattern implementation with signal & observable support
+- `libs/ngx.ux/` - Viewport/responsive utilities with SSR support
+- `apps/test-app/` - Development harness for testing both libraries
+- Each library: standalone exports, `ng-package.json`, separate `project.json` configs
 
-### Library Structure
+**Dependency Flow:**
 
-- Libraries in `libs/` use Angular's `ng-package` build system
-- Test app in `apps/test-app/` for development and testing
-- Each library has its own `project.json`, package configuration, and TypeScript configs
+- Libraries are fully standalone (no cross-dependencies)
+- Test app imports both via `@ssv/ngx.command` and `@ssv/ngx.ux` path aliases
+- Build outputs to `dist/libs/{lib-name}` for npm publishing
 
-## Key Development Patterns
+**Tech Stack (Angular 20 specific):**
 
-### Command Pattern Implementation
+- Angular 20.3.7 with standalone components/directives (no NgModules in new code)
+- TypeScript 5.9.3 with strict mode + `isolatedModules`
+- RxJS 7.8.2 for observables (coexists with signals)
+- Jest 30.2.0 + jest-preset-angular 15.0.3 (no `setup-jest` import needed)
+- pnpm 9.15+ as package manager (enforced via preinstall script)
+- Nx 22.0.1 for build orchestration and caching
 
-The command library implements the command pattern with these key concepts:
+## Critical Development Patterns
 
-- `command()` and `commandAsync()` factory functions for creating commands
-- Commands automatically handle `canExecute`, `isExecuting` states
-- Directive `[ssvCommand]` binds commands to UI elements (typically buttons)
-- Support for signal-based, observable-based, and function-based `canExecute` logic
+### Modern Angular 20 DI Pattern
 
-Example usage:
+**Use `inject()` function with private fields** (not constructor injection):
 
 ```typescript
-// In component
-saveCmd = command(() => this.save(), this.isValid);
-saveAsyncCmd = commandAsync(() => this.saveAsync$(), this.canSave$);
-
-// In template
-<button [ssvCommand]="saveCmd">Save</button>
-<button [ssvCommand]="saveAsyncCmd" [ssvCommandParams]="[item.id]">Save Item</button>
+@Directive({ standalone: true })
+export class ExampleDirective {
+  #service = inject(SomeService); // Private field pattern
+  #renderer = inject(Renderer2);
+}
 ```
 
-### Viewport Management
+- Aligns with Angular 20+ conventions
+- Enables better tree-shaking
+- Already migrated throughout codebase (see `viewport-matcher.directive.ts`)
 
-The UX library provides responsive utilities:
+### Command Pattern Implementation (`@ssv/ngx.command`)
 
-- `ViewportService` with signals for current viewport size and type
-- `*ssvViewportMatcher` structural directive for conditional rendering
-- Configurable breakpoint system with size types (xsmall, small, medium, large, etc.)
+**Factory functions (not classes)** for command creation:
 
-Example viewport patterns:
+```typescript
+// Preferred: Factory functions with auto-cleanup
+saveCmd = command(() => this.save(), this.isValid);        // Sync
+asyncCmd = commandAsync(() => this.http.post(...), this.canSave$);  // Async
+
+// Supports: signal, observable, or function for canExecute
+command(() => execute(), signal(true));           // Signal
+command(() => execute(), observable$);            // Observable
+command(() => execute(), () => this.check());     // Function
+```
+
+- `Command` class is **deprecated** - use factories only
+- Factories auto-inject `DestroyRef` → no manual cleanup needed
+- Commands expose `isExecuting`, `canExecute` as both snapshot values and observables
+
+**Directive Usage:**
 
 ```html
-<div *ssvViewportMatcher="['>=', 'xlarge']">Desktop content</div>
-<div *ssvViewportMatcher="['xsmall', 'small']">Mobile content</div>
+<!-- Basic button binding -->
+<button [ssvCommand]="saveCmd">Save</button>
+
+<!-- With parameters (NOTE: arrays must be double-wrapped) -->
+<button [ssvCommand]="deleteCmd" [ssvCommandParams]="[item]">Delete</button>
+<button [ssvCommand]="multiCmd" [ssvCommandParams]="[[arr]]">Pass Array</button>
+
+<!-- Command creator (for per-row commands in loops) -->
+<button [ssvCommand]="{host: this, execute: remove$, params: [hero]}">Remove</button>
 ```
+
+### Viewport/Responsive Patterns (`@ssv/ngx.ux`)
+
+**Structural directives with tuple syntax** (preferred):
+
+```html
+<!-- Tuple syntax (recommended) -->
+<div *ssvViewportMatcher="['>=', 'xlarge']">Desktop UI</div>
+<div *ssvViewportMatcher="['<=', 'medium']">Mobile UI</div>
+
+<!-- Object syntax (verbose) -->
+<div *ssvViewportMatcher="{size: 'large', operation: '>='}">...</div>
+
+<!-- Include multiple sizes -->
+<div *ssvViewportMatcher="['xsmall', 'small']">Small screens</div>
+
+<!-- Else clause support (use object syntax or tuple) -->
+<div *ssvViewportMatcher="['>=', 'xlarge']">Large</div>
+<div *ssvViewportMatcher="['<', 'xlarge']">Not large</div>
+```
+
+**ViewportService signal API:**
+
+```typescript
+constructor() {
+  const viewport = inject(ViewportService);
+
+  effect(() => {
+    const size = viewport.sizeType();  // Signal: { type, name, widthThreshold }
+    console.log('Current:', size.name);  // 'xsmall' | 'small' | 'medium' | ...
+  });
+}
+```
+
+**SSR Compatibility:**
+
+- Always provide device type via `withViewportSsrDevice('mobile' | 'tablet' | 'desktop')`
+- See `viewport-server-size.service.ts` for custom implementations
+- Default breakpoints: xsmall (≤450), small (451-767), medium (768-992), large (993-1200), xlarge (1201-1500), xxlarge (1501-1920), xxlarge1 (≥1921)
 
 ## Development Workflows
 
-### Key Commands
+**Essential Commands:**
 
-- `pnpm start` - Start test app for development
-- `nx run-many -t build` - Build all libraries
-- `nx run-many -t test` - Run all tests
-- `nx run-many -t lint` - Lint all projects
+```bash
+pnpm start                    # Dev server (test-app on port 4200)
+pnpm nx run-many -t build     # Build all libraries
+pnpm nx run-many -t test      # Run Jest tests for all libs
+pnpm nx run-many -t lint      # ESLint all projects
+pnpm nx reset                 # Clear Nx cache (fixes stale builds)
+```
 
-### Testing Patterns
+**Release Process:**
 
-- Jest for unit testing with Nx integration
-- Test files follow `.spec.ts` naming convention
-- Mock functions use Jest syntax: `jest.fn()`, `jest.spyOn()`
-- Tests focus on command state management and directive behavior
+```bash
+pnpm run prepare-release      # Version bump + changelog (doesn't publish)
+pnpm run release              # Publish to npm (CI only)
+```
 
-### Build System
+- Versioning: Managed by `nx release` (updates `package.json` + `version.ts`)
+- CI publishes on `master`, `*.x` branches, or manual workflow trigger
 
-- Uses Nx with Angular package builder (`@nx/angular:package`)
-- Libraries built to `dist/libs/{lib-name}`
-- Production builds use `tsconfig.lib.prod.json`
-- Releases managed through `nx release` commands
+## Testing Conventions
 
-## Angular-Specific Conventions
+**Jest 30 + jest-preset-angular 15 setup:**
 
-### Dependency Injection
+```typescript
+// test-setup.ts (NO import of 'jest-preset-angular/setup-jest' - removed in v15)
+globalThis.ngJest = {
+  testEnvironmentOptions: {
+    errorOnUnknownElements: true,
+    errorOnUnknownProperties: true,
+  },
+};
+```
 
-- Prefer `inject()` function over constructor injection in modern code
-- Services use `providedIn: 'root'` for singleton behavior
-- Command factories auto-inject `DestroyRef` for cleanup
+**Test Structure:**
 
-### Signals and RxJS Integration
+```typescript
+describe("Command", () => {
+  it("should disable during execution", async () => {
+    const cmd = command(() => delay(100));
+    expect(cmd.canExecute).toBe(true);
+    cmd.execute();
+    expect(cmd.isExecuting).toBe(true);
+    await delay(150);
+    expect(cmd.isExecuting).toBe(false);
+  });
+});
+```
 
-- Heavy use of Angular signals for reactive state
-- `toObservable()` and `toSignal()` for signal/observable interop
-- Commands support both signal and observable-based `canExecute` logic
+- Use `jest.fn()`, `jest.spyOn()` for mocking
+- Command tests verify `isExecuting` state transitions
+- Viewport tests validate breakpoint calculations and condition matching
 
-### TypeScript Patterns
+## Code Quality Standards
 
-- Strict TypeScript configuration
-- Extensive use of type guards (e.g., `isCommand()`, `isCommandCreator()`)
-- Generic types for command parameters and execution functions
+**TypeScript:**
 
-## Library-Specific Guidelines
+- Strict mode enabled (`strict: true`, `isolatedModules: true`)
+- Use type guards: `isCommand()`, `isViewportSizeMatcherExpression()` (see `command.util.ts`, `viewport.util.ts`)
+- Avoid `any` - use `unknown` with type narrowing or suppress with `// eslint-disable-next-line @typescript-eslint/no-explicit-any`
 
-When working on `@ssv/ngx.command`:
+**ESLint:**
 
-- Maintain backward compatibility for command creation patterns
-- Test both sync and async command execution paths
-- Ensure directive properly handles enable/disable and CSS class management
+- Double quotes enforced (`@stylistic/ts/quotes`)
+- Nx module boundaries enforced (no cross-lib dependencies)
+- Angular directive selector rules disabled (custom `ssv` prefix used)
 
-When working on `@ssv/ngx.ux`:
+**Deprecation Pattern:**
 
-- Consider server-side rendering compatibility for viewport detection
-- Test responsive behavior across different breakpoint configurations
-- Maintain performance for frequent viewport size changes
+```typescript
+/**
+ * @deprecated Use {@link commandAsync} instead.
+ */
+export class CommandAsync extends Command { ... }
+```
+
+- Mark deprecated APIs with JSDoc + maintain for backward compatibility
+- Steer users to modern alternatives in documentation
+
+## Angular 20 Compatibility Notes
+
+**Template Reference Typing (Breaking Change in Angular 20):**
+
+- `else` clause on structural directives may cause `TemplateRef<any>` incompatibility
+- Workaround: Use separate directives instead of `else`:
+
+  ```html
+  <!-- Instead of this (can cause TS2322 errors): -->
+  <div *ssvViewportMatcher="['>=', 'large']; else smaller">...</div>
+
+  <!-- Use this: -->
+  <div *ssvViewportMatcher="['>=', 'large']">Large</div>
+  <div *ssvViewportMatcher="['<', 'large']">Smaller</div>
+  ```
+
+**Signal & Observable Interop:**
+
+- `toSignal()` converts observables → signals (used in `ViewportService`)
+- `toObservable()` converts signals → observables (used in `Command` for `canExecute`)
+- Both coexist: Commands accept signal/observable/function for `canExecute`
+
+## Library Publishing
+
+**What gets published:**
+
+- Built files from `dist/libs/{lib-name}` (excludes tests, specs, config)
+- Each library has separate npm package (`@ssv/ngx.command`, `@ssv/ngx.ux`)
+- Version sync: Both libraries share root `package.json` version
+
+**Version compatibility:**
+
+- Angular 17+ → library v3.x
+- Angular 10-16 → library v2.x
+- Angular 4-9 → library v1.x
+
+## Quick Reference Links
+
+- [Command README](../libs/ngx.command/README.md) - Full API docs
+- [Viewport README](../libs/ngx.ux/README.md) - Breakpoint config & SSR
+- [Angular Instructions](instructions/angular.instructions.md) - Team coding standards
+- [Nx Agent Guidelines](../AGENTS.md) - Nx-specific AI workflows
