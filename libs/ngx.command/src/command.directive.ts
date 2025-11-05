@@ -81,7 +81,7 @@ export class CommandDirective implements OnInit {
 	readonly #cdr = inject(ChangeDetectorRef);
 	readonly #injector = inject(Injector);
 
-	readonly commandOrCreator = input<ICommand | CommandCreator | undefined>(undefined, {
+	readonly commandOrCreator = input.required<ICommand | CommandCreator>({
 		alias: `ssvCommand`
 	});
 	readonly ssvCommandOptions = input<Partial<CommandOptions>>(this.#options);
@@ -133,9 +133,7 @@ export class CommandDirective implements OnInit {
 	ngOnInit(): void {
 		const commandOrCreator = this.commandOrCreator();
 		// console.log("[ssvCommand::init]", this.globalOptions);
-		if (!commandOrCreator) {
-			throw new Error(`${NAME_CAMEL}: [${NAME_CAMEL}] should be defined!`);
-		} else if (isCommand(commandOrCreator)) {
+		if (isCommand(commandOrCreator)) {
 			this._command = commandOrCreator;
 		} else if (isCommandCreator(commandOrCreator)) {
 			const isAsync = commandOrCreator.isAsync || commandOrCreator.isAsync === undefined;

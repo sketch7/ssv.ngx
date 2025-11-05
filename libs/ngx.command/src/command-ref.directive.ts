@@ -1,4 +1,4 @@
-import { Directive, OnInit, Input, inject, Injector, DestroyRef } from "@angular/core";
+import { Directive, OnInit, inject, Injector, DestroyRef, input } from "@angular/core";
 
 import type { ICommand, CommandCreator, CanExecute } from "./command.model";
 import { isCommandCreator } from "./command.util";
@@ -32,7 +32,9 @@ export class CommandRefDirective implements OnInit {
 
 	readonly #injector = inject(Injector);
 
-	@Input(NAME_CAMEL) commandCreator: CommandCreator | undefined;
+	readonly commandCreator = input.required<CommandCreator>({
+		alias: `ssvCommandRef`
+	});
 
 	get command(): ICommand { return this._command; }
 	private _command!: ICommand;
@@ -45,8 +47,8 @@ export class CommandRefDirective implements OnInit {
 	}
 
 	ngOnInit(): void {
-		if (isCommandCreator(this.commandCreator)) {
-			const commandCreator = this.commandCreator;
+		if (isCommandCreator(this.commandCreator())) {
+			const commandCreator = this.commandCreator();
 			const isAsync = commandCreator.isAsync || commandCreator.isAsync === undefined;
 
 			const execFn = commandCreator.execute.bind(commandCreator.host);
