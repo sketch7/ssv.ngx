@@ -68,6 +68,9 @@ const NAME_CAMEL = "ssvCommand";
 
 @Directive({
 	selector: `[${NAME_CAMEL}]`,
+	host: {
+		"(click)": "_handleClick()",
+	},
 	exportAs: NAME_CAMEL,
 	standalone: true,
 })
@@ -159,8 +162,7 @@ export class CommandDirective implements OnInit, OnDestroy {
 		this._command.subscribe();
 	}
 
-	@HostListener("click")
-	onClick(): void {
+	_handleClick(): void {
 		const commandParams = this.commandParams();
 		// console.log("[ssvCommand::onClick]", commandParams);
 		if (Array.isArray(commandParams)) {

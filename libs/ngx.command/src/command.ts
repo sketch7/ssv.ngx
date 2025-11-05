@@ -51,7 +51,7 @@ export function command(
 
 /**
  * Command object used to encapsulate information which is needed to perform an action.
- * @deprecated Use {@link command} or {@link commandAsync} instead for creating instances.
+ *
  */
 export class Command implements ICommand {
 
@@ -93,6 +93,7 @@ export class Command implements ICommand {
 	 * @param execute Execute function to invoke - use `isAsync: true` when `Observable<any>`.
 	 * @param canExecute Observable which determines whether it can execute or not.
 	 * @param isAsync Indicates that the execute function is async e.g. Observable.
+	 * @deprecated Use {@link command} or {@link commandAsync} instead for creating instances.
 	 */
 	constructor(
 		execute: ExecuteFn,
@@ -101,8 +102,8 @@ export class Command implements ICommand {
 	) {
 		if (canExecute$) {
 			const canExecute = typeof canExecute$ === "function"
-			? computed(canExecute$)
-			: canExecute$;
+				? computed(canExecute$)
+				: canExecute$;
 			this._$canExecute = isSignal(canExecute) ? canExecute : toSignal(canExecute, { initialValue: false });
 			// this.canExecute$ = combineLatest([
 			// 	this._isExecuting$,
