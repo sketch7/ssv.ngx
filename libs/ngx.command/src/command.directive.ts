@@ -2,7 +2,6 @@ import {
 	Directive,
 	OnInit,
 	OnDestroy,
-	HostListener,
 	ElementRef,
 	Renderer2,
 	ChangeDetectorRef,
@@ -151,6 +150,7 @@ export class CommandDirective implements OnInit, OnDestroy {
 			// 	firstParam: params ? params[0] : null,
 			// 	params
 			// });
+
 			// todo: pass injector instead
 			runInInjectionContext(this.injector, () => {
 				this._command = new Command(execFn, canExec, isAsync);

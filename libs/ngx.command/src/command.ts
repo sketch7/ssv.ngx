@@ -215,6 +215,9 @@ export class Command implements ICommand {
  */
 export class CommandAsync extends Command {
 
+	/**
+	 * @deprecated Use {@link commandAsync} instead to create an instance.
+	 */
 	constructor(
 		execute: ExecuteAsyncFn,
 		canExecute$?: CanExecute,
