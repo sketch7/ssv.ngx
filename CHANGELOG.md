@@ -4,6 +4,8 @@
 
 - **command:** refactor to signal based add `$isExecuting` and `$canExecute`
 - **command:** change `provideSsvCommandOptions` to `Provider[]` instead of `EnvironmentProviders`
+- **command:** deprecated `Command` `autoDestroy`, `subscribe`, `unsubscribe` (redundant when using `command`/`commandAsync`)
+- **command:** deprecated `Command` `canExecute`, `isExecuting` in favor of signal based
 
 ### Refactor
 

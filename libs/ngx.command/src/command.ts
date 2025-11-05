@@ -55,35 +55,18 @@ export function command(
  */
 export class Command implements ICommand {
 
-	/** Determines whether the command is currently executing, as a snapshot value. */
 	get isExecuting(): boolean { return this.$isExecuting(); }
 
-	/** Determines whether the command can execute or not, as a snapshot value. */
 	get canExecute(): boolean { return this.$canExecute(); }
 
-	/** Determines whether the command is currently executing, as a signal. */
 	readonly $isExecuting = signal(false);
-
-	/** Determines whether the command can execute or not, as a signal. */
 	readonly $canExecute = computed(() => !this.$isExecuting() && this._$canExecute());
-
-	// /** Determines whether the command is currently executing, as an observable. */
-	// readonly isExecuting$ = toObservable(this.$isExecuting);
-
-	// /** Determines whether the command can execute or not, as an observable. */
-	// readonly canExecute$ = toObservable(this.$canExecute);
 
 	private readonly _$canExecute: Signal<boolean>;
 
-	/** Determines whether to auto destroy when having 0 subscribers. */
 	autoDestroy = true;
 
-	// private _isExecuting$ = new BehaviorSubject<boolean>(false);
-	// private _isExecuting = false;
-	// private _canExecute = true;
 	private executionPipe$ = new Subject<unknown[] | undefined>();
-	// private isExecuting$$ = Subscription.EMPTY;
-	// private canExecute$$ = Subscription.EMPTY;
 	private executionPipe$$ = Subscription.EMPTY;
 	private subscribersCount = 0;
 
@@ -108,30 +91,8 @@ export class Command implements ICommand {
 			this._$canExecute = isSignal(canExecute)
 				? canExecute
 				: toSignal(canExecute, { initialValue: false, injector });
-			// this.canExecute$ = combineLatest([
-			// 	this._isExecuting$,
-			// 	isSignal(canExecute$) ? toObservable(canExecute$) : canExecute$
-			// ]).pipe(
-			// 	map(([isExecuting, canExecuteResult]) => {
-			// 		// console.log("[command::combineLatest$] update!", { isExecuting, canExecuteResult });
-			// 		this._isExecuting = isExecuting;
-			// 		this._canExecute = !isExecuting && !!canExecuteResult;
-			// 		return this._canExecute;
-			// 	}),
-			// );
-			// this.canExecute$$ = this.canExecute$.subscribe();
 		} else {
 			this._$canExecute = signal(true);
-			// this.canExecute$ = this._isExecuting$.pipe(
-			// 	map(x => {
-			// 		const canExecute = !x;
-			// 		this._canExecute = canExecute;
-			// 		return canExecute;
-			// 	})
-			// );
-			// this.isExecuting$$ = this._isExecuting$
-			// 	.pipe(tap(x => this._isExecuting = x))
-			// 	.subscribe();
 		}
 		this.executionPipe$$ = this.buildExecutionPipe(execute, isAsync).subscribe();
 	}
@@ -146,8 +107,6 @@ export class Command implements ICommand {
 	destroy(): void {
 		// console.warn("[command::destroy]");
 		this.executionPipe$$.unsubscribe();
-		// this.canExecute$$.unsubscribe();
-		// this.isExecuting$$.unsubscribe();
 	}
 
 	subscribe(): void {

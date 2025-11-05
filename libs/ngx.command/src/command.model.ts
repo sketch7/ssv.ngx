@@ -8,25 +8,25 @@ export type ExecuteAsyncFn = (...args: any[]) => Observable<unknown> | Promise<u
 export type CanExecute = (() => boolean) | Signal<boolean> | Observable<boolean>;
 
 export interface ICommand {
-	/** Determines whether the command is currently executing, as a snapshot value. */
+	/** Determines whether the command is currently executing, as a snapshot value.
+	 * @deprecated Use {@link $isExecuting} signal instead.
+	*/
 	readonly isExecuting: boolean;
 
 	/** Determines whether the command is currently executing, as a signal. */
 	readonly $isExecuting: Signal<boolean>;
 
-	// /** Determines whether the command is currently executing, as an observable. */
-	// readonly isExecuting$: Observable<boolean>;
-
-	/** Determines whether the command can execute or not, as a snapshot value. */
+	/** Determines whether the command can execute or not, as a snapshot value.
+	 * @deprecated Use {@link $canExecute} signal instead.
+	*/
 	readonly canExecute: boolean;
 
 	/** Determines whether the command can execute or not, as a signal. */
 	readonly $canExecute: Signal<boolean>;
 
-	// /** Determines whether the command can execute or not, as an observable. */
-	// readonly canExecute$: Observable<boolean>;
-
-	/** Determines whether to auto destroy when having 0 subscribers (defaults to `true`). */
+	/** Determines whether to auto destroy when having 0 subscribers (defaults to `true`).
+	 * @deprecated Use using command/commandAsync is handled automatically.
+	 */
 	autoDestroy: boolean;
 
 	/** Execute function to invoke. */
@@ -35,10 +35,15 @@ export interface ICommand {
 	/** Disposes all resources held by subscriptions. */
 	destroy(): void;
 
-	/** Subscribe listener, in order to handle auto disposing. */
+	/** Subscribe listener, in order to handle auto disposing.
+	 * @deprecated Use using command/commandAsync is handled automatically.
+	 */
 	subscribe(): void;
 
-	/** Unsubscribe listener, in order to handle auto disposing. */
+	/**
+	 * Unsubscribe listener, in order to handle auto disposing.
+	 * @deprecated Use using command/commandAsync is handled automatically.
+	*/
 	unsubscribe(): void;
 }
 
