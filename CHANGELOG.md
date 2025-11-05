@@ -5,6 +5,10 @@
 - **command:** change `provideSsvCommandOptions` to `Provider[]` instead of `EnvironmentProviders`
 - **command:** refactor to signal based add `$isExecuting` and `$canExecute`
 
+### Refactor
+
+- **all:** remove all `OnDestroy` in favor of `DestroyRef`
+
 ### BREAKING CHANGES
 
 - **command:** remove `Command` `isExecuting$` and `canExecute$`

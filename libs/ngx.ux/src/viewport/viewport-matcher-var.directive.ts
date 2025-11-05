@@ -1,5 +1,6 @@
-import { OnInit, OnDestroy, Directive, Input, TemplateRef, ViewContainerRef, EmbeddedViewRef, inject } from "@angular/core";
-import { combineLatest, ReplaySubject, Subject, tap, map, takeUntil } from "rxjs";
+import { OnInit, Directive, Input, TemplateRef, ViewContainerRef, EmbeddedViewRef, inject, DestroyRef } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { combineLatest, ReplaySubject, tap, map } from "rxjs";
 
 import { ViewportService } from "./viewport.service";
 import {
@@ -23,14 +24,14 @@ export class SsvViewportMatcherVarContext {
 	selector: `[${NAME_CAMEL}]`,
 	standalone: true,
 })
-export class SsvViewportMatcherVar implements OnInit, OnDestroy {
+export class SsvViewportMatcherVar implements OnInit {
 	#viewport = inject(ViewportService);
 	#viewContainer = inject(ViewContainerRef);
 	#templateRef = inject<TemplateRef<SsvViewportMatcherVarContext>>(TemplateRef);
+	#destroyRef = inject(DestroyRef);
 
 	private _matchConditions: ViewportMatchConditions = {};
 	private _context = new SsvViewportMatcherVarContext();
-	private readonly _destroy$ = new Subject<void>();
 	private readonly _update$ = new ReplaySubject<void>(1);
 	private _viewRef!: EmbeddedViewRef<SsvViewportMatcherVarContext>;
 
@@ -56,13 +57,8 @@ export class SsvViewportMatcherVar implements OnInit, OnDestroy {
 			map(([sizeType]) => isViewportConditionMatch(sizeType, this._matchConditions, this.#viewport.sizeTypeMap)),
 			tap(x => this._context.$implicit = x),
 			tap(() => this._viewRef.markForCheck()),
-			takeUntil(this._destroy$),
+			takeUntilDestroyed(this.#destroyRef),
 		).subscribe();
-	}
-
-	ngOnDestroy(): void {
-		this._destroy$.next();
-		this._destroy$.complete();
 	}
 
 	private updateView(): void {

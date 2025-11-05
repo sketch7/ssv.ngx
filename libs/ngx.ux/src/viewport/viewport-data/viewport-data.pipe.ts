@@ -1,5 +1,6 @@
 import { Subscription, tap } from "rxjs";
-import { Pipe, PipeTransform, OnDestroy, ChangeDetectorRef, inject } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { Pipe, PipeTransform, ChangeDetectorRef, inject, DestroyRef } from "@angular/core";
 
 import { ViewportDataConfig, ViewportDataMatchStrategy, ViewportDataMatchStrategyLiteral } from "./viewport-data-matcher";
 import { ViewportDataService } from "./viewport-data.service";
@@ -10,9 +11,10 @@ import { ViewportDataService } from "./viewport-data.service";
 	pure: false,
 	standalone: true,
 })
-export class ViewportDataPipe implements PipeTransform, OnDestroy {
+export class ViewportDataPipe implements PipeTransform {
 	#viewportData = inject(ViewportDataService);
 	#cdr = inject(ChangeDetectorRef);
+	#destroyRef = inject(DestroyRef);
 
 	private markForTransform = true;
 	private value: unknown;
@@ -34,14 +36,11 @@ export class ViewportDataPipe implements PipeTransform, OnDestroy {
 				this.value = value;
 				this.#cdr.markForCheck();
 			}),
+			takeUntilDestroyed(this.#destroyRef),
 		).subscribe();
 
 		this.markForTransform = false;
 		return this.value;
-	}
-
-	ngOnDestroy(): void {
-		this.data$$.unsubscribe();
 	}
 
 }

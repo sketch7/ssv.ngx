@@ -3,9 +3,9 @@ import {
 	Observable, Subscription, Subject, of, EMPTY,
 	tap, filter, switchMap, catchError, finalize, take,
 } from "rxjs";
+import { toSignal } from "@angular/core/rxjs-interop";
 import type { CanExecute, ExecuteAsyncFn, ExecuteFn, ICommand } from "./command.model";
 import { assertInInjectionContext, computed, DestroyRef, inject, Injector, isSignal, signal, type Signal } from "@angular/core";
-import { toSignal } from "@angular/core/rxjs-interop";
 
 export interface CommandCreateOptions {
 	isAsync: boolean,
