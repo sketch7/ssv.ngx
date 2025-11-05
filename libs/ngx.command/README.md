@@ -164,7 +164,6 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideSsvCommandOptions({
       executingCssClass: "is-busy",
-      hasDisabledDelay: false
     }),
   ],
 };

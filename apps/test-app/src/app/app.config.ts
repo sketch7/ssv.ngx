@@ -14,7 +14,6 @@ export const appConfig: ApplicationConfig = {
 
 		provideSsvCommandOptions({
 			executingCssClass: "is-busy",
-			hasDisabledDelay: false
 		}),
 
 		provideSsvUxViewportOptions({

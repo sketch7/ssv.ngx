@@ -14,6 +14,7 @@
 ### BREAKING CHANGES
 
 - **command:** remove `Command` `isExecuting$` and `canExecute$`
+- **command:** remove `CommandOptions` `hasDisabledDelay`
 - **command:** rename `CommandDirective` to `SsvCommand`
 - **command:** rename `CommandRefDirective` to `SsvCommandRef`
 - **ux:** rename `SsvViewportMatcherVarDirective` to `SsvViewportMatcherVar`
