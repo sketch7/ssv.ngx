@@ -1,20 +1,29 @@
-import { BehaviorSubject, EMPTY } from "rxjs";
+import { createEnvironmentInjector, EnvironmentInjector } from "@angular/core";
+import { BehaviorSubject, EMPTY, type Observable } from "rxjs";
 
-import { Command } from "./command";
+import { Command, command, commandAsync } from "./command";
 
 describe("CommandSpecs", () => {
 	let SUT: Command;
-	let executeFn: jest.Mock<void, unknown[], unknown> ;
+	let executeFn: jest.Mock<void, unknown[], unknown>;
+	let asyncExecuteFn: jest.Mock<Observable<unknown>, unknown[], unknown>;
+	let injector: EnvironmentInjector;
 	// let executeSpyFn: jest.SpyInstance<void, unknown[], unknown>;
 
 	beforeEach(() => {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		injector = createEnvironmentInjector([], null as any);
 		executeFn = jest.fn();
 		// executeSpyFn = executeFn;
 	});
 
+	afterEach(() => {
+		injector?.destroy();
+	});
+
 	describe("given a command without canExecute$ param", () => {
 		beforeEach(() => {
-			SUT = new Command(executeFn);
+			SUT = command(executeFn, undefined, { injector, isAsync: false });
 			// executeSpyFn = jest.spyOn(SUT, "execute");
 		});
 
@@ -23,11 +32,8 @@ describe("CommandSpecs", () => {
 				expect(SUT.canExecute).toBe(true);
 			});
 
-			it("should have canExecute$ set to true", done => {
-				SUT.canExecute$.subscribe(x => {
-					expect(x).toBe(true);
-					done();
-				});
+			it("should have $canExecute signal set to true", () => {
+				expect(SUT.$canExecute()).toBe(true);
 			});
 		});
 
@@ -54,7 +60,7 @@ describe("CommandSpecs", () => {
 		describe("when canExecute is true", () => {
 			beforeEach(() => {
 				const isInitialValid = true;
-				SUT = new Command(executeFn, new BehaviorSubject<boolean>(isInitialValid));
+				SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector, isAsync: false });
 			});
 
 			it("should invoke execute function passed", () => {
@@ -66,15 +72,16 @@ describe("CommandSpecs", () => {
 		describe("when observable completes", () => {
 			beforeEach(() => {
 				const isInitialValid = true;
-				executeFn = jest.fn().mockImplementation(() => EMPTY);
-				SUT = new Command(executeFn, new BehaviorSubject<boolean>(isInitialValid));
+				asyncExecuteFn = jest.fn().mockImplementation(() => EMPTY);
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				SUT = commandAsync(asyncExecuteFn as any, new BehaviorSubject<boolean>(isInitialValid), { injector });
 			});
 
 			it("should invoke multiple times", () => {
 				SUT.execute();
 				SUT.execute();
 				expect(SUT.isExecuting).toBeFalsy();
-				expect(executeFn).toHaveBeenCalledTimes(2);
+				expect(asyncExecuteFn).toHaveBeenCalledTimes(2);
 			});
 		});
 
@@ -89,7 +96,7 @@ describe("CommandSpecs", () => {
 				executeFn = jest.fn().mockImplementation(() => {
 					throw new Error("Execution failed!");
 				});
-				SUT = new Command(executeFn, new BehaviorSubject<boolean>(isInitialValid));
+				SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector, isAsync: false });
 			});
 
 			it("should invoke multiple times", () => {
@@ -107,7 +114,7 @@ describe("CommandSpecs", () => {
 		describe("when args are passed", () => {
 			beforeEach(() => {
 				const isInitialValid = true;
-				SUT = new Command(executeFn, new BehaviorSubject<boolean>(isInitialValid));
+				SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector, isAsync: false });
 			});
 
 			it("and has 1 param should receive 1 arg", () => {
@@ -136,7 +143,7 @@ describe("CommandSpecs", () => {
 		describe("when canExecute is false", () => {
 			beforeEach(() => {
 				const isInitialValid = false;
-				SUT = new Command(executeFn, new BehaviorSubject<boolean>(isInitialValid));
+				SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector, isAsync: false });
 			});
 
 			it("should not execute the provided execute function", () => {
@@ -152,18 +159,15 @@ describe("CommandSpecs", () => {
 		beforeEach(() => {
 			const isInitialValid = true;
 			canExecute$ = new BehaviorSubject<boolean>(isInitialValid);
-			SUT = new Command(executeFn, canExecute$);
+			SUT = command(executeFn, canExecute$, { injector, isAsync: false });
 		});
 
 		it("should have canExecute set to true", () => {
 			expect(SUT.canExecute).toBe(true);
 		});
 
-		it("should have canExecute$ set to true", done => {
-			SUT.canExecute$.subscribe(x => {
-				expect(x).toBe(true);
-				done();
-			});
+		it("should have $canExecute signal set to true", () => {
+			expect(SUT.$canExecute()).toBe(true);
 		});
 
 		describe("when the canExecute observable changes", () => {
@@ -175,11 +179,8 @@ describe("CommandSpecs", () => {
 				expect(SUT.canExecute).toBe(false);
 			});
 
-			it("should update canExecute$", done => {
-				SUT.canExecute$.subscribe(x => {
-					expect(x).toBe(false);
-					done();
-				});
+			it("should update $canExecute signal", () => {
+				expect(SUT.$canExecute()).toBe(false);
 			});
 		});
 	});
@@ -187,25 +188,22 @@ describe("CommandSpecs", () => {
 	describe("given canExecute with an initial value of false", () => {
 		beforeEach(() => {
 			const isInitialValid = false;
-			SUT = new Command(executeFn, new BehaviorSubject<boolean>(isInitialValid));
+			SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector, isAsync: false });
 		});
 
 		it("should have canExecute set to false", () => {
 			expect(SUT.canExecute).toBe(false);
 		});
 
-		it("should have canExecute$ set to false", done => {
-			SUT.canExecute$.subscribe(x => {
-				expect(x).toBe(false);
-				done();
-			});
+		it("should have $canExecute signal set to false", () => {
+			expect(SUT.$canExecute()).toBe(false);
 		});
 	});
 
 	describe("given destroy is invoked", () => {
 		beforeEach(() => {
 			const isInitialValid = false;
-			SUT = new Command(executeFn, new BehaviorSubject<boolean>(isInitialValid));
+			SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector, isAsync: false });
 		});
 
 		it("should destroy successfully", () => {
