@@ -2,8 +2,8 @@
 
 ### Features
 
-- **command:** change `provideSsvCommandOptions` to `Provider[]` instead of `EnvironmentProviders`
 - **command:** refactor to signal based add `$isExecuting` and `$canExecute`
+- **command:** change `provideSsvCommandOptions` to `Provider[]` instead of `EnvironmentProviders`
 
 ### Refactor
 
