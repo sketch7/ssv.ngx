@@ -3,12 +3,12 @@
 // import {TestComponentBuilder, ComponentFixture} from "@angular/compiler/testing";
 // import {Component, provide} from "@angular/core";
 
-// import {Command, ICommand, CommandDirective} from "./index";
+// import {Command, ICommand, SsvCommand} from "./index";
 
 // @Component({
 // 	template: `<button class="btn" [ssvCommand]="saveCmd" >Save</button>`,
 // 	directives: [
-// 		CommandDirective
+// 		SsvCommand
 // 	]
 // })
 // class TestContainer {
@@ -18,14 +18,14 @@
 // @Component({
 // 	template: `<button class="btn" [ssvCommand]="emptyCmd" >Save</button>`,
 // 	directives: [
-// 		CommandDirective
+// 		SsvCommand
 // 	]
 // })
 // class NullCommandTestContainer {
 
 // }
 
-// describe("CommandDirectiveSpecs", () => {
+// describe("SsvCommandSpecs", () => {
 
 // 	let testComponentBuilder: TestComponentBuilder;
 

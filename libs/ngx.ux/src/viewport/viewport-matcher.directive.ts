@@ -1,5 +1,6 @@
-import { OnInit, OnDestroy, Directive, Renderer2, ViewContainerRef, Input, EmbeddedViewRef, TemplateRef, ChangeDetectorRef, inject } from "@angular/core";
-import { Subscription, Subject, tap, filter, pairwise, startWith } from "rxjs";
+import { OnInit, Directive, Renderer2, ViewContainerRef, Input, EmbeddedViewRef, TemplateRef, ChangeDetectorRef, inject, DestroyRef } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { Subject, tap, filter, pairwise, startWith } from "rxjs";
 
 import { ViewportService } from "./viewport.service";
 import {
@@ -22,11 +23,12 @@ export class SsvViewportMatcherContext implements ViewportMatchConditions {
 	exportAs: "ssvViewportMatcher",
 	standalone: true,
 })
-export class SsvViewportMatcherDirective implements OnInit, OnDestroy {
+export class SsvViewportMatcher implements OnInit {
 	#viewport = inject(ViewportService);
 	#renderer = inject(Renderer2);
 	#viewContainer = inject(ViewContainerRef);
 	#cdr = inject(ChangeDetectorRef);
+	#destroyRef = inject(DestroyRef);
 
 	sizeInfo: ViewportSizeTypeInfo | undefined;
 
@@ -35,8 +37,7 @@ export class SsvViewportMatcherDirective implements OnInit, OnDestroy {
 	private _elseTemplateRef: TemplateRef<SsvViewportMatcherContext> | null = null;
 	private _thenViewRef: EmbeddedViewRef<SsvViewportMatcherContext> | null = null;
 	private _elseViewRef: EmbeddedViewRef<SsvViewportMatcherContext> | null = null;
-	private sizeType$$ = Subscription.EMPTY;
-	private cssClass$$ = Subscription.EMPTY;
+
 	private readonly _update$ = new Subject<SsvViewportMatcherContext>();
 
 	@Input() set ssvViewportMatcher(value: string | string[] | ViewportSizeMatcherExpression) {
@@ -77,6 +78,10 @@ export class SsvViewportMatcherDirective implements OnInit, OnDestroy {
 		const templateRef = inject<TemplateRef<SsvViewportMatcherContext>>(TemplateRef);
 
 		this._thenTemplateRef = templateRef;
+
+		this.#destroyRef.onDestroy(() => {
+			this._update$.complete();
+		});
 	}
 
 	ngOnInit(): void {
@@ -93,15 +98,16 @@ export class SsvViewportMatcherDirective implements OnInit, OnDestroy {
 			)
 			.subscribe();
 
-		this.sizeType$$ = this.#viewport.sizeType$
+		this.#viewport.sizeType$
 			.pipe(
 				// tap(x => console.log("ssvViewportMatcher - sizeType changed", x)),
 				tap(x => this.sizeInfo = x),
 				tap(() => this._update$.next(this._context)),
+				takeUntilDestroyed(this.#destroyRef),
 			)
 			.subscribe();
 
-		this.cssClass$$ = this.#viewport.sizeType$
+		this.#viewport.sizeType$
 			.pipe(
 				startWith<ViewportSizeTypeInfo | undefined>(undefined),
 				filter(() => !!(this._thenViewRef || this._elseViewRef)),
@@ -119,14 +125,9 @@ export class SsvViewportMatcherDirective implements OnInit, OnDestroy {
 					}
 					this.#renderer.addClass(el, `ssv-vp-size--${curr?.name}`);
 				}),
+				takeUntilDestroyed(this.#destroyRef),
 			)
 			.subscribe();
-	}
-
-	ngOnDestroy(): void {
-		this.cssClass$$.unsubscribe();
-		this.sizeType$$.unsubscribe();
-		this._update$.complete();
 	}
 
 	private _updateView(sizeInfo: ViewportSizeTypeInfo) {

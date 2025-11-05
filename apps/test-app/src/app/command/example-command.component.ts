@@ -5,7 +5,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 
 import { BehaviorSubject, timer, Observable, tap, filter, map, distinctUntilChanged } from "rxjs";
-import { CommandAsync, commandAsync, SsvCommandModule } from "@ssv/ngx.command";
+import { commandAsync, SsvCommand, SsvCommandRef } from "@ssv/ngx.command";
 import { CommonModule } from "@angular/common";
 
 interface Hero {
@@ -31,10 +31,14 @@ interface HeroPausedState {
 		MatIconModule,
 		MatButtonModule,
 		MatProgressSpinnerModule,
-		SsvCommandModule,
+		SsvCommand,
+		SsvCommandRef,
 	]
 })
 export class ExampleCommandComponent {
+
+	readonly #cdr = inject(ChangeDetectorRef);
+	readonly #destroyRef = inject(DestroyRef);
 
 	isValid = true;
 	isExecuting = false;
@@ -45,12 +49,12 @@ export class ExampleCommandComponent {
 	readonly $isValid = signal(false);
 	readonly $containerVisibility = signal(true);
 
-	readonly saveCmd = new CommandAsync(() => this.save$(), this.isValid$);
-	readonly saveSignalCmd = new CommandAsync(() => this.save$(), this.$isValid);
-	readonly saveCmdNoValidation = new CommandAsync(() => this.save$());
-	readonly removeHeroCmd = new CommandAsync(this.removeHero$.bind(this), this.isValidHeroRemove$);
-	readonly pauseHeroCmd = new CommandAsync(this.pauseHero$.bind(this), this.isValidHeroRemove$);
-	readonly saveReduxCmd = new CommandAsync(
+	readonly saveCmd = commandAsync(() => this.save$(), this.isValid$);
+	readonly saveSignalCmd = commandAsync(() => this.save$(), this.$isValid);
+	readonly saveCmdNoValidation = commandAsync(() => this.save$());
+	readonly removeHeroCmd = commandAsync(this.removeHero$.bind(this), this.isValidHeroRemove$);
+	readonly pauseHeroCmd = commandAsync(this.pauseHero$.bind(this), this.isValidHeroRemove$);
+	readonly saveReduxCmd = commandAsync(
 		this.saveRedux.bind(this),
 		this.isValidRedux$,
 	);
@@ -71,26 +75,22 @@ export class ExampleCommandComponent {
 		isInvulnerable: true
 	} as Hero);
 
-	// saveCmdSync: ICommand = new Command(this.save$.bind(this), this.isValid$, true);
-	// saveCmd: ICommand = new Command(this.save$.bind(this), null, true);
+	// saveCmdSync = command(this.save$.bind(this), this.isValid$, true);
+	// saveCmd = command(this.save$.bind(this), null, true);
 	private _state = new BehaviorSubject({ isLoading: false });
 	private _pauseState = new BehaviorSubject<HeroPausedState>({});
 
-	private readonly cdr = inject(ChangeDetectorRef);
-	private readonly destroyRef = inject(DestroyRef);
-
 	constructor() {
-		this.destroyRef.onDestroy(() => {
+		this.#destroyRef.onDestroy(() => {
 			console.warn("destroyRef.onDestroy");
 		});
-		// this.containerDestroySaveCmd.autoDestroy = false;
 	}
 
 	save() {
 		this.isExecuting = true;
 		setTimeout(() => {
 			this.isExecuting = false;
-			this.cdr.markForCheck();
+			this.#cdr.markForCheck();
 			console.warn("save", "execute complete");
 		}, 2000);
 	}
@@ -145,7 +145,7 @@ export class ExampleCommandComponent {
 			map(x => !x || !x.isPaused),
 			distinctUntilChanged(),
 			tap(x => console.warn(">>>> canPauseHero$ change", x, hero)),
-			tap(() => this.cdr.markForCheck()),
+			tap(() => this.#cdr.markForCheck()),
 		);
 	}
 

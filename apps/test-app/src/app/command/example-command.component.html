@@ -139,8 +139,7 @@
 				mat-raised-button
 				color="primary"
 				disabled
-				[ssvCommand]="saveCmdNoValidation"
-				[ssvCommandOptions]="{ hasDisabledDelay: true }">
+				[ssvCommand]="saveCmdNoValidation">
 				@if (saveCmdNoValidation.isExecuting) {
 				<i class="ai-circled ai-indicator ai-dark-spin small"></i>
 				} Save

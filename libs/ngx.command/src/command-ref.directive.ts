@@ -1,9 +1,8 @@
-import { Observable } from "rxjs";
-import { Directive, OnInit, OnDestroy, Input } from "@angular/core";
+import { Directive, OnInit, inject, Injector, DestroyRef, input } from "@angular/core";
 
-import { ICommand, CommandCreator } from "./command.model";
+import type { ICommand, CommandCreator, CanExecute } from "./command.model";
 import { isCommandCreator } from "./command.util";
-import { Command } from "./command";
+import { command } from "./command";
 
 const NAME_CAMEL = "ssvCommandRef";
 
@@ -29,28 +28,34 @@ const NAME_CAMEL = "ssvCommandRef";
 	exportAs: NAME_CAMEL,
 	standalone: true,
 })
-export class CommandRefDirective implements OnInit, OnDestroy {
+export class SsvCommandRef implements OnInit {
 
-	@Input(NAME_CAMEL) commandCreator: CommandCreator | undefined;
+	readonly #injector = inject(Injector);
+
+	readonly commandCreator = input.required<CommandCreator>({
+		alias: `ssvCommandRef`
+	});
 
 	get command(): ICommand { return this._command; }
 	private _command!: ICommand;
 
-	ngOnInit(): void {
-		if (isCommandCreator(this.commandCreator)) {
-			const isAsync = this.commandCreator.isAsync || this.commandCreator.isAsync === undefined;
-
-			const execFn = this.commandCreator.execute.bind(this.commandCreator.host);
-			this._command = new Command(execFn, this.commandCreator.canExecute as Observable<boolean> | undefined, isAsync);
-		} else {
-			throw new Error(`${NAME_CAMEL}: [${NAME_CAMEL}] is not defined properly!`);
-		}
+	constructor() {
+		const destroyRef = inject(DestroyRef);
+		destroyRef.onDestroy(() => {
+			this._command?.unsubscribe();
+		});
 	}
 
-	ngOnDestroy(): void {
-		// console.log("[commandRef::destroy]");
-		if (this._command) {
-			this._command.destroy();
+	ngOnInit(): void {
+		if (isCommandCreator(this.commandCreator())) {
+			const commandCreator = this.commandCreator();
+			const isAsync = commandCreator.isAsync || commandCreator.isAsync === undefined;
+
+			const execFn = commandCreator.execute.bind(commandCreator.host);
+
+			this._command = command(execFn, commandCreator.canExecute as CanExecute, { isAsync, injector: this.#injector });
+		} else {
+			throw new Error(`${NAME_CAMEL}: [${NAME_CAMEL}] is not defined properly!`);
 		}
 	}
 

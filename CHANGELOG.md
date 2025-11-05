@@ -1,3 +1,25 @@
+## 4.0.0 (2025-11-05)
+
+### Features
+
+- **command:** refactor to signal based add `$isExecuting` and `$canExecute`
+- **command:** change `provideSsvCommandOptions` to `Provider[]` instead of `EnvironmentProviders`
+- **command:** deprecated `Command` `autoDestroy`, `subscribe`, `unsubscribe` (redundant when using `command`/`commandAsync`)
+- **command:** deprecated `Command` `canExecute`, `isExecuting` in favor of signal based
+
+### Refactor
+
+- **all:** remove all `OnDestroy` in favor of `DestroyRef`
+
+### BREAKING CHANGES
+
+- **command:** remove `Command` `isExecuting$` and `canExecute$`
+- **command:** remove `CommandOptions` `hasDisabledDelay`
+- **command:** rename `CommandDirective` to `SsvCommand`
+- **command:** rename `CommandRefDirective` to `SsvCommandRef`
+- **ux:** rename `SsvViewportMatcherVarDirective` to `SsvViewportMatcherVar`
+- **ux:** rename `SsvViewportMatcherDirective` to `SsvViewportMatcher`
+
 ## 3.3.0 (2025-10-28)
 
 ### Chore

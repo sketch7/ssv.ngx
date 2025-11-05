@@ -6,6 +6,7 @@ const EXPORTED_IMPORTS = [
 	SsvUxViewportModule,
 ];
 
+/** @deprecated Use standalone instead. */
 @NgModule({
 	imports: [EXPORTED_IMPORTS],
 	exports: [EXPORTED_IMPORTS]

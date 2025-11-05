@@ -1,4 +1,4 @@
-import { type EnvironmentProviders, InjectionToken, makeEnvironmentProviders } from "@angular/core";
+import { InjectionToken, type Provider } from "@angular/core";
 
 export interface CommandOptions {
 	/**
@@ -11,17 +11,11 @@ export interface CommandOptions {
 	 * This disables the handling manually and need to pass explicitly `[disabled]="!saveCmd.canExecute"`.
 	 */
 	handleDisabled: boolean;
-
-	/** Determine whether to set a `delay(1)` when setting the disabled. Which might be needed when working with external
-	 * components/directives (such as material button)
-	 */
-	hasDisabledDelay: boolean;
 }
 
 const DEFAULT_OPTIONS = Object.freeze<CommandOptions>({
 	executingCssClass: "executing",
 	handleDisabled: true,
-	hasDisabledDelay: false,
 });
 
 export const COMMAND_OPTIONS = new InjectionToken<CommandOptions>("SSV_COMMAND_OPTIONS", {
@@ -30,8 +24,8 @@ export const COMMAND_OPTIONS = new InjectionToken<CommandOptions>("SSV_COMMAND_O
 
 export function provideSsvCommandOptions(
 	options: Partial<CommandOptions> | ((defaults: Readonly<CommandOptions>) => Partial<CommandOptions>)
-): EnvironmentProviders {
-	return makeEnvironmentProviders([
+): Provider[] {
+	return [
 		{
 			provide: COMMAND_OPTIONS,
 			useFactory: () => {
@@ -45,5 +39,5 @@ export function provideSsvCommandOptions(
 				return opts;
 			},
 		},
-	]);
+	];
 }

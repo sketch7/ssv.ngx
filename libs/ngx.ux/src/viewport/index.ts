@@ -3,8 +3,8 @@ export * from "./viewport-data/index";
 export { SsvUxViewportModule } from "./viewport.module";
 export { provideSsvUxViewportOptions, VIEWPORT_OPTIONS, type UxViewportOptions, withViewportSsrDevice } from "./viewport.options";
 
-export { SsvViewportMatcherVarDirective, SsvViewportMatcherVarContext } from "./viewport-matcher-var.directive";
-export { SsvViewportMatcherDirective, SsvViewportMatcherContext } from "./viewport-matcher.directive";
+export { SsvViewportMatcherVar, SsvViewportMatcherVarContext } from "./viewport-matcher-var.directive";
+export { SsvViewportMatcher, SsvViewportMatcherContext } from "./viewport-matcher.directive";
 export { VIEWPORT_SSR_DEVICE, ViewportServerSizeService } from "./viewport-server-size.service";
 export {
 	type ComparisonOperationValueType,
