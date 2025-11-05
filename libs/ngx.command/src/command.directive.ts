@@ -122,7 +122,7 @@ export class SsvCommand implements OnInit {
 
 	ngOnInit(): void {
 		const commandOrCreator = this.commandOrCreator();
-		// console.log("[ssvCommand::init]", this.globalOptions);
+		// console.log("[ssvCommand::init]", this.#options);
 		if (isCommand(commandOrCreator)) {
 			this._command = commandOrCreator;
 		} else if (isCommandCreator(commandOrCreator)) {
@@ -144,12 +144,7 @@ export class SsvCommand implements OnInit {
 			// 	params
 			// });
 
-			console.warn(">>>> commandCreator");
 			this._command = command(execFn, canExec, { isAsync, injector: this.#injector });
-			// // todo: pass injector instead
-			// runInInjectionContext(this.injector, () => {
-			// 	this._command = new Command(execFn, canExec, isAsync);
-			// });
 		} else {
 			throw new Error(`${NAME_CAMEL}: [${NAME_CAMEL}] is not defined properly!`);
 		}
