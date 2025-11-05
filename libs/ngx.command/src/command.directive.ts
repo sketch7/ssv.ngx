@@ -1,7 +1,6 @@
 import {
 	Directive,
 	OnInit,
-	OnDestroy,
 	ElementRef,
 	Renderer2,
 	ChangeDetectorRef,
@@ -9,12 +8,12 @@ import {
 	effect,
 	input,
 	Injector,
-	runInInjectionContext,
 	computed,
+	DestroyRef,
 } from "@angular/core";
 
 import { type CommandOptions, COMMAND_OPTIONS } from "./command.options";
-import { Command } from "./command";
+import { command } from "./command";
 import { isCommand, isCommandCreator } from "./command.util";
 import { CommandCreator, type ICommand } from "./command.model";
 
@@ -73,24 +72,26 @@ const NAME_CAMEL = "ssvCommand";
 	exportAs: NAME_CAMEL,
 	standalone: true,
 })
-export class CommandDirective implements OnInit, OnDestroy {
+export class CommandDirective implements OnInit {
 
 	// readonly id = `${NAME_CAMEL}-${nextUniqueId++}`;
-	private readonly globalOptions = inject(COMMAND_OPTIONS);
-	private readonly renderer = inject(Renderer2);
-	private readonly element = inject(ElementRef);
-	private readonly cdr = inject(ChangeDetectorRef);
-	private readonly injector = inject(Injector);
+	readonly #options = inject(COMMAND_OPTIONS);
+	readonly #renderer = inject(Renderer2);
+	readonly #element = inject(ElementRef);
+	readonly #cdr = inject(ChangeDetectorRef);
+	readonly #injector = inject(Injector);
 
-	readonly commandOrCreator = input<ICommand | CommandCreator | undefined>(undefined, { alias: `ssvCommand` });
-	readonly ssvCommandOptions = input<Partial<CommandOptions>>(this.globalOptions);
+	readonly commandOrCreator = input<ICommand | CommandCreator | undefined>(undefined, {
+		alias: `ssvCommand`
+	});
+	readonly ssvCommandOptions = input<Partial<CommandOptions>>(this.#options);
 	readonly commandOptions = computed<CommandOptions>(() => {
 		const value = this.ssvCommandOptions();
-		if (value === this.globalOptions) {
-			return this.globalOptions;
+		if (value === this.#options) {
+			return this.#options;
 		}
 		return {
-			...this.globalOptions,
+			...this.#options,
 			...value,
 		};
 	});
@@ -103,22 +104,26 @@ export class CommandDirective implements OnInit, OnDestroy {
 	private _command!: ICommand;
 
 	constructor() {
+		const destroyRef = inject(DestroyRef);
+		destroyRef.onDestroy(() => {
+			this._command?.unsubscribe();
+		});
 		effect(() => {
 			const canExecute = this._command.$canExecute();
 			this.trySetDisabled(!canExecute);
 			// console.log("[ssvCommand::canExecute$]", { canExecute: x });
-			this.cdr.markForCheck();
+			this.#cdr.markForCheck();
 		});
 		effect(() => {
 			// console.log("[ssvCommand::isExecuting$]", x, this.commandOptions);
 			if (this._command.$isExecuting()) {
-				this.renderer.addClass(
-					this.element.nativeElement,
+				this.#renderer.addClass(
+					this.#element.nativeElement,
 					this.commandOptions().executingCssClass
 				);
 			} else {
-				this.renderer.removeClass(
-					this.element.nativeElement,
+				this.#renderer.removeClass(
+					this.#element.nativeElement,
 					this.commandOptions().executingCssClass
 				);
 			}
@@ -151,10 +156,12 @@ export class CommandDirective implements OnInit, OnDestroy {
 			// 	params
 			// });
 
-			// todo: pass injector instead
-			runInInjectionContext(this.injector, () => {
-				this._command = new Command(execFn, canExec, isAsync);
-			});
+			console.warn(">>>> commandCreator");
+			this._command = command(execFn, canExec, { isAsync, injector: this.#injector });
+			// // todo: pass injector instead
+			// runInInjectionContext(this.injector, () => {
+			// 	this._command = new Command(execFn, canExec, isAsync);
+			// });
 		} else {
 			throw new Error(`${NAME_CAMEL}: [${NAME_CAMEL}] is not defined properly!`);
 		}
@@ -172,15 +179,10 @@ export class CommandDirective implements OnInit, OnDestroy {
 		}
 	}
 
-	ngOnDestroy(): void {
-		// console.log("[ssvCommand::destroy]");
-		this._command?.unsubscribe();
-	}
-
 	private trySetDisabled(disabled: boolean) {
 		if (this.commandOptions().handleDisabled) {
 			// console.warn(">>>> disabled", { id: this.id, disabled });
-			this.renderer.setProperty(this.element.nativeElement, "disabled", disabled);
+			this.#renderer.setProperty(this.#element.nativeElement, "disabled", disabled);
 		}
 	}
 

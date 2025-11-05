@@ -1,8 +1,8 @@
-import { Directive, OnInit, OnDestroy, Input, inject, Injector, runInInjectionContext } from "@angular/core";
+import { Directive, OnInit, Input, inject, Injector, DestroyRef } from "@angular/core";
 
 import type { ICommand, CommandCreator, CanExecute } from "./command.model";
 import { isCommandCreator } from "./command.util";
-import { Command } from "./command";
+import { command } from "./command";
 
 const NAME_CAMEL = "ssvCommandRef";
 
@@ -28,14 +28,21 @@ const NAME_CAMEL = "ssvCommandRef";
 	exportAs: NAME_CAMEL,
 	standalone: true,
 })
-export class CommandRefDirective implements OnInit, OnDestroy {
+export class CommandRefDirective implements OnInit {
 
-	private readonly injector = inject(Injector);
+	readonly #injector = inject(Injector);
 
 	@Input(NAME_CAMEL) commandCreator: CommandCreator | undefined;
 
 	get command(): ICommand { return this._command; }
 	private _command!: ICommand;
+
+	constructor() {
+		const destroyRef = inject(DestroyRef);
+		destroyRef.onDestroy(() => {
+			this._command?.unsubscribe();
+		});
+	}
 
 	ngOnInit(): void {
 		if (isCommandCreator(this.commandCreator)) {
@@ -43,19 +50,10 @@ export class CommandRefDirective implements OnInit, OnDestroy {
 			const isAsync = commandCreator.isAsync || commandCreator.isAsync === undefined;
 
 			const execFn = commandCreator.execute.bind(commandCreator.host);
-			// todo: pass injector instead
-			runInInjectionContext(this.injector, () => {
-				this._command = new Command(execFn, commandCreator.canExecute as CanExecute, isAsync);
-			});
+
+			this._command = command(execFn, commandCreator.canExecute as CanExecute, { isAsync, injector: this.#injector });
 		} else {
 			throw new Error(`${NAME_CAMEL}: [${NAME_CAMEL}] is not defined properly!`);
-		}
-	}
-
-	ngOnDestroy(): void {
-		// console.log("[commandRef::destroy]");
-		if (this._command) {
-			this._command.destroy();
 		}
 	}
 

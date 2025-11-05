@@ -39,7 +39,7 @@ export function command(
 	const injector = opts?.injector ?? inject(Injector);
 	const isAsync = opts?.isAsync ?? false;
 	const destroyRef = injector.get(DestroyRef);
-	const cmd = new Command(execute, canExecute$, isAsync);
+	const cmd = new Command(execute, canExecute$, isAsync, injector);
 	cmd.autoDestroy = false;
 
 	destroyRef.onDestroy(() => {
@@ -99,12 +99,15 @@ export class Command implements ICommand {
 		execute: ExecuteFn,
 		canExecute$?: CanExecute,
 		isAsync?: boolean,
+		injector?: Injector,
 	) {
 		if (canExecute$) {
 			const canExecute = typeof canExecute$ === "function"
 				? computed(canExecute$)
 				: canExecute$;
-			this._$canExecute = isSignal(canExecute) ? canExecute : toSignal(canExecute, { initialValue: false });
+			this._$canExecute = isSignal(canExecute)
+				? canExecute
+				: toSignal(canExecute, { initialValue: false, injector });
 			// this.canExecute$ = combineLatest([
 			// 	this._isExecuting$,
 			// 	isSignal(canExecute$) ? toObservable(canExecute$) : canExecute$
