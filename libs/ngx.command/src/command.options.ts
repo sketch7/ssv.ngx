@@ -1,4 +1,4 @@
-import { type EnvironmentProviders, InjectionToken, makeEnvironmentProviders } from "@angular/core";
+import { type EnvironmentProviders, InjectionToken, makeEnvironmentProviders, Provider } from "@angular/core";
 
 export interface CommandOptions {
 	/**
@@ -30,8 +30,8 @@ export const COMMAND_OPTIONS = new InjectionToken<CommandOptions>("SSV_COMMAND_O
 
 export function provideSsvCommandOptions(
 	options: Partial<CommandOptions> | ((defaults: Readonly<CommandOptions>) => Partial<CommandOptions>)
-): EnvironmentProviders {
-	return makeEnvironmentProviders([
+): Provider[] {
+	return [
 		{
 			provide: COMMAND_OPTIONS,
 			useFactory: () => {
@@ -45,5 +45,5 @@ export function provideSsvCommandOptions(
 				return opts;
 			},
 		},
-	]);
+	];
 }

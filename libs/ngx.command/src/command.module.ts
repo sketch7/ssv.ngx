@@ -1,13 +1,14 @@
 import { NgModule } from "@angular/core";
 
-import { CommandDirective } from "./command.directive";
-import { CommandRefDirective } from "./command-ref.directive";
+import { SsvCommand } from "./command.directive";
+import { SsvCommandRef } from "./command-ref.directive";
 
 const EXPORTED_IMPORTS = [
-	CommandDirective,
-	CommandRefDirective
+	SsvCommand,
+	SsvCommandRef
 ];
 
+/** @deprecated Use standalone instead. */
 @NgModule({
 	imports: [EXPORTED_IMPORTS],
 	exports: [EXPORTED_IMPORTS]

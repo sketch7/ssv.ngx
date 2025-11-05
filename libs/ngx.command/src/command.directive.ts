@@ -72,7 +72,7 @@ const NAME_CAMEL = "ssvCommand";
 	exportAs: NAME_CAMEL,
 	standalone: true,
 })
-export class CommandDirective implements OnInit {
+export class SsvCommand implements OnInit {
 
 	// readonly id = `${NAME_CAMEL}-${nextUniqueId++}`;
 	readonly #options = inject(COMMAND_OPTIONS);

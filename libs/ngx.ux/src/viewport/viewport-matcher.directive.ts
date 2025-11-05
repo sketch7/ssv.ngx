@@ -22,7 +22,7 @@ export class SsvViewportMatcherContext implements ViewportMatchConditions {
 	exportAs: "ssvViewportMatcher",
 	standalone: true,
 })
-export class SsvViewportMatcherDirective implements OnInit, OnDestroy {
+export class SsvViewportMatcher implements OnInit, OnDestroy {
 	#viewport = inject(ViewportService);
 	#renderer = inject(Renderer2);
 	#viewContainer = inject(ViewContainerRef);

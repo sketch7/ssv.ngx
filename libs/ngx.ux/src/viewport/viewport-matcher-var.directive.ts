@@ -23,7 +23,7 @@ export class SsvViewportMatcherVarContext {
 	selector: `[${NAME_CAMEL}]`,
 	standalone: true,
 })
-export class SsvViewportMatcherVarDirective implements OnInit, OnDestroy {
+export class SsvViewportMatcherVar implements OnInit, OnDestroy {
 	#viewport = inject(ViewportService);
 	#viewContainer = inject(ViewContainerRef);
 	#templateRef = inject<TemplateRef<SsvViewportMatcherVarContext>>(TemplateRef);

@@ -28,7 +28,7 @@ const NAME_CAMEL = "ssvCommandRef";
 	exportAs: NAME_CAMEL,
 	standalone: true,
 })
-export class CommandRefDirective implements OnInit {
+export class SsvCommandRef implements OnInit {
 
 	readonly #injector = inject(Injector);
 

@@ -1,15 +1,16 @@
 import { NgModule } from "@angular/core";
 
 import { ViewportDataPipe } from "./viewport-data/viewport-data.pipe";
-import { SsvViewportMatcherVarDirective } from "./viewport-matcher-var.directive";
-import { SsvViewportMatcherDirective } from "./viewport-matcher.directive";
+import { SsvViewportMatcherVar } from "./viewport-matcher-var.directive";
+import { SsvViewportMatcher } from "./viewport-matcher.directive";
 
 const EXPORTED_IMPORTS = [
-	SsvViewportMatcherDirective,
-	SsvViewportMatcherVarDirective,
+	SsvViewportMatcher,
+	SsvViewportMatcherVar,
 	ViewportDataPipe,
 ];
 
+/** @deprecated Use standalone instead. */
 @NgModule({
 	imports: [EXPORTED_IMPORTS],
 	exports: [EXPORTED_IMPORTS]

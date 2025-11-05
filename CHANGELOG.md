@@ -1,3 +1,18 @@
+## 4.0.0 (2025-11-05)
+
+### Features
+
+- **command:** change `provideSsvCommandOptions` to `Provider[]` instead of `EnvironmentProviders`
+- **command:** refactor to signal based add `$isExecuting` and `$canExecute`
+
+### BREAKING CHANGES
+
+- **command:** remove `Command` `isExecuting$` and `canExecute$`
+- **command:** rename `CommandDirective` to `SsvCommand`
+- **command:** rename `CommandRefDirective` to `SsvCommandRef`
+- **ux:** rename `SsvViewportMatcherVarDirective` to `SsvViewportMatcherVar`
+- **ux:** rename `SsvViewportMatcherDirective` to `SsvViewportMatcher`
+
 ## 3.3.0 (2025-10-28)
 
 ### Chore
