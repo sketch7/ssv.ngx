@@ -67,6 +67,7 @@ const NAME_CAMEL = "ssvCommand";
 @Directive({
 	selector: `[${NAME_CAMEL}]`,
 	host: {
+		"[class]": "_hostClasses()",
 		"(click)": "_handleClick()",
 	},
 	exportAs: NAME_CAMEL,
@@ -97,6 +98,9 @@ export class SsvCommand implements OnInit {
 	});
 	readonly ssvCommandParams = input<unknown | unknown[]>(undefined);
 	readonly commandParams = computed<unknown | unknown[]>(() => this.ssvCommandParams() || this.creatorParams);
+	readonly _hostClasses = computed(() => ["ssv-command", this.#executingClass()]);
+	readonly #executingClass = computed(() => this._command.$isExecuting() ? this.commandOptions().executingCssClass : "");
+
 	private creatorParams: unknown | unknown[] = [];
 
 	get command(): ICommand { return this._command; }
@@ -113,20 +117,6 @@ export class SsvCommand implements OnInit {
 			this.trySetDisabled(!canExecute);
 			// console.log("[ssvCommand::canExecute$]", { canExecute: x });
 			this.#cdr.markForCheck();
-		});
-		effect(() => {
-			// console.log("[ssvCommand::isExecuting$]", x, this.commandOptions);
-			if (this._command.$isExecuting()) {
-				this.#renderer.addClass(
-					this.#element.nativeElement,
-					this.commandOptions().executingCssClass
-				);
-			} else {
-				this.#renderer.removeClass(
-					this.#element.nativeElement,
-					this.commandOptions().executingCssClass
-				);
-			}
 		});
 	}
 
