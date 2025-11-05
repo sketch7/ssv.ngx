@@ -46,6 +46,7 @@ export interface CommandCreator {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	execute: (...args: any[]) => Observable<unknown> | Promise<unknown> | void;
 	// CanExecute | ((...args: any[]) => CanExecute);
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 	canExecute?: CanExecute | Function;
 	params?: unknown | unknown[];
 	isAsync?: boolean;
