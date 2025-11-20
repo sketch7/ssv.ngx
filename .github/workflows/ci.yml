@@ -35,7 +35,8 @@ jobs:
     uses: sketch7/.github/.github/workflows/node-lib.yml@node-libs-v1
     with:
       package-manager: "pnpm"
-      node-version: "20"
+      node-version: ""
+      node-version-file: "package.json"
       publishable: ${{ contains(fromJSON('["develop", "master", "workflow"]'), github.ref_name) || endsWith(github.ref_name, '.x') || github.event.inputs.publish == 'true' }}
       force-preid: ${{ github.event.inputs.force-prerelease == 'true' }}
       preid-branches: "master,workflow"
