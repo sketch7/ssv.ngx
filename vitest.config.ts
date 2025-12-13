@@ -11,8 +11,7 @@ export default defineConfig({
 		environment: "jsdom",
 		reporters: ["default"],
 		projects: [
-			"libs/ngx.command/vitest.config.ts",
-			"libs/ngx.ux/vitest.config.ts",
+			"./libs/*",
 		],
 	},
 });
