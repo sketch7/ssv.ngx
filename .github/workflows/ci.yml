@@ -30,8 +30,8 @@ on:
         default: true
 
 permissions:
-  id-token: write # Required for OIDC
-  contents: read
+  id-token: write # required for OIDC
+  contents: write # required for tag push
 
 jobs:
   package:
