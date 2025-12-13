@@ -19,11 +19,6 @@
     "type": "git",
     "url": "https://github.com/sketch7/ssv.ngx.git"
   },
-  "dependencies": {
-    "vite": "workspace:*",
-    "@analogjs/vite-plugin-angular": "workspace:*",
-    "vite-tsconfig-paths": "workspace:*"
-  },
   "peerDependencies": {
     "@angular/core": ">=17.0.0",
     "@angular/forms": ">=17.0.0",
