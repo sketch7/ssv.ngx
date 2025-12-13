@@ -1,19 +1,20 @@
 import { createEnvironmentInjector, EnvironmentInjector } from "@angular/core";
 import { BehaviorSubject, EMPTY, type Observable } from "rxjs";
+import { vi, type Mock } from "vitest";
 
 import { Command, command, commandAsync } from "./command";
 
 describe("CommandSpecs", () => {
 	let SUT: Command;
-	let executeFn: jest.Mock<void, unknown[], unknown>;
-	let asyncExecuteFn: jest.Mock<Observable<unknown>, unknown[], unknown>;
+	let executeFn: Mock<(...args: unknown[]) => void>;
+	let asyncExecuteFn: Mock<(...args: unknown[]) => Observable<unknown>>;
 	let injector: EnvironmentInjector;
-	// let executeSpyFn: jest.SpyInstance<void, unknown[], unknown>;
+	// let executeSpyFn: SpyInstance;
 
 	beforeEach(() => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		injector = createEnvironmentInjector([], null as any);
-		executeFn = jest.fn();
+		executeFn = vi.fn();
 		// executeSpyFn = executeFn;
 	});
 
@@ -72,7 +73,7 @@ describe("CommandSpecs", () => {
 		describe("when observable completes", () => {
 			beforeEach(() => {
 				const isInitialValid = true;
-				asyncExecuteFn = jest.fn().mockImplementation(() => EMPTY);
+				asyncExecuteFn = vi.fn().mockImplementation(() => EMPTY);
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				SUT = commandAsync(asyncExecuteFn as any, new BehaviorSubject<boolean>(isInitialValid), { injector });
 			});
@@ -88,12 +89,12 @@ describe("CommandSpecs", () => {
 		describe("when an error is thrown", () => {
 			const _errorFn = console.error;
 			beforeAll(() => {
-				console.error = jest.fn();
+				console.error = vi.fn();
 			});
 
 			beforeEach(() => {
 				const isInitialValid = true;
-				executeFn = jest.fn().mockImplementation(() => {
+				executeFn = vi.fn().mockImplementation(() => {
 					throw new Error("Execution failed!");
 				});
 				SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector, isAsync: false });

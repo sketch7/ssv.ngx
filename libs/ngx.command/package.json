@@ -19,7 +19,6 @@
     "type": "git",
     "url": "https://github.com/sketch7/ssv.ngx.git"
   },
-  "dependencies": {},
   "peerDependencies": {
     "@angular/core": ">=17.0.0",
     "@angular/forms": ">=17.0.0",
