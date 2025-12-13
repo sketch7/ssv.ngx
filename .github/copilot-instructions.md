@@ -1,6 +1,6 @@
 # GitHub Copilot Instructions
 
-Nx monorepo for publishable Angular utility libraries (`@ssv/ngx.command` and `@ssv/ngx.ux`) built with Angular 20+, TypeScript 5.9, and Jest 30.
+Nx monorepo for publishable Angular utility libraries (`@ssv/ngx.command` and `@ssv/ngx.ux`) built with Angular 20+, TypeScript 5.9, and Vitest 4.x.
 
 ## Architecture & Structure
 
@@ -22,7 +22,7 @@ Nx monorepo for publishable Angular utility libraries (`@ssv/ngx.command` and `@
 - Angular 20.3.7 with standalone components/directives (no NgModules in new code)
 - TypeScript 5.9.3 with strict mode + `isolatedModules`
 - RxJS 7.8.2 for observables (coexists with signals)
-- Jest 30.2.0 + jest-preset-angular 15.0.3 (no `setup-jest` import needed)
+- Vitest 4.x + @analogjs/vitest-angular for testing
 - pnpm 9.15+ as package manager (enforced via preinstall script)
 - Nx 22.0.1 for build orchestration and caching
 
@@ -123,7 +123,7 @@ constructor() {
 ```bash
 pnpm start                    # Dev server (test-app on port 4200)
 pnpm nx run-many -t build     # Build all libraries
-pnpm nx run-many -t test      # Run Jest tests for all libs
+pnpm nx run-many -t test      # Run Vitest tests for all libs
 pnpm nx run-many -t lint      # ESLint all projects
 pnpm nx reset                 # Clear Nx cache (fixes stale builds)
 ```
@@ -140,21 +140,30 @@ pnpm run release              # Publish to npm (CI only)
 
 ## Testing Conventions
 
-**Jest 30 + jest-preset-angular 15 setup:**
+**Vitest 4.x + @analogjs/vitest-angular setup:**
 
 ```typescript
-// test-setup.ts (NO import of 'jest-preset-angular/setup-jest' - removed in v15)
-globalThis.ngJest = {
-  testEnvironmentOptions: {
-    errorOnUnknownElements: true,
-    errorOnUnknownProperties: true,
-  },
-};
+// test-setup.ts
+import "@angular/compiler";
+import "@analogjs/vitest-angular/setup-zone";
+
+import {
+  BrowserTestingModule,
+  platformBrowserTesting,
+} from "@angular/platform-browser/testing";
+import { getTestBed } from "@angular/core/testing";
+
+getTestBed().initTestEnvironment(
+  BrowserTestingModule,
+  platformBrowserTesting(),
+);
 ```
 
 **Test Structure:**
 
 ```typescript
+import { vi, type Mock } from "vitest";
+
 describe("Command", () => {
   it("should disable during execution", async () => {
     const cmd = command(() => delay(100));
@@ -167,7 +176,7 @@ describe("Command", () => {
 });
 ```
 
-- Use `jest.fn()`, `jest.spyOn()` for mocking
+- Use `vi.fn()`, `vi.spyOn()` for mocking (vitest equivalents)
 - Command tests verify `isExecuting` state transitions
 - Viewport tests validate breakpoint calculations and condition matching
 
