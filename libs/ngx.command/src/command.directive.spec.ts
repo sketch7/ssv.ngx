@@ -9,7 +9,6 @@ import { commandAsync } from "./command";
 
 // Test host component for button element
 @Component({
-	standalone: true,
 	imports: [SsvCommand],
 	template: `
 		<button
@@ -26,7 +25,6 @@ class ButtonHostComponent {
 
 // Test host component for div element
 @Component({
-	standalone: true,
 	imports: [SsvCommand],
 	template: `
 		<div
@@ -43,7 +41,6 @@ class DivHostComponent {
 
 // Test host component with params
 @Component({
-	standalone: true,
 	imports: [SsvCommand],
 	template: `
 		<button
@@ -65,7 +62,6 @@ class ParamsHostComponent {
 
 // Test host component with command creator
 @Component({
-	standalone: true,
 	imports: [SsvCommand],
 	template: `
 		<button
