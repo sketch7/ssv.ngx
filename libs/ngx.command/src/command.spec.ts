@@ -77,9 +77,9 @@ describe("CommandSpecs", () => {
 				SUT = commandAsync(asyncExecuteFn, new BehaviorSubject<boolean>(isInitialValid), { injector });
 			});
 
-			it("should invoke multiple times", () => {
-				SUT.execute();
-				SUT.execute();
+			it("should invoke multiple times", async () => {
+				await SUT.execute();
+				await SUT.execute();
 				expect(SUT.isExecuting).toBeFalsy();
 				expect(asyncExecuteFn).toHaveBeenCalledTimes(2);
 			});
@@ -102,6 +102,7 @@ describe("CommandSpecs", () => {
 			it("should invoke multiple times", () => {
 				SUT.execute();
 				SUT.execute();
+				// todo: shouldnt this throw?
 				expect(SUT.isExecuting).toBeFalsy();
 				expect(executeFn).toHaveBeenCalledTimes(2);
 			});

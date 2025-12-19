@@ -1,8 +1,9 @@
 import type { Observable } from "rxjs";
 import type { Signal } from "@angular/core";
+import type { MaybeAsync } from "./private";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ExecuteFn = (...args: any[]) => unknown;
+export type ExecuteFn = (...args: any[]) => MaybeAsync<unknown>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ExecuteAsyncFn = (...args: any[]) => Observable<unknown> | Promise<unknown>;
 export type CanExecute = (() => boolean) | Signal<boolean> | Observable<boolean>;

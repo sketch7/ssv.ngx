@@ -2,6 +2,9 @@
 import {
 	Observable, Subscription, Subject, EMPTY,
 	tap, filter, switchMap, catchError, finalize, take,
+	mergeMap,
+	lastValueFrom,
+	isObservable,
 } from "rxjs";
 import { toSignal } from "@angular/core/rxjs-interop";
 import type { CanExecute, ExecuteAsyncFn, ExecuteFn, ICommand } from "./command.model";
@@ -63,7 +66,7 @@ export class Command implements ICommand {
 
 	autoDestroy = true;
 
-	private executionPipe$ = new Subject<unknown[] | undefined>();
+	// private executionPipe$: Observable<unknown | undefined>;
 	private executionPipe$$ = Subscription.EMPTY;
 	private subscribersCount = 0;
 
@@ -75,7 +78,7 @@ export class Command implements ICommand {
 	 * @deprecated Use {@link command} or {@link commandAsync} instead for creating instances.
 	 */
 	constructor(
-		execute: ExecuteFn,
+		private readonly _execute: ExecuteFn,
 		canExecute$?: CanExecute,
 		injector?: Injector,
 	) {
@@ -89,13 +92,59 @@ export class Command implements ICommand {
 		} else {
 			this._$canExecute = signal(true);
 		}
-		this.executionPipe$$ = this.#buildExecutionPipe(execute).subscribe();
+		// this.executionPipe$ = this.#buildExecutionPipe(execute);
 	}
 
 	/** Execute function to invoke. */
-	execute(...args: unknown[]): void {
+	async execute(...args: unknown[]): Promise<void> {
+		if (!this.$canExecute()) {
+			return Promise.reject();
+		}
+		this.$isExecuting.set(true);
+
+		console.warn("[command::execute]", args);
+
+		try {
+			const result = args ? this._execute(...args) : this._execute();
+			if (isObservable(result)) {
+				await lastValueFrom(result, { defaultValue: undefined });
+			} else if (result instanceof Promise) {
+				await result;
+			}
+		} catch (err) {
+			console.error("Unhandled execute error");
+			throw new Error("Unhandled execute error");
+		} finally {
+			this.$isExecuting.set(false);
+		}
+
+		// // coerceObservable(result);
+		// const execute$ = this.executionPipe$.pipe(
+		// 	// tap(x => console.warn(">>>> executionPipe", this._canExecute)),
+		// 	filter(() => this.$canExecute()),
+		// 	tap(() => {
+		// 		// console.log("[command::executionPipe$] do#1 - set execute", { args: x });
+		// 		this.$isExecuting.set(true);
+		// 	}),
+		// 	mergeMap(args => coerceObservable(args ? execute(...args) : execute())),
+		// 	finalize(() => {
+		// 		// console.log("[command::executionPipe$]  finalize inner#1 - set idle");
+		// 		this.$isExecuting.set(false);
+		// 	}),
+		// 	take(1), // todo: remove it must be completed
+		// 	catchError(error => {
+		// 		console.error("Unhandled execute error", error);
+		// 		return EMPTY;
+		// 	}),
+		// 	tap(() => {
+		// 		// console.log("[command::executionPipe$] tap#2 - set idle");
+		// 		// this._isExecuting$.next(false);
+		// 		this.$isExecuting.set(false);
+		// 	}),
+		// );;
+		// await lastValueFrom(this.executionPipe$);
 		// console.warn("[command::execute]", args);
-		this.executionPipe$.next(args);
+		// this.executionPipe$.next(args);
 	}
 
 	/** Disposes all resources held by subscriptions. */
@@ -116,32 +165,31 @@ export class Command implements ICommand {
 		}
 	}
 
-	#buildExecutionPipe(execute: (...args: unknown[]) => MaybeAsync<unknown>): Observable<unknown> {
-		const pipe$ = this.executionPipe$.pipe(
-			// tap(x => console.warn(">>>> executionPipe", this._canExecute)),
-			filter(() => this.$canExecute()),
-			tap(() => {
-				// console.log("[command::executionPipe$] do#1 - set execute", { args: x });
-				this.$isExecuting.set(true);
-			}),
-			switchMap(args => coerceObservable(args ? execute(...args) : execute())),
-
-			finalize(() => {
-				// console.log("[command::executionPipe$]  finalize inner#1 - set idle");
-				this.$isExecuting.set(false);
-			}),
-			take(1), // todo: remove it must be completed
-			catchError(error => {
-				console.error("Unhandled execute error", error);
-				return EMPTY;
-			}),
-			tap(() => {
-				// console.log("[command::executionPipe$] tap#2 - set idle");
-				// this._isExecuting$.next(false);
-				this.$isExecuting.set(false);
-			}),
-		);
-		return pipe$;
-	}
+	// #buildExecutionPipe(execute: (...args: unknown[]) => MaybeAsync<unknown>): Observable<unknown> {
+	// 	const pipe$ = this.executionPipe$.pipe(
+	// 		// tap(x => console.warn(">>>> executionPipe", this._canExecute)),
+	// 		filter(() => this.$canExecute()),
+	// 		tap(() => {
+	// 			// console.log("[command::executionPipe$] do#1 - set execute", { args: x });
+	// 			this.$isExecuting.set(true);
+	// 		}),
+	// 		mergeMap(args => coerceObservable(args ? execute(...args) : execute())),
+	// 		finalize(() => {
+	// 			// console.log("[command::executionPipe$]  finalize inner#1 - set idle");
+	// 			this.$isExecuting.set(false);
+	// 		}),
+	// 		take(1), // todo: remove it must be completed
+	// 		catchError(error => {
+	// 			console.error("Unhandled execute error", error);
+	// 			return EMPTY;
+	// 		}),
+	// 		tap(() => {
+	// 			// console.log("[command::executionPipe$] tap#2 - set idle");
+	// 			// this._isExecuting$.next(false);
+	// 			this.$isExecuting.set(false);
+	// 		}),
+	// 	);
+	// 	return pipe$;
+	// }
 
 }
