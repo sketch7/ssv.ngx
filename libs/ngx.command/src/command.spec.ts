@@ -74,8 +74,7 @@ describe("CommandSpecs", () => {
 			beforeEach(() => {
 				const isInitialValid = true;
 				asyncExecuteFn = vi.fn().mockImplementation(() => EMPTY);
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				SUT = commandAsync(asyncExecuteFn as any, new BehaviorSubject<boolean>(isInitialValid), { injector });
+				SUT = commandAsync(asyncExecuteFn, new BehaviorSubject<boolean>(isInitialValid), { injector });
 			});
 
 			it("should invoke multiple times", () => {
