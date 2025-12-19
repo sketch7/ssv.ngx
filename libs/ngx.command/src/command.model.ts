@@ -56,6 +56,5 @@ export interface CommandCreator {
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 	canExecute?: CanExecute | Function;
 	params?: unknown | unknown[];
-	isAsync?: boolean;
 	host: unknown;
 }

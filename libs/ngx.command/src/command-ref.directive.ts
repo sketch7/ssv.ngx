@@ -49,11 +49,10 @@ export class SsvCommandRef implements OnInit {
 	ngOnInit(): void {
 		if (isCommandCreator(this.commandCreator())) {
 			const commandCreator = this.commandCreator();
-			const isAsync = commandCreator.isAsync || commandCreator.isAsync === undefined;
 
 			const execFn = commandCreator.execute.bind(commandCreator.host);
 
-			this._command = command(execFn, commandCreator.canExecute as CanExecute, { isAsync, injector: this.#injector });
+			this._command = command(execFn, commandCreator.canExecute as CanExecute, { injector: this.#injector });
 		} else {
 			throw new Error(`${NAME_CAMEL}: [${NAME_CAMEL}] is not defined properly!`);
 		}

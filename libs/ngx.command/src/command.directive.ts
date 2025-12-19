@@ -126,7 +126,6 @@ export class SsvCommand implements OnInit {
 		if (isCommand(commandOrCreator)) {
 			this._command = commandOrCreator;
 		} else if (isCommandCreator(commandOrCreator)) {
-			const isAsync = commandOrCreator.isAsync || commandOrCreator.isAsync === undefined;
 			this.creatorParams = commandOrCreator.params;
 
 			// todo: find something like this for ivy (or angular10+)
@@ -144,7 +143,7 @@ export class SsvCommand implements OnInit {
 			// 	params
 			// });
 
-			this._command = command(execFn, canExec, { isAsync, injector: this.#injector });
+			this._command = command(execFn, canExec, { injector: this.#injector });
 		} else {
 			throw new Error(`${NAME_CAMEL}: [${NAME_CAMEL}] is not defined properly!`);
 		}

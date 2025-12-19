@@ -24,7 +24,7 @@ describe("CommandSpecs", () => {
 
 	describe("given a command without canExecute$ param", () => {
 		beforeEach(() => {
-			SUT = command(executeFn, undefined, { injector, isAsync: false });
+			SUT = command(executeFn, undefined, { injector });
 			// executeSpyFn = jest.spyOn(SUT, "execute");
 		});
 
@@ -61,7 +61,7 @@ describe("CommandSpecs", () => {
 		describe("when canExecute is true", () => {
 			beforeEach(() => {
 				const isInitialValid = true;
-				SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector, isAsync: false });
+				SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector });
 			});
 
 			it("should invoke execute function passed", () => {
@@ -96,7 +96,7 @@ describe("CommandSpecs", () => {
 				executeFn = vi.fn().mockImplementation(() => {
 					throw new Error("Execution failed!");
 				});
-				SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector, isAsync: false });
+				SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector });
 			});
 
 			it("should invoke multiple times", () => {
@@ -114,7 +114,7 @@ describe("CommandSpecs", () => {
 		describe("when args are passed", () => {
 			beforeEach(() => {
 				const isInitialValid = true;
-				SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector, isAsync: false });
+				SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector });
 			});
 
 			it("and has 1 param should receive 1 arg", () => {
@@ -143,7 +143,7 @@ describe("CommandSpecs", () => {
 		describe("when canExecute is false", () => {
 			beforeEach(() => {
 				const isInitialValid = false;
-				SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector, isAsync: false });
+				SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector });
 			});
 
 			it("should not execute the provided execute function", () => {
@@ -159,7 +159,7 @@ describe("CommandSpecs", () => {
 		beforeEach(() => {
 			const isInitialValid = true;
 			canExecute$ = new BehaviorSubject<boolean>(isInitialValid);
-			SUT = command(executeFn, canExecute$, { injector, isAsync: false });
+			SUT = command(executeFn, canExecute$, { injector });
 		});
 
 		it("should have canExecute set to true", () => {
@@ -188,7 +188,7 @@ describe("CommandSpecs", () => {
 	describe("given canExecute with an initial value of false", () => {
 		beforeEach(() => {
 			const isInitialValid = false;
-			SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector, isAsync: false });
+			SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector });
 		});
 
 		it("should have canExecute set to false", () => {
@@ -203,7 +203,7 @@ describe("CommandSpecs", () => {
 	describe("given destroy is invoked", () => {
 		beforeEach(() => {
 			const isInitialValid = false;
-			SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector, isAsync: false });
+			SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector });
 		});
 
 		it("should destroy successfully", () => {
