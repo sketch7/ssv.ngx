@@ -107,6 +107,7 @@ export class Command implements ICommand {
 		try {
 			const result = args ? this._execute(...args) : this._execute();
 			if (isObservable(result)) {
+				// todo: make it return Observable to keep users type?
 				await lastValueFrom(result, { defaultValue: undefined });
 			} else if (result instanceof Promise) {
 				await result;
