@@ -103,6 +103,9 @@ describe("CommandSpecs", () => {
 				SUT.execute();
 				SUT.execute();
 				// todo: shouldnt this throw?
+				// await SUT.execute();
+				// await SUT.execute();
+				// expect(() => SUT.execute()).toThrow("Execution failed!");
 				expect(SUT.isExecuting).toBeFalsy();
 				expect(executeFn).toHaveBeenCalledTimes(2);
 			});
