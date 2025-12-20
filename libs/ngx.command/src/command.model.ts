@@ -31,7 +31,7 @@ export interface ICommand<TExecute extends ExecuteFn = ExecuteFn> {
 	autoDestroy: boolean;
 
 	/** Execute function to invoke. */
-	execute(...args: Parameters<TExecute>): Promise<Awaited<ReturnType<TExecute>>>;
+	execute(...args: Parameters<TExecute>): ReturnType<TExecute>;
 
 	/** Disposes all resources held by subscriptions. */
 	destroy(): void;

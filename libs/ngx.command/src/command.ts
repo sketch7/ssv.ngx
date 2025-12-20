@@ -96,9 +96,9 @@ export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand
 	}
 
 	/** Execute function to invoke. */
-	async execute(...args: Parameters<TExecute>): Promise<Awaited<ReturnType<TExecute>>> {
+	execute(...args: Parameters<TExecute>): ReturnType<TExecute> {
 		if (!this.$canExecute()) {
-			return Promise.reject();
+			return Promise.reject() as ReturnType<TExecute>;
 		}
 		this.$isExecuting.set(true);
 
@@ -106,47 +106,47 @@ export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand
 
 		try {
 			const result = args.length > 0 ? this._execute(...args) : this._execute();
-			if (isObservable(result)) {
-				// todo: make it return Observable to keep users type?
-				return await lastValueFrom(result, { defaultValue: undefined }) as Awaited<ReturnType<TExecute>>;
-			} else if (result instanceof Promise) {
-				return await result as Awaited<ReturnType<TExecute>>;
-			}
-			return result as Awaited<ReturnType<TExecute>>;
-		} catch (err) {
-			console.error("Unhandled execute error");
-			throw new Error("Unhandled execute error");
-		} finally {
-			this.$isExecuting.set(false);
-		}
 
-		// // coerceObservable(result);
-		// const execute$ = this.executionPipe$.pipe(
-		// 	// tap(x => console.warn(">>>> executionPipe", this._canExecute)),
-		// 	filter(() => this.$canExecute()),
-		// 	tap(() => {
-		// 		// console.log("[command::executionPipe$] do#1 - set execute", { args: x });
-		// 		this.$isExecuting.set(true);
-		// 	}),
-		// 	mergeMap(args => coerceObservable(args ? execute(...args) : execute())),
-		// 	finalize(() => {
-		// 		// console.log("[command::executionPipe$]  finalize inner#1 - set idle");
-		// 		this.$isExecuting.set(false);
-		// 	}),
-		// 	take(1), // todo: remove it must be completed
-		// 	catchError(error => {
-		// 		console.error("Unhandled execute error", error);
-		// 		return EMPTY;
-		// 	}),
-		// 	tap(() => {
-		// 		// console.log("[command::executionPipe$] tap#2 - set idle");
-		// 		// this._isExecuting$.next(false);
-		// 		this.$isExecuting.set(false);
-		// 	}),
-		// );;
-		// await lastValueFrom(this.executionPipe$);
-		// console.warn("[command::execute]", args);
-		// this.executionPipe$.next(args);
+			if (isObservable(result)) {
+				// For observables, we need to track the subscription
+				// The isExecuting will be reset when observable completes/errors
+				const tracked$ = new Observable(subscriber => {
+					const sub = result.subscribe({
+						next: (value) => subscriber.next(value),
+						error: (err) => {
+							this.$isExecuting.set(false);
+							console.error("Unhandled execute error", err);
+							subscriber.error(err);
+						},
+						complete: () => {
+							this.$isExecuting.set(false);
+							subscriber.complete();
+						}
+					});
+					return () => sub.unsubscribe();
+				});
+				return tracked$ as ReturnType<TExecute>;
+			} else if (result instanceof Promise) {
+				// Return promise with proper cleanup
+				return result
+					.then((value) => {
+						this.$isExecuting.set(false);
+						return value;
+					})
+					.catch((error) => {
+						this.$isExecuting.set(false);
+						console.error("Unhandled execute error", error);
+						throw error;
+					}) as ReturnType<TExecute>;
+			}
+			// Sync execution
+			this.$isExecuting.set(false);
+			return result as ReturnType<TExecute>;
+		} catch (err) {
+			this.$isExecuting.set(false);
+			console.error("Unhandled execute error", err);
+			throw err;
+		}
 	}
 
 	/** Disposes all resources held by subscriptions. */
