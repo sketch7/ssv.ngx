@@ -18,22 +18,22 @@ export interface CommandCreateOptions {
 /** Creates an async {@link Command}. Must be used within an injection context.
  * NOTE: this auto injects `DestroyRef` and handles auto destroy. {@link ICommand.autoDestroy} should not be used.
  */
-export function commandAsync(
-	execute: ExecuteAsyncFn,
+export function commandAsync<TExecute extends ExecuteAsyncFn>(
+	execute: TExecute,
 	canExecute$?: CanExecute,
 	opts?: CommandCreateOptions,
-): Command {
+): Command<TExecute> {
 	return command(execute, canExecute$, opts);
 }
 
 /** Creates a {@link Command}. Must be used within an injection context.
  * NOTE: this auto injects `DestroyRef` and handles auto destroy. {@link ICommand.autoDestroy} should not be used.
  */
-export function command(
-	execute: ExecuteFn,
+export function command<TExecute extends ExecuteFn>(
+	execute: TExecute,
 	canExecute$?: CanExecute,
 	opts?: CommandCreateOptions,
-): Command {
+): Command<TExecute> {
 	if (!opts?.injector) {
 		assertInInjectionContext(command);
 	}
@@ -53,7 +53,7 @@ export function command(
  * Command object used to encapsulate information which is needed to perform an action.
  *
  */
-export class Command implements ICommand {
+export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand<TExecute> {
 
 	get isExecuting(): boolean { return this.$isExecuting(); }
 
@@ -78,7 +78,7 @@ export class Command implements ICommand {
 	 * @deprecated Use {@link command} or {@link commandAsync} instead for creating instances.
 	 */
 	constructor(
-		private readonly _execute: ExecuteFn,
+		private readonly _execute: TExecute,
 		canExecute$?: CanExecute,
 		injector?: Injector,
 	) {
@@ -96,7 +96,7 @@ export class Command implements ICommand {
 	}
 
 	/** Execute function to invoke. */
-	async execute(...args: unknown[]): Promise<void> {
+	async execute(...args: Parameters<TExecute>): Promise<Awaited<ReturnType<TExecute>>> {
 		if (!this.$canExecute()) {
 			return Promise.reject();
 		}
@@ -105,13 +105,14 @@ export class Command implements ICommand {
 		console.warn("[command::execute]", args);
 
 		try {
-			const result = args ? this._execute(...args) : this._execute();
+			const result = args.length > 0 ? this._execute(...args) : this._execute();
 			if (isObservable(result)) {
 				// todo: make it return Observable to keep users type?
-				await lastValueFrom(result, { defaultValue: undefined });
+				return await lastValueFrom(result, { defaultValue: undefined }) as Awaited<ReturnType<TExecute>>;
 			} else if (result instanceof Promise) {
-				await result;
+				return await result as Awaited<ReturnType<TExecute>>;
 			}
+			return result as Awaited<ReturnType<TExecute>>;
 		} catch (err) {
 			console.error("Unhandled execute error");
 			throw new Error("Unhandled execute error");

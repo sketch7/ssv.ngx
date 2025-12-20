@@ -3,12 +3,12 @@ import type { Signal } from "@angular/core";
 import type { MaybeAsync } from "./private";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ExecuteFn = (...args: any[]) => MaybeAsync<unknown>;
+export type ExecuteFn<TArgs extends any[] = any[], TReturn = unknown> = (...args: TArgs) => MaybeAsync<TReturn>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ExecuteAsyncFn = (...args: any[]) => Observable<unknown> | Promise<unknown>;
+export type ExecuteAsyncFn<TArgs extends any[] = any[], TReturn = unknown> = (...args: TArgs) => Observable<TReturn> | Promise<TReturn>;
 export type CanExecute = (() => boolean) | Signal<boolean> | Observable<boolean>;
 
-export interface ICommand {
+export interface ICommand<TExecute extends ExecuteFn = ExecuteFn> {
 	/** Determines whether the command is currently executing, as a snapshot value.
 	 * @deprecated Use {@link $isExecuting} signal instead.
 	*/
@@ -31,7 +31,7 @@ export interface ICommand {
 	autoDestroy: boolean;
 
 	/** Execute function to invoke. */
-	execute(...args: unknown[]): void;
+	execute(...args: Parameters<TExecute>): Promise<Awaited<ReturnType<TExecute>>>;
 
 	/** Disposes all resources held by subscriptions. */
 	destroy(): void;
