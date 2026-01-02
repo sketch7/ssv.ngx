@@ -69,11 +69,11 @@ export class ExampleCommandComponent {
 	get invulnerableHero(): Hero {
 		return this.invulnerableHeroState$.value;
 	}
-	invulnerableHeroState$ = new BehaviorSubject({
+	invulnerableHeroState$ = new BehaviorSubject<Hero>({
 		key: "brahum",
 		name: "Brahum",
-		isInvulnerable: true
-	} as Hero);
+		isInvulnerable: true,
+	});
 
 	// saveCmdSync = command(this.save$.bind(this), this.isValid$, true);
 	// saveCmd = command(this.save$.bind(this), null, true);
