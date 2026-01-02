@@ -290,7 +290,7 @@ describe("CommandSpecs", () => {
 		});
 
 		describe("given an Observable-based command", () => {
-			it("should return an Observable", (ctx) => {
+			it("should return an Observable", () => {
 				const execute = vi.fn((value: string) => of({ result: value }));
 				const cmd = commandAsync(execute, undefined, { injector });
 
@@ -311,7 +311,7 @@ describe("CommandSpecs", () => {
 				});
 			});
 
-			it("should handle Observable errors", (ctx) => {
+			it("should handle Observable errors", () => {
 				const execute = vi.fn(() => throwError(() => new Error("Observable error")));
 				const cmd = commandAsync(execute, undefined, { injector });
 
@@ -328,7 +328,7 @@ describe("CommandSpecs", () => {
 				});
 			});
 
-			it("should complete isExecuting after observable completes", (ctx) => {
+			it("should complete isExecuting after observable completes", () => {
 				const execute = vi.fn(() => of(1, 2, 3));
 				const cmd = commandAsync(execute, undefined, { injector });
 
