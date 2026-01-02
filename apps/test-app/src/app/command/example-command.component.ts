@@ -4,8 +4,8 @@ import { MatButtonModule } from "@angular/material/button";
 import { MatIconModule } from "@angular/material/icon";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 
-import { BehaviorSubject, timer, Observable, tap, filter, map, distinctUntilChanged } from "rxjs";
-import { commandAsync, SsvCommand, SsvCommandRef } from "@ssv/ngx.command";
+import { BehaviorSubject, timer, Observable, tap, map, distinctUntilChanged, first } from "rxjs";
+import { command, SsvCommand, SsvCommandRef } from "@ssv/ngx.command";
 import { CommonModule } from "@angular/common";
 
 interface Hero {
@@ -49,16 +49,16 @@ export class ExampleCommandComponent {
 	readonly $isValid = signal(false);
 	readonly $containerVisibility = signal(true);
 
-	readonly saveCmd = commandAsync(() => this.save$(), this.isValid$);
-	readonly saveSignalCmd = commandAsync(() => this.save$(), this.$isValid);
-	readonly saveCmdNoValidation = commandAsync(() => this.save$());
-	readonly removeHeroCmd = commandAsync(this.removeHero$.bind(this), this.isValidHeroRemove$);
-	readonly pauseHeroCmd = commandAsync(this.pauseHero$.bind(this), this.isValidHeroRemove$);
-	readonly saveReduxCmd = commandAsync(
+	readonly saveCmd = command(() => this.save$(), this.isValid$);
+	readonly saveSignalCmd = command(() => this.save$(), this.$isValid);
+	readonly saveCmdNoValidation = command(() => this.save$());
+	readonly removeHeroCmd = command(this.removeHero$.bind(this), this.isValidHeroRemove$);
+	readonly pauseHeroCmd = command(this.pauseHero$.bind(this), this.isValidHeroRemove$);
+	readonly saveReduxCmd = command(
 		this.saveRedux.bind(this),
 		this.isValidRedux$,
 	);
-	readonly containerDestroySaveCmd = commandAsync(() => this.save$());
+	readonly containerDestroySaveCmd = command(() => this.save$());
 
 	heroes: Hero[] = [
 		{ key: "rexxar", name: "Rexxar" },
@@ -184,7 +184,7 @@ export class ExampleCommandComponent {
 		console.warn(">>> saveRedux init");
 		// selector
 		return this._state.pipe(
-			filter(x => !x.isLoading),
+			first(x => !x.isLoading),
 			tap(x => console.warn(">>>> isloading", x))
 		);
 	}
