@@ -1,5 +1,5 @@
 import { createEnvironmentInjector } from "@angular/core";
-import { BehaviorSubject, EMPTY, lastValueFrom, of, throwError } from "rxjs";
+import { BehaviorSubject, EMPTY, of, throwError } from "rxjs";
 import { vi } from "vitest";
 
 import { command } from "./command";
