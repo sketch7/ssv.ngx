@@ -1,6 +1,6 @@
 import { createEnvironmentInjector } from "@angular/core";
-import { BehaviorSubject, EMPTY, lastValueFrom, of, throwError, type Observable } from "rxjs";
-import { vi, type Mock } from "vitest";
+import { BehaviorSubject, EMPTY, lastValueFrom, of, throwError } from "rxjs";
+import { vi } from "vitest";
 
 // todo: remove commandAsync usages
 import { command, commandAsync } from "./command";
@@ -11,10 +11,6 @@ interface Hero {
 }
 
 describe("CommandSpecs", () => {
-	// let SUT: Command;
-	// todo: remove these and do them inline?
-	let executeFn = vi.fn();
-	let asyncExecuteFn: Mock<() => Observable<string>>;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const injector = createEnvironmentInjector([], null as any);
 
@@ -23,6 +19,7 @@ describe("CommandSpecs", () => {
 	});
 
 	describe("given a command without canExecute$ param", () => {
+		const executeFn = vi.fn();
 		const cmd = command(executeFn, undefined, { injector });
 
 		describe("when command is initialized", () => {
@@ -54,9 +51,9 @@ describe("CommandSpecs", () => {
 
 	describe("given execute is invoked", () => {
 		describe("when canExecute is true", () => {
+			const executeFn = vi.fn();
 
 			it("should invoke execute function passed", () => {
-				executeFn.mockReset();
 				const cmd = command(executeFn, () => true, { injector })
 				cmd.execute();
 				expect(executeFn).toHaveBeenCalledTimes(1);
@@ -64,30 +61,25 @@ describe("CommandSpecs", () => {
 		});
 
 		describe("when observable completes", () => {
-			beforeEach(() => {
-				asyncExecuteFn = vi.fn().mockImplementation(() => EMPTY);
-			});
+			const executeFn = vi.fn().mockImplementation(() => EMPTY);
 
 			it("should invoke multiple times", async () => {
-				const cmd = commandAsync(asyncExecuteFn, () => true, { injector })
+				const cmd = commandAsync(executeFn, () => true, { injector })
 				await lastValueFrom(cmd.execute(), { defaultValue: undefined });
 				await lastValueFrom(cmd.execute(), { defaultValue: undefined });
 
 				expect(cmd.isExecuting).toBeFalsy();
-				expect(asyncExecuteFn).toHaveBeenCalledTimes(2);
+				expect(executeFn).toHaveBeenCalledTimes(2);
 			});
 		});
 
 		describe("when an error is thrown", () => {
 			const _errorFn = console.error;
+			const executeFn = vi.fn().mockImplementation(() => {
+				throw new Error("Execution failed!");
+			});
 			beforeAll(() => {
 				console.error = vi.fn();
-			});
-
-			beforeEach(() => {
-				executeFn = vi.fn().mockImplementation(() => {
-					throw new Error("Execution failed!");
-				});
 			});
 
 			it("should invoke multiple times", () => {
@@ -116,6 +108,7 @@ describe("CommandSpecs", () => {
 
 	describe("given canExecute with an initial value of true", () => {
 		const canExecute$ = new BehaviorSubject(true);
+		const executeFn = vi.fn();
 		const cmd = command(executeFn, canExecute$, { injector });
 
 		it("should have canExecute set to true", () => {
@@ -142,6 +135,7 @@ describe("CommandSpecs", () => {
 	});
 
 	describe("given canExecute with an initial value of false", () => {
+		const executeFn = vi.fn();
 		const cmd = command(executeFn, new BehaviorSubject(false), { injector });
 
 		it("should have canExecute set to false", () => {
@@ -154,6 +148,7 @@ describe("CommandSpecs", () => {
 	});
 
 	describe("given destroy is invoked", () => {
+		const executeFn = vi.fn();
 		const cmd = command(executeFn, () => false, { injector });
 
 		it("should destroy successfully", () => {

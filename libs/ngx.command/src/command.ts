@@ -1,15 +1,8 @@
 
-import {
-	Observable, Subscription, Subject, EMPTY,
-	tap, filter, switchMap, catchError, finalize, take,
-	mergeMap,
-	lastValueFrom,
-	isObservable,
-} from "rxjs";
+import { Observable, Subscription, isObservable } from "rxjs";
 import { toSignal } from "@angular/core/rxjs-interop";
 import type { CanExecute, ExecuteAsyncFn, ExecuteFn, ICommand } from "./command.model";
 import { assertInInjectionContext, computed, DestroyRef, inject, Injector, isSignal, signal, type Signal } from "@angular/core";
-import { coerceObservable, type MaybeAsync } from "./private";
 
 export interface CommandCreateOptions {
 	injector?: Injector;
