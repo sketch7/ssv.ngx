@@ -99,7 +99,7 @@ describe("CommandSpecs", () => {
 			const cmd = command(executeFn, () => false, { injector });
 
 			it("should not execute the provided execute function", () => {
-				cmd.execute();
+				expect(() => cmd.execute()).toThrow();
 				expect(executeFn).not.toHaveBeenCalled();
 			});
 		});
@@ -301,7 +301,6 @@ describe("CommandSpecs", () => {
 			});
 
 			it("should handle Observable errors", async () => {
-
 				const execute = vi.fn(() => throwError(() => new Error("Observable error")));
 				const cmd = command(execute, undefined, { injector });
 

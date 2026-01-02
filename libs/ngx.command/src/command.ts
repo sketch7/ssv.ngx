@@ -91,7 +91,8 @@ export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand
 	/** Execute function to invoke. */
 	execute(...args: Parameters<TExecute>): ReturnType<TExecute> {
 		if (!this.$canExecute()) {
-			return Promise.reject() as ReturnType<TExecute>;
+			throw new Error("Command cannot execute in its current state.");
+			// return Promise.reject() as ReturnType<TExecute>;
 		}
 		this.$isExecuting.set(true);
 
