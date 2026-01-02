@@ -1,7 +1,7 @@
 
-import { Observable, isObservable } from "rxjs";
+import { isObservable, lastValueFrom } from "rxjs";
 import { toSignal } from "@angular/core/rxjs-interop";
-import type { CanExecute, ExecuteAsyncFn, ExecuteFn, ICommand } from "./command.model";
+import type { CanExecute, ExecuteAsyncFn, ExecuteFn, ExecuteReturnType, ICommand } from "./command.model";
 import { assertInInjectionContext, computed, inject, Injector, isSignal, signal, type Signal } from "@angular/core";
 
 export interface CommandCreateOptions {
@@ -75,8 +75,8 @@ export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand
 		}
 	}
 
-	/** Execute function to invoke. */
-	execute(...args: Parameters<TExecute>): ReturnType<TExecute> {
+	/** Execute function to invoke. Returns Promise if the execute function returns Observable, otherwise returns the original type. */
+	execute(...args: Parameters<TExecute>): ExecuteReturnType<TExecute> {
 		if (!this.$canExecute()) {
 			throw new Error("Command cannot execute in its current state.");
 			// return Promise.reject() as ReturnType<TExecute>;
@@ -89,31 +89,20 @@ export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand
 			const result = args.length > 0 ? this._execute(...args) : this._execute();
 
 			if (isObservable(result)) {
-				// For observables, we need to track the subscription
-				// The isExecuting will be reset when observable completes/errors
-				const tracked$ = new Observable(subscriber => {
-					const sub = result.subscribe({
-						next: (value) => subscriber.next(value),
-						error: (err) => {
-							this.$isExecuting.set(false);
-							subscriber.error(err);
-						},
-						complete: () => {
-							this.$isExecuting.set(false);
-							subscriber.complete();
-						},
-					});
-					return () => sub.unsubscribe();
-				});
-				return tracked$ as ReturnType<TExecute>;
+				// Convert observable to promise using lastValueFrom
+				// This ensures fire-and-forget execution without requiring manual subscription
+				// Use defaultValue to handle empty observables (those that complete without emitting)
+				const promise = lastValueFrom(result, { defaultValue: undefined as any })
+					.finally(() => this.$isExecuting.set(false));
+				return promise as ExecuteReturnType<TExecute>;
 			} else if (result instanceof Promise) {
 				// Return promise with proper cleanup
 				return result
-					.finally(() => this.$isExecuting.set(false)) as ReturnType<TExecute>;
+					.finally(() => this.$isExecuting.set(false)) as ExecuteReturnType<TExecute>;
 			}
 			// Sync execution
 			this.$isExecuting.set(false);
-			return result as ReturnType<TExecute>;
+			return result as ExecuteReturnType<TExecute>;
 		} catch (err) {
 			this.$isExecuting.set(false);
 			throw err;

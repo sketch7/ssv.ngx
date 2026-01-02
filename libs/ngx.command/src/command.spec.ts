@@ -64,8 +64,8 @@ describe("CommandSpecs", () => {
 
 			it("should invoke multiple times", async () => {
 				const cmd = command(executeFn, () => true, { injector })
-				await lastValueFrom(cmd.execute(), { defaultValue: undefined });
-				await lastValueFrom(cmd.execute(), { defaultValue: undefined });
+				await cmd.execute();
+				await cmd.execute();
 
 				expect(cmd.isExecuting).toBeFalsy();
 				expect(executeFn).toHaveBeenCalledTimes(2);
@@ -290,26 +290,26 @@ describe("CommandSpecs", () => {
 				console.error = vi.fn();
 			});
 
-			it("should return an Observable", async () => {
+			it("should return a Promise (converted from Observable)", async () => {
 				const execute = vi.fn((value: string) => of({ result: value }));
 				const cmd = command(execute, undefined, { injector });
 
-				const result$ = cmd.execute("test");
+				const result = cmd.execute("test");
 
 				expect(cmd.isExecuting).toBe(true);
-				expect(result$).toHaveProperty("subscribe");
+				expect(result).toBeInstanceOf(Promise);
 
-				const value = await lastValueFrom(result$);
+				const value = await result;
 				expect(value).toEqual({ result: "test" });
 				expect(cmd.isExecuting).toBe(false);
 			});
 
-			it("should handle Observable errors", async () => {
+			it("should handle Observable errors (converted to Promise rejection)", async () => {
 				const execute = vi.fn(() => throwError(() => new Error("Observable error")));
 				const cmd = command(execute, undefined, { injector });
 
 				await expect(async () => {
-					await lastValueFrom(cmd.execute());
+					await cmd.execute();
 				}).rejects.toThrow("Observable error");
 				expect(cmd.isExecuting).toBe(false);
 			});
@@ -319,17 +319,13 @@ describe("CommandSpecs", () => {
 				const cmd = command(execute, undefined, { injector });
 
 				expect(cmd.isExecuting).toBe(false);
-				const result$ = cmd.execute();
+				const result = cmd.execute();
 
-				const values: number[] = [];
-				await new Promise<void>((resolve) => {
-					result$.subscribe({
-						next: (value) => values.push(value),
-						complete: () => resolve()
-					});
-				});
+				expect(result).toBeInstanceOf(Promise);
+				// lastValueFrom returns the last emitted value (3 in this case)
+				const value = await result;
 
-				expect(values).toEqual([1, 2, 3]);
+				expect(value).toBe(3);
 				expect(cmd.isExecuting).toBe(false);
 			});
 
