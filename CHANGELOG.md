@@ -1,8 +1,16 @@
 ## 5.0.0 (2026-01-XX)
 
+### Features
+
+- **command:** `command` supports both sync/async
+- **command:** `command.execute` now returns `T | Promise<T>` (based on the execute function)
+- **command:** `command.execute` when error is thrown it will bubble the error
+- **command:** `Command` is now typed based on the execute function
+
 ### BREAKING CHANGES
 
 - **command:** remove `autoDestroy`, `destroy`, `subscribe`, `unsubscribe` from `ICommand`/`Command`
+- **command:** `commandAsync` deprecated use `command` instead
 
 ## 4.0.0 (2025-11-14)
 

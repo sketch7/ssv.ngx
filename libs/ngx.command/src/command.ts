@@ -11,6 +11,7 @@ export interface CommandCreateOptions {
 // todo: remove
 /** Creates an async {@link Command}. Must be used within an injection context.
  * NOTE: this auto injects `DestroyRef` and handles auto destroy. {@link ICommand.autoDestroy} should not be used.
+ * @deprecated Use {@link command} instead, as it handles both sync and async execute functions.
  */
 export function commandAsync<TExecute extends ExecuteAsyncFn>(
 	execute: TExecute,
@@ -92,7 +93,7 @@ export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand
 				// Convert observable to promise using lastValueFrom
 				// This ensures fire-and-forget execution without requiring manual subscription
 				// Use defaultValue to handle empty observables (those that complete without emitting)
-				const promise = lastValueFrom(result, { defaultValue: undefined as any })
+				const promise = lastValueFrom(result, { defaultValue: undefined })
 					.finally(() => this.$isExecuting.set(false));
 				return promise as ExecuteReturnType<TExecute>;
 			} else if (result instanceof Promise) {
