@@ -2,8 +2,7 @@ import { createEnvironmentInjector } from "@angular/core";
 import { BehaviorSubject, EMPTY, lastValueFrom, of, throwError } from "rxjs";
 import { vi } from "vitest";
 
-// todo: remove commandAsync usages
-import { command, commandAsync } from "./command";
+import { command } from "./command";
 
 interface Hero {
 	name: string;
@@ -64,7 +63,7 @@ describe("CommandSpecs", () => {
 			const executeFn = vi.fn().mockImplementation(() => EMPTY);
 
 			it("should invoke multiple times", async () => {
-				const cmd = commandAsync(executeFn, () => true, { injector })
+				const cmd = command(executeFn, () => true, { injector })
 				await lastValueFrom(cmd.execute(), { defaultValue: undefined });
 				await lastValueFrom(cmd.execute(), { defaultValue: undefined });
 
@@ -287,7 +286,7 @@ describe("CommandSpecs", () => {
 		describe("given an Observable-based command", () => {
 			it("should return an Observable", () => {
 				const execute = vi.fn((value: string) => of({ result: value }));
-				const cmd = commandAsync(execute, undefined, { injector });
+				const cmd = command(execute, undefined, { injector });
 
 				const result$ = cmd.execute("test");
 
@@ -308,7 +307,7 @@ describe("CommandSpecs", () => {
 
 			it("should handle Observable errors", () => {
 				const execute = vi.fn(() => throwError(() => new Error("Observable error")));
-				const cmd = commandAsync(execute, undefined, { injector });
+				const cmd = command(execute, undefined, { injector });
 
 				const result$ = cmd.execute();
 
@@ -325,7 +324,7 @@ describe("CommandSpecs", () => {
 
 			it("should complete isExecuting after observable completes", () => {
 				const execute = vi.fn(() => of(1, 2, 3));
-				const cmd = commandAsync(execute, undefined, { injector });
+				const cmd = command(execute, undefined, { injector });
 
 				expect(cmd.isExecuting).toBe(false);
 				const result$ = cmd.execute();
