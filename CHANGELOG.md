@@ -11,6 +11,7 @@
 
 - **command:** remove `autoDestroy`, `destroy`, `subscribe`, `unsubscribe` from `ICommand`/`Command`
 - **command:** `commandAsync` deprecated use `command` instead
+- **command:** `Observable` `isExecuting` will change to false only when it completes (previously when it emits)
 
 ## 4.0.0 (2025-11-14)
 
