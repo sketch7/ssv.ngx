@@ -1,4 +1,4 @@
-import { Directive, OnInit, inject, Injector, DestroyRef, input } from "@angular/core";
+import { Directive, OnInit, inject, Injector, input } from "@angular/core";
 
 import type { ICommand, CommandCreator, CanExecute } from "./command.model";
 import { isCommandCreator } from "./command.util";
@@ -40,12 +40,13 @@ export class SsvCommandRef implements OnInit {
 	private _command!: ICommand;
 
 	constructor() {
-		const destroyRef = inject(DestroyRef);
-		destroyRef.onDestroy(() => {
-			this._command?.unsubscribe();
-		});
+		// const destroyRef = inject(DestroyRef);
+		// destroyRef.onDestroy(() => {
+		// 	this._command?.unsubscribe();
+		// });
 	}
 
+	// todo: use afterNextRender
 	ngOnInit(): void {
 		if (isCommandCreator(this.commandCreator())) {
 			const commandCreator = this.commandCreator();

@@ -9,7 +9,6 @@ import {
 	input,
 	Injector,
 	computed,
-	DestroyRef,
 } from "@angular/core";
 
 import { type CommandOptions, COMMAND_OPTIONS } from "./command.options";
@@ -108,10 +107,6 @@ export class SsvCommand implements OnInit {
 	private _command!: ICommand;
 
 	constructor() {
-		const destroyRef = inject(DestroyRef);
-		destroyRef.onDestroy(() => {
-			this._command?.unsubscribe();
-		});
 		effect(() => {
 			const canExecute = this._command.$canExecute();
 			this.trySetDisabled(!canExecute);
@@ -147,8 +142,6 @@ export class SsvCommand implements OnInit {
 		} else {
 			throw new Error(`${NAME_CAMEL}: [${NAME_CAMEL}] is not defined properly!`);
 		}
-
-		this._command.subscribe();
 	}
 
 	_handleClick(): void {
@@ -169,4 +162,3 @@ export class SsvCommand implements OnInit {
 	}
 
 }
-

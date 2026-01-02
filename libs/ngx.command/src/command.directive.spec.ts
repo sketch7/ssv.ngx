@@ -5,7 +5,7 @@ import { BehaviorSubject, Observable, of, delay } from "rxjs";
 import { vi } from "vitest";
 
 import { SsvCommand } from "./command.directive";
-import { commandAsync } from "./command";
+import { command } from "./command";
 
 // Test host component for button element
 @Component({
@@ -20,7 +20,7 @@ import { commandAsync } from "./command";
 })
 class ButtonHostComponent {
 	readonly isValid$ = new BehaviorSubject(true);
-	readonly saveCmd = commandAsync(() => of(null).pipe(delay(100)), this.isValid$);
+	readonly saveCmd = command(() => of(null).pipe(delay(100)), this.isValid$);
 }
 
 // Test host component for div element
@@ -36,7 +36,7 @@ class ButtonHostComponent {
 })
 class DivHostComponent {
 	readonly $isValid = signal(true);
-	readonly actionCmd = commandAsync(() => of(null).pipe(delay(100)), this.$isValid);
+	readonly actionCmd = command(() => of(null).pipe(delay(100)), this.$isValid);
 }
 
 // Test host component with params
@@ -54,7 +54,7 @@ class DivHostComponent {
 class ParamsHostComponent {
 	readonly item = { id: 1, name: "Test" };
 	receivedArgs: unknown[] = [];
-	readonly removeCmd = commandAsync((...args: unknown[]) => {
+	readonly removeCmd = command((...args: unknown[]) => {
 		this.receivedArgs = args;
 		return of(null);
 	});
