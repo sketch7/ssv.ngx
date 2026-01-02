@@ -1,13 +1,14 @@
 
-import { Observable, Subscription, isObservable } from "rxjs";
+import { Observable, isObservable } from "rxjs";
 import { toSignal } from "@angular/core/rxjs-interop";
 import type { CanExecute, ExecuteAsyncFn, ExecuteFn, ICommand } from "./command.model";
-import { assertInInjectionContext, computed, DestroyRef, inject, Injector, isSignal, signal, type Signal } from "@angular/core";
+import { assertInInjectionContext, computed, inject, Injector, isSignal, signal, type Signal } from "@angular/core";
 
 export interface CommandCreateOptions {
 	injector?: Injector;
 }
 
+// todo: remove
 /** Creates an async {@link Command}. Must be used within an injection context.
  * NOTE: this auto injects `DestroyRef` and handles auto destroy. {@link ICommand.autoDestroy} should not be used.
  */
@@ -31,14 +32,7 @@ export function command<TExecute extends ExecuteFn>(
 		assertInInjectionContext(command);
 	}
 	const injector = opts?.injector ?? inject(Injector);
-	const destroyRef = injector.get(DestroyRef);
 	const cmd = new Command(execute, canExecute$, injector);
-	cmd.autoDestroy = false;
-
-	destroyRef.onDestroy(() => {
-		// console.warn("[command::destroy]");
-		cmd.destroy();
-	});
 	return cmd;
 }
 
@@ -53,15 +47,9 @@ export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand
 	get canExecute(): boolean { return this.$canExecute(); }
 
 	readonly $isExecuting = signal(false);
-	readonly $canExecute = computed(() => !this.$isExecuting() && this._$canExecute());
+	readonly $canExecute = computed(() => !this.$isExecuting() && this.#canExecute());
 
-	private readonly _$canExecute: Signal<boolean>;
-
-	autoDestroy = true;
-
-	// private executionPipe$: Observable<unknown | undefined>;
-	private executionPipe$$ = Subscription.EMPTY;
-	private subscribersCount = 0;
+	readonly #canExecute: Signal<boolean>;
 
 	/**
 	 * Creates an instance of Command.
@@ -79,13 +67,12 @@ export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand
 			const canExecute = typeof canExecute$ === "function"
 				? computed(canExecute$)
 				: canExecute$;
-			this._$canExecute = isSignal(canExecute)
+			this.#canExecute = isSignal(canExecute)
 				? canExecute
 				: toSignal(canExecute, { initialValue: false, injector });
 		} else {
-			this._$canExecute = signal(true);
+			this.#canExecute = signal(true);
 		}
-		// this.executionPipe$ = this.#buildExecutionPipe(execute);
 	}
 
 	/** Execute function to invoke. */
@@ -142,50 +129,5 @@ export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand
 			throw err;
 		}
 	}
-
-	/** Disposes all resources held by subscriptions. */
-	destroy(): void {
-		// console.warn("[command::destroy]");
-		this.executionPipe$$.unsubscribe();
-	}
-
-	subscribe(): void {
-		this.subscribersCount++;
-	}
-
-	unsubscribe(): void {
-		this.subscribersCount--;
-		// console.log("[command::unsubscribe]", { autoDestroy: this.autoDestroy, subscribersCount: this.subscribersCount });
-		if (this.autoDestroy && this.subscribersCount <= 0) {
-			this.destroy();
-		}
-	}
-
-	// #buildExecutionPipe(execute: (...args: unknown[]) => MaybeAsync<unknown>): Observable<unknown> {
-	// 	const pipe$ = this.executionPipe$.pipe(
-	// 		// tap(x => console.warn(">>>> executionPipe", this._canExecute)),
-	// 		filter(() => this.$canExecute()),
-	// 		tap(() => {
-	// 			// console.log("[command::executionPipe$] do#1 - set execute", { args: x });
-	// 			this.$isExecuting.set(true);
-	// 		}),
-	// 		mergeMap(args => coerceObservable(args ? execute(...args) : execute())),
-	// 		finalize(() => {
-	// 			// console.log("[command::executionPipe$]  finalize inner#1 - set idle");
-	// 			this.$isExecuting.set(false);
-	// 		}),
-	// 		take(1), // todo: remove it must be completed
-	// 		catchError(error => {
-	// 			console.error("Unhandled execute error", error);
-	// 			return EMPTY;
-	// 		}),
-	// 		tap(() => {
-	// 			// console.log("[command::executionPipe$] tap#2 - set idle");
-	// 			// this._isExecuting$.next(false);
-	// 			this.$isExecuting.set(false);
-	// 		}),
-	// 	);
-	// 	return pipe$;
-	// }
 
 }

@@ -25,27 +25,8 @@ export interface ICommand<TExecute extends ExecuteFn = ExecuteFn> {
 	/** Determines whether the command can execute or not, as a signal. */
 	readonly $canExecute: Signal<boolean>;
 
-	/** Determines whether to auto destroy when having 0 subscribers (defaults to `true`).
-	 * @deprecated Use using command/commandAsync is handled automatically.
-	 */
-	autoDestroy: boolean;
-
 	/** Execute function to invoke. */
 	execute(...args: Parameters<TExecute>): ReturnType<TExecute>;
-
-	/** Disposes all resources held by subscriptions. */
-	destroy(): void;
-
-	/** Subscribe listener, in order to handle auto disposing.
-	 * @deprecated Use using command/commandAsync is handled automatically.
-	 */
-	subscribe(): void;
-
-	/**
-	 * Unsubscribe listener, in order to handle auto disposing.
-	 * @deprecated Use using command/commandAsync is handled automatically.
-	*/
-	unsubscribe(): void;
 }
 
 export interface CommandCreator {

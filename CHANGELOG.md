@@ -1,3 +1,9 @@
+## 5.0.0 (2026-01-XX)
+
+### BREAKING CHANGES
+
+- **command:** remove `autoDestroy`, `destroy`, `subscribe`, `unsubscribe` from `ICommand`/`Command`
+
 ## 4.0.0 (2025-11-14)
 
 ### Features

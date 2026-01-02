@@ -146,15 +146,6 @@ describe("CommandSpecs", () => {
 		});
 	});
 
-	describe("given destroy is invoked", () => {
-		const executeFn = vi.fn();
-		const cmd = command(executeFn, () => false, { injector });
-
-		it("should destroy successfully", () => {
-			cmd.destroy();
-		});
-	});
-
 	describe("Typed Parameters", () => {
 		describe("given a parameterless command", () => {
 			it("should type execute with no parameters", () => {
@@ -262,6 +253,11 @@ describe("CommandSpecs", () => {
 		});
 
 		describe("given a Promise-based command", () => {
+			const _errorFn = console.error;
+			beforeEach(() => {
+				console.error = vi.fn();
+			});
+
 			it("should return a Promise", async () => {
 				const execute = vi.fn((id: number) => Promise.resolve({ id, name: "User" }));
 				const cmd = command(execute, undefined, { injector });
@@ -281,11 +277,17 @@ describe("CommandSpecs", () => {
 				await expect(cmd.execute()).rejects.toThrow("Failed");
 				expect(cmd.isExecuting).toBe(false);
 			});
+
+			afterAll(() => {
+				console.error = _errorFn;
+			});
 		});
 
 		describe("given an Observable-based command", () => {
 			const _errorFn = console.error;
-			console.error = vi.fn();
+			beforeEach(() => {
+				console.error = vi.fn();
+			});
 
 			it("should return an Observable", async () => {
 				const execute = vi.fn((value: string) => of({ result: value }));
