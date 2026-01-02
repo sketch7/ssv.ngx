@@ -299,7 +299,7 @@
 								<button
 									mat-icon-button
 									color="primary"
-							[ssvCommand]="{ host: this, execute: removeHero$, params: hero }"
+									[ssvCommand]="{ host: this, execute: removeHero$, params: [hero] }"
 									[ssvCommandParams]="[hero, 1336, 'yo']"
 									title="params always takes over + doesnt respect isValid">
 									<mat-icon>close</mat-icon>
@@ -356,7 +356,7 @@
 								<button
 									mat-icon-button
 									color="accent"
-							[ssvCommand]="{ host: this, execute: pauseHero$, canExecute: canPauseHero$, params: hero }"
+									[ssvCommand]="{ host: this, execute: pauseHero$, canExecute: canPauseHero$, params: [hero] }"
 									title="synced with the other collection's items">
 									<mat-icon>pause</mat-icon>
 								</button>
@@ -389,7 +389,7 @@
 						<button
 							mat-icon-button
 							color="accent"
-						[ssvCommand]="{ host: this, execute: pauseHero$, canExecute: canRemoveHero$, params: invulnerableHero }"
+							[ssvCommand]="{ host: this, execute: pauseHero$, canExecute: canRemoveHero$, params: [invulnerableHero] }"
 							title="command creator canExecute">
 							<mat-icon>face</mat-icon>
 						</button>

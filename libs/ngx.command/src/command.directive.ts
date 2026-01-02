@@ -14,7 +14,7 @@ import {
 import { type CommandOptions, COMMAND_OPTIONS } from "./command.options";
 import { command } from "./command";
 import { isCommand, isCommandCreator } from "./command.util";
-import { CommandCreator, type ICommand } from "./command.model";
+import { CommandCreator, type ICommand, type CanExecute } from "./command.model";
 
 /**
  * Controls the state of a component in sync with `Command`.
@@ -129,9 +129,14 @@ export class SsvCommand implements OnInit {
 			const execFn = commandOrCreator.execute.bind(commandOrCreator.host);
 			const params = this.commandParams();
 
-			const canExec = commandOrCreator.canExecute instanceof Function
-				? commandOrCreator.canExecute.bind(commandOrCreator.host, params)()
-				: commandOrCreator.canExecute;
+			let canExec: CanExecute | undefined;
+			if (commandOrCreator.canExecute instanceof Function) {
+				const boundFn = commandOrCreator.canExecute.bind(commandOrCreator.host);
+				const result = Array.isArray(params) ? boundFn(...params) : boundFn(params);
+				canExec = result as CanExecute;
+			} else {
+				canExec = commandOrCreator.canExecute;
+			}
 
 			// console.log("[ssvCommand::init] command creator", {
 			// 	firstParam: params ? params[0] : null,

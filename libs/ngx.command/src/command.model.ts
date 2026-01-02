@@ -40,14 +40,13 @@ export interface ICommand<TExecute extends ExecuteFn = ExecuteFn> {
 	execute(...args: Parameters<TExecute>): ExecuteReturnType<TExecute>;
 }
 
-export interface CommandCreator {
-	// todo: stricter typing
-	// execute: (...args: TParams extends unknown[] ? TParams : [TParams]) => Observable<unknown> | Promise<unknown> | void;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	execute: (...args: any[]) => Observable<unknown> | Promise<unknown> | void;
-	// CanExecute | ((...args: any[]) => CanExecute);
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-	canExecute?: CanExecute | Function;
-	params?: unknown | unknown[];
+export interface CommandCreator<TExecute extends ExecuteFn = ExecuteFn> {
+	/** Execute function to invoke. */
+	execute: TExecute;
+	/** Determines whether the command can execute or not. Can be a signal, observable, or function. */
+	canExecute?: CanExecute | ((...args: Parameters<TExecute>) => CanExecute);
+	/** Parameters to pass to the execute function. */
+	params?: Parameters<TExecute>;
+	/** Host context for binding the execute function. */
 	host: unknown;
 }
