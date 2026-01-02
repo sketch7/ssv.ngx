@@ -48,8 +48,9 @@ export class SsvCommandRef<TExecute extends ExecuteFn = ExecuteFn> implements On
 
 	// todo: use afterNextRender
 	ngOnInit(): void {
-		if (isCommandCreator(this.commandCreator())) {
-			const commandCreator = this.commandCreator();
+		const commandOrCreator = this.commandCreator();
+		if (isCommandCreator(commandOrCreator)) {
+			const commandCreator = commandOrCreator;
 
 			const execFn = commandCreator.execute.bind(commandCreator.host) as TExecute;
 

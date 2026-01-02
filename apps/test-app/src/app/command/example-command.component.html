@@ -308,14 +308,14 @@
 									mat-icon-button
 									color="accent"
 									[ssvCommand]="{ host: this, execute: removeHero$, canExecute: isValidHeroRemove$ }"
-									[ssvCommandParams]="hero"
+									[ssvCommandParams]="[hero, 1335, 'yo']"
 									title="params only">
 									<mat-icon>close</mat-icon>
 								</button>
 								<button
 									mat-icon-button
 									[ssvCommand]="pauseHeroCmd"
-									[ssvCommandParams]="hero"
+									[ssvCommandParams]="[hero]"
 									title="shared with other items">
 									<mat-icon>pause</mat-icon>
 								</button>
@@ -323,7 +323,7 @@
 									mat-icon-button
 									color="warn"
 									[ssvCommand]="actionCmd.command"
-									[ssvCommandParams]="hero"
+									[ssvCommandParams]="[hero, undefined, undefined]"
 									title="shared with x2">
 									<mat-icon>delete</mat-icon> x2
 								</button>

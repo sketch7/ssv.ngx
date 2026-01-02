@@ -12,7 +12,7 @@ import {
 } from "@angular/core";
 
 import { type CommandOptions, COMMAND_OPTIONS } from "./command.options";
-import { command } from "./command";
+import { command, type Command } from "./command";
 import { isCommand, isCommandCreator } from "./command.util";
 import { CommandCreator, type ICommand, type CanExecute, type ExecuteFn } from "./command.model";
 
@@ -63,6 +63,15 @@ const NAME_CAMEL = "ssvCommand";
 
 // let nextUniqueId = 0;
 
+/** Helper type to extract ExecuteFn from ICommand/Command or use ExecuteFn directly */
+type ExtractExecuteFn<T> = T extends Command<infer TExec>
+	? TExec
+	: T extends ICommand<infer TExec>
+		? TExec
+		: T extends ExecuteFn
+			? T
+			: never;
+
 @Directive({
 	selector: `[${NAME_CAMEL}]`,
 	host: {
@@ -73,7 +82,7 @@ const NAME_CAMEL = "ssvCommand";
 	exportAs: NAME_CAMEL,
 	standalone: true,
 })
-export class SsvCommand<TExecute extends ExecuteFn = ExecuteFn> implements OnInit {
+export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements OnInit {
 
 	// readonly id = `${NAME_CAMEL}-${nextUniqueId++}`;
 	readonly #options = inject(COMMAND_OPTIONS);
@@ -82,7 +91,7 @@ export class SsvCommand<TExecute extends ExecuteFn = ExecuteFn> implements OnIni
 	readonly #cdr = inject(ChangeDetectorRef);
 	readonly #injector = inject(Injector);
 
-	readonly commandOrCreator = input.required<ICommand<TExecute> | CommandCreator<TExecute>>({
+	readonly commandOrCreator = input.required<T extends ICommand ? T : (ICommand<ExtractExecuteFn<T>> | CommandCreator<ExtractExecuteFn<T>>)>({
 		alias: `ssvCommand`
 	});
 	readonly ssvCommandOptions = input<Partial<CommandOptions>>(this.#options);
@@ -96,16 +105,16 @@ export class SsvCommand<TExecute extends ExecuteFn = ExecuteFn> implements OnIni
 			...value,
 		};
 	});
-	readonly ssvCommandParams = input<Parameters<TExecute>>();
-	readonly commandParams = computed<Parameters<TExecute> | undefined>(() => this.ssvCommandParams() || this.creatorParams);
+	readonly ssvCommandParams = input<Parameters<ExtractExecuteFn<T>>>();
+	readonly commandParams = computed(() => this.ssvCommandParams() || this.creatorParams);
 	readonly _hostClasses = computed(() => ["ssv-command", this.#executingClass()]);
 	readonly #executingClass = computed(() => this._command.$isExecuting() ? this.commandOptions().executingCssClass : "");
 
-	private creatorParams: Parameters<TExecute> | undefined;
+	private creatorParams: Parameters<ExtractExecuteFn<T>> | undefined;
 
-	get command(): ICommand<TExecute> { return this._command; }
+	get command(): ICommand<ExtractExecuteFn<T>> { return this._command; }
 
-	private _command!: ICommand<TExecute>;
+	private _command!: ICommand<ExtractExecuteFn<T>>;
 
 	constructor() {
 		effect(() => {
@@ -122,12 +131,12 @@ export class SsvCommand<TExecute extends ExecuteFn = ExecuteFn> implements OnIni
 		if (isCommand(commandOrCreator)) {
 			this._command = commandOrCreator;
 		} else if (isCommandCreator(commandOrCreator)) {
-			this.creatorParams = commandOrCreator.params;
+			this.creatorParams = commandOrCreator.params as Parameters<ExtractExecuteFn<T>> | undefined;
 
 			// todo: find something like this for ivy (or angular10+)
 			// const hostComponent = (this.viewContainer as any)._view.component;
 
-			const execFn = commandOrCreator.execute.bind(commandOrCreator.host) as TExecute;
+			const execFn = commandOrCreator.execute.bind(commandOrCreator.host) as ExtractExecuteFn<T>;
 			const params = this.commandParams();
 
 			let canExec: CanExecute | undefined;

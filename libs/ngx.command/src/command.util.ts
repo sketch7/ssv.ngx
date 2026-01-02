@@ -6,15 +6,15 @@ import { Command } from "./command";
 import { type Signal, computed } from "@angular/core";
 
 /** Determines whether the arg object is of type `Command`. */
-export function isCommand(arg: unknown): arg is ICommand {
+export function isCommand<T extends ICommand>(arg: unknown | T): arg is T {
 	return arg instanceof Command;
 }
 
 /** Determines whether the arg object is of type `CommandCreator`. */
-export function isCommandCreator(arg: unknown): arg is CommandCreator {
+export function isCommandCreator<T extends CommandCreator>(arg: unknown | T): arg is T {
 	if (arg instanceof Command) {
 		return false;
-	} else if (isAssumedType<CommandCreator>(arg) && arg.execute && arg.host) {
+	} else if (isAssumedType<T>(arg) && arg.execute && arg.host) {
 		return true;
 	}
 	return false;

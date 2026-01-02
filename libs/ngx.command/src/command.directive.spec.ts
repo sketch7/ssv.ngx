@@ -314,7 +314,7 @@ describe("SsvCommand Directive", () => {
 
 			const buttonDebugEl = fixture.debugElement.query(By.css("[data-testid='creator-btn']"));
 			buttonEl = buttonDebugEl.nativeElement;
-			directiveInstance = buttonDebugEl.injector.get(SsvCommand);
+			directiveInstance = buttonDebugEl.injector.get<SsvCommand>(SsvCommand);
 		});
 
 		describe("when initialized", () => {
