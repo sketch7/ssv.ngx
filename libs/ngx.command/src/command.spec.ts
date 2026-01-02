@@ -284,7 +284,10 @@ describe("CommandSpecs", () => {
 		});
 
 		describe("given an Observable-based command", () => {
-			it("should return an Observable", () => {
+			const _errorFn = console.error;
+			console.error = vi.fn();
+
+			it("should return an Observable", async () => {
 				const execute = vi.fn((value: string) => of({ result: value }));
 				const cmd = command(execute, undefined, { injector });
 
@@ -292,54 +295,43 @@ describe("CommandSpecs", () => {
 
 				expect(result$).toHaveProperty("subscribe");
 
-				return new Promise<void>((resolve) => {
-					result$.subscribe({
-						next: (value) => {
-							expect(value).toEqual({ result: "test" });
-						},
-						complete: () => {
-							expect(cmd.isExecuting).toBe(false);
-							resolve();
-						}
-					});
-				});
+				const value = await lastValueFrom(result$);
+				expect(value).toEqual({ result: "test" });
+				expect(cmd.isExecuting).toBe(false);
 			});
 
-			it("should handle Observable errors", () => {
+			it("should handle Observable errors", async () => {
+
 				const execute = vi.fn(() => throwError(() => new Error("Observable error")));
 				const cmd = command(execute, undefined, { injector });
 
-				const result$ = cmd.execute();
-
-				return new Promise<void>((resolve) => {
-					result$.subscribe({
-						error: (err) => {
-							expect(err.message).toBe("Observable error");
-							expect(cmd.isExecuting).toBe(false);
-							resolve();
-						}
-					});
-				});
+				await expect(async () => {
+					await lastValueFrom(cmd.execute());
+				}).rejects.toThrow("Observable error");
+				expect(cmd.isExecuting).toBe(false);
 			});
 
-			it("should complete isExecuting after observable completes", () => {
+			it("should complete isExecuting after observable completes", async () => {
 				const execute = vi.fn(() => of(1, 2, 3));
 				const cmd = command(execute, undefined, { injector });
 
 				expect(cmd.isExecuting).toBe(false);
 				const result$ = cmd.execute();
 
-				return new Promise<void>((resolve) => {
-					const values: number[] = [];
+				const values: number[] = [];
+				await new Promise<void>((resolve) => {
 					result$.subscribe({
 						next: (value) => values.push(value),
-						complete: () => {
-							expect(values).toEqual([1, 2, 3]);
-							expect(cmd.isExecuting).toBe(false);
-							resolve();
-						}
+						complete: () => resolve()
 					});
 				});
+
+				expect(values).toEqual([1, 2, 3]);
+				expect(cmd.isExecuting).toBe(false);
+			});
+
+			afterAll(() => {
+				console.error = _errorFn;
 			});
 		});
 
