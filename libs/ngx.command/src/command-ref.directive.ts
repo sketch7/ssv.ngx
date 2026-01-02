@@ -1,6 +1,6 @@
 import { Directive, OnInit, inject, Injector, input } from "@angular/core";
 
-import type { ICommand, CommandCreator, CanExecute } from "./command.model";
+import type { ICommand, CommandCreator, CanExecute, ExecuteFn } from "./command.model";
 import { isCommandCreator } from "./command.util";
 import { command } from "./command";
 
@@ -28,16 +28,16 @@ const NAME_CAMEL = "ssvCommandRef";
 	exportAs: NAME_CAMEL,
 	standalone: true,
 })
-export class SsvCommandRef implements OnInit {
+export class SsvCommandRef<TExecute extends ExecuteFn = ExecuteFn> implements OnInit {
 
 	readonly #injector = inject(Injector);
 
-	readonly commandCreator = input.required<CommandCreator>({
+	readonly commandCreator = input.required<CommandCreator<TExecute>>({
 		alias: `ssvCommandRef`
 	});
 
-	get command(): ICommand { return this._command; }
-	private _command!: ICommand;
+	get command(): ICommand<TExecute> { return this._command; }
+	private _command!: ICommand<TExecute>;
 
 	constructor() {
 		// const destroyRef = inject(DestroyRef);
@@ -51,7 +51,7 @@ export class SsvCommandRef implements OnInit {
 		if (isCommandCreator(this.commandCreator())) {
 			const commandCreator = this.commandCreator();
 
-			const execFn = commandCreator.execute.bind(commandCreator.host);
+			const execFn = commandCreator.execute.bind(commandCreator.host) as TExecute;
 
 			this._command = command(execFn, commandCreator.canExecute as CanExecute, { injector: this.#injector });
 		} else {

@@ -14,7 +14,7 @@ import {
 import { type CommandOptions, COMMAND_OPTIONS } from "./command.options";
 import { command } from "./command";
 import { isCommand, isCommandCreator } from "./command.util";
-import { CommandCreator, type ICommand, type CanExecute } from "./command.model";
+import { CommandCreator, type ICommand, type CanExecute, type ExecuteFn } from "./command.model";
 
 /**
  * Controls the state of a component in sync with `Command`.
@@ -69,10 +69,11 @@ const NAME_CAMEL = "ssvCommand";
 		"[class]": "_hostClasses()",
 		"(click)": "_handleClick()",
 	},
+	// todo: handle keydown/enter?
 	exportAs: NAME_CAMEL,
 	standalone: true,
 })
-export class SsvCommand implements OnInit {
+export class SsvCommand<TExecute extends ExecuteFn = ExecuteFn> implements OnInit {
 
 	// readonly id = `${NAME_CAMEL}-${nextUniqueId++}`;
 	readonly #options = inject(COMMAND_OPTIONS);
@@ -81,7 +82,7 @@ export class SsvCommand implements OnInit {
 	readonly #cdr = inject(ChangeDetectorRef);
 	readonly #injector = inject(Injector);
 
-	readonly commandOrCreator = input.required<ICommand | CommandCreator>({
+	readonly commandOrCreator = input.required<ICommand<TExecute> | CommandCreator<TExecute>>({
 		alias: `ssvCommand`
 	});
 	readonly ssvCommandOptions = input<Partial<CommandOptions>>(this.#options);
@@ -95,16 +96,16 @@ export class SsvCommand implements OnInit {
 			...value,
 		};
 	});
-	readonly ssvCommandParams = input<unknown | unknown[]>(undefined);
-	readonly commandParams = computed<unknown | unknown[]>(() => this.ssvCommandParams() || this.creatorParams);
+	readonly ssvCommandParams = input<Parameters<TExecute>>();
+	readonly commandParams = computed<Parameters<TExecute> | undefined>(() => this.ssvCommandParams() || this.creatorParams);
 	readonly _hostClasses = computed(() => ["ssv-command", this.#executingClass()]);
 	readonly #executingClass = computed(() => this._command.$isExecuting() ? this.commandOptions().executingCssClass : "");
 
-	private creatorParams: unknown | unknown[] = [];
+	private creatorParams: Parameters<TExecute> | undefined;
 
-	get command(): ICommand { return this._command; }
+	get command(): ICommand<TExecute> { return this._command; }
 
-	private _command!: ICommand;
+	private _command!: ICommand<TExecute>;
 
 	constructor() {
 		effect(() => {
@@ -126,13 +127,13 @@ export class SsvCommand implements OnInit {
 			// todo: find something like this for ivy (or angular10+)
 			// const hostComponent = (this.viewContainer as any)._view.component;
 
-			const execFn = commandOrCreator.execute.bind(commandOrCreator.host);
+			const execFn = commandOrCreator.execute.bind(commandOrCreator.host) as TExecute;
 			const params = this.commandParams();
 
 			let canExec: CanExecute | undefined;
 			if (commandOrCreator.canExecute instanceof Function) {
 				const boundFn = commandOrCreator.canExecute.bind(commandOrCreator.host);
-				const result = Array.isArray(params) ? boundFn(...params) : boundFn(params);
+				const result = Array.isArray(params) ? boundFn(...params) : boundFn();
 				canExec = result as CanExecute;
 			} else {
 				canExec = commandOrCreator.canExecute;
@@ -155,7 +156,8 @@ export class SsvCommand implements OnInit {
 		if (Array.isArray(commandParams)) {
 			this._command.execute(...commandParams);
 		} else {
-			this._command.execute(commandParams);
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			(this._command.execute as any)();
 		}
 	}
 

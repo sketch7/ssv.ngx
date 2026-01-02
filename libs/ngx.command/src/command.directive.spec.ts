@@ -74,9 +74,9 @@ class ParamsHostComponent {
 class CommandCreatorHostComponent {
 	readonly item = { id: 42 };
 	readonly canExecute$ = new BehaviorSubject(true);
-	executedWith: unknown = null;
+	executedWith: typeof this.item | null = null;
 
-	executeAction = (item: unknown): Observable<unknown> => {
+	executeAction = (item: typeof this.item): Observable<unknown> => {
 		this.executedWith = item;
 		return of(null).pipe(delay(50));
 	};

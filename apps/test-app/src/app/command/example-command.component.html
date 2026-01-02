@@ -299,7 +299,7 @@
 								<button
 									mat-icon-button
 									color="primary"
-									[ssvCommand]="{ host: this, execute: removeHero$, params: [hero] }"
+									[ssvCommand]="{ host: this, execute: removeHero$, params: [hero, undefined, undefined] }"
 									[ssvCommandParams]="[hero, 1336, 'yo']"
 									title="params always takes over + doesnt respect isValid">
 									<mat-icon>close</mat-icon>
