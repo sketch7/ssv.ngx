@@ -39,7 +39,6 @@ export function command<TExecute extends ExecuteFn>(
 
 /**
  * Command object used to encapsulate information which is needed to perform an action.
- *
  */
 export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand<TExecute> {
 

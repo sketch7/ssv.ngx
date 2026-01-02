@@ -1,7 +1,7 @@
-import { AbstractControl, PristineChangeEvent, StatusChangeEvent } from "@angular/forms";
+import { type AbstractControl, PristineChangeEvent, StatusChangeEvent } from "@angular/forms";
 import { Observable, map, distinctUntilChanged, filter, combineLatest, of, defer, concat } from "rxjs";
 
-import { CommandCreator, ICommand } from "./command.model";
+import type { CommandCreator, ICommand } from "./command.model";
 import { Command } from "./command";
 import { type Signal, computed } from "@angular/core";
 

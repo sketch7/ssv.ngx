@@ -3,6 +3,8 @@ import type { Signal } from "@angular/core";
 
 import type { MaybeAsync } from "./private";
 
+type SignalLike<T> = (() => T);
+
 /** Converts Observable<T> to Promise<T>, leaves other types unchanged */
 export type ConvertObservableToPromise<T> = T extends Observable<infer U> ? Promise<U> : T;
 
@@ -13,9 +15,10 @@ export type ExecuteReturnType<TExecute extends ExecuteFn> = ConvertObservableToP
 export type ExecuteFn<TArgs extends any[] = any[], TReturn = unknown> = (...args: TArgs) => MaybeAsync<TReturn>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ExecuteAsyncFn<TArgs extends any[] = any[], TReturn = unknown> = (...args: TArgs) => Observable<TReturn> | Promise<TReturn>;
-// todo: signal like type
-export type CanExecute = (() => boolean) | Signal<boolean> | Observable<boolean>;
 
+export type CanExecute = SignalLike<boolean> | Observable<boolean>;
+
+// todo: rename to Command and Command to CommandImpl or similar
 export interface ICommand<TExecute extends ExecuteFn = ExecuteFn> {
 	/** Determines whether the command is currently executing, as a snapshot value.
 	 * @deprecated Use {@link $isExecuting} signal instead.
