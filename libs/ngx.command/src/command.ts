@@ -96,13 +96,12 @@ export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand
 						next: (value) => subscriber.next(value),
 						error: (err) => {
 							this.$isExecuting.set(false);
-							console.error("Unhandled execute error", err);
 							subscriber.error(err);
 						},
 						complete: () => {
 							this.$isExecuting.set(false);
 							subscriber.complete();
-						}
+						},
 					});
 					return () => sub.unsubscribe();
 				});
@@ -110,22 +109,13 @@ export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand
 			} else if (result instanceof Promise) {
 				// Return promise with proper cleanup
 				return result
-					.then((value) => {
-						this.$isExecuting.set(false);
-						return value;
-					})
-					.catch((error) => {
-						this.$isExecuting.set(false);
-						console.error("Unhandled execute error", error);
-						throw error;
-					}) as ReturnType<TExecute>;
+					.finally(() => this.$isExecuting.set(false)) as ReturnType<TExecute>;
 			}
 			// Sync execution
 			this.$isExecuting.set(false);
 			return result as ReturnType<TExecute>;
 		} catch (err) {
 			this.$isExecuting.set(false);
-			console.error("Unhandled execute error", err);
 			throw err;
 		}
 	}

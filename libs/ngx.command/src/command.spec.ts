@@ -264,6 +264,7 @@ describe("CommandSpecs", () => {
 
 				const resultPromise = cmd.execute(1);
 
+				expect(cmd.isExecuting).toBe(true);
 				expect(resultPromise).toBeInstanceOf(Promise);
 				const result = await resultPromise;
 				expect(result).toEqual({ id: 1, name: "User" });
@@ -295,6 +296,7 @@ describe("CommandSpecs", () => {
 
 				const result$ = cmd.execute("test");
 
+				expect(cmd.isExecuting).toBe(true);
 				expect(result$).toHaveProperty("subscribe");
 
 				const value = await lastValueFrom(result$);
