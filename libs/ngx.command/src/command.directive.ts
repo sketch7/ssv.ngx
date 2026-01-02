@@ -67,10 +67,10 @@ const NAME_CAMEL = "ssvCommand";
 type ExtractExecuteFn<T> = T extends Command<infer TExec>
 	? TExec
 	: T extends ICommand<infer TExec>
-		? TExec
-		: T extends ExecuteFn
-			? T
-			: never;
+	? TExec
+	: T extends ExecuteFn
+	? T
+	: never;
 
 @Directive({
 	selector: `[${NAME_CAMEL}]`,
@@ -108,28 +108,29 @@ export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements O
 	readonly ssvCommandParams = input<Parameters<ExtractExecuteFn<T>>>();
 	readonly commandParams = computed(() => this.ssvCommandParams() || this.creatorParams);
 	readonly _hostClasses = computed(() => ["ssv-command", this.#executingClass()]);
-	readonly #executingClass = computed(() => this._command.$isExecuting() ? this.commandOptions().executingCssClass : "");
+	readonly #executingClass = computed(() => this.#command.$isExecuting() ? this.commandOptions().executingCssClass : "");
 
 	private creatorParams: Parameters<ExtractExecuteFn<T>> | undefined;
 
-	get command(): ICommand<ExtractExecuteFn<T>> { return this._command; }
+	get command(): ICommand<ExtractExecuteFn<T>> { return this.#command; }
 
-	private _command!: ICommand<ExtractExecuteFn<T>>;
+	#command!: ICommand<ExtractExecuteFn<T>>;
 
 	constructor() {
 		effect(() => {
-			const canExecute = this._command.$canExecute();
+			const canExecute = this.#command.$canExecute();
 			this.trySetDisabled(!canExecute);
 			// console.log("[ssvCommand::canExecute$]", { canExecute: x });
 			this.#cdr.markForCheck();
 		});
 	}
 
+	// todo: afterNextRender
 	ngOnInit(): void {
 		const commandOrCreator = this.commandOrCreator();
 		// console.log("[ssvCommand::init]", this.#options);
 		if (isCommand(commandOrCreator)) {
-			this._command = commandOrCreator;
+			this.#command = commandOrCreator;
 		} else if (isCommandCreator(commandOrCreator)) {
 			this.creatorParams = commandOrCreator.params as Parameters<ExtractExecuteFn<T>> | undefined;
 
@@ -153,7 +154,7 @@ export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements O
 			// 	params
 			// });
 
-			this._command = command(execFn, canExec, { injector: this.#injector });
+			this.#command = command(execFn, canExec, { injector: this.#injector });
 		} else {
 			throw new Error(`${NAME_CAMEL}: [${NAME_CAMEL}] is not defined properly!`);
 		}
@@ -163,10 +164,10 @@ export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements O
 		const commandParams = this.commandParams();
 		// console.log("[ssvCommand::onClick]", commandParams);
 		if (Array.isArray(commandParams)) {
-			this._command.execute(...commandParams);
+			this.#command.execute(...commandParams);
 		} else {
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			(this._command.execute as any)();
+			(this.#command.execute as any)();
 		}
 	}
 
