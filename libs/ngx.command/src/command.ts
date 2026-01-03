@@ -60,19 +60,10 @@ export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand
 	 */
 	constructor(
 		private readonly _execute: TExecute,
-		canExecute$?: CanExecute,
+		canExecute?: CanExecute,
 		injector?: Injector,
 	) {
-		if (canExecute$) {
-			const canExecute = typeof canExecute$ === "function"
-				? computed(canExecute$)
-				: canExecute$;
-			this.#canExecute = isSignal(canExecute)
-				? canExecute
-				: toSignal(canExecute, { initialValue: false, injector });
-		} else {
-			this.#canExecute = computed(() => true);
-		}
+		this.#canExecute = this.#buildCanExecuteSignal(canExecute, injector);
 	}
 
 	/** Execute function to invoke. Returns Promise if the execute function returns Observable, otherwise returns the original type. */
@@ -83,7 +74,7 @@ export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand
 		}
 		this.$isExecuting.set(true);
 
-		console.warn("[command::execute]", args);
+		// console.warn("[command::execute]", args);
 
 		try {
 			const result = args.length > 0 ? this._execute(...args) : this._execute();
@@ -107,6 +98,19 @@ export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand
 			this.$isExecuting.set(false);
 			throw err;
 		}
+	}
+
+	#buildCanExecuteSignal(canExecute?: CanExecute, injector?: Injector): Signal<boolean> {
+		if (!canExecute) {
+			return computed(() => true);
+		}
+		if (isSignal(canExecute)) {
+			return canExecute;
+		}
+		if (typeof canExecute === "function") {
+			return computed(canExecute);
+		}
+		return toSignal(canExecute, { initialValue: false, injector });
 	}
 
 }
