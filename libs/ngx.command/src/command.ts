@@ -15,10 +15,10 @@ export interface CommandCreateOptions {
  */
 export function commandAsync<TExecute extends ExecuteAsyncFn>(
 	execute: TExecute,
-	canExecute$?: CanExecute,
+	canExecute?: CanExecute,
 	opts?: CommandCreateOptions,
 ): Command<TExecute> {
-	return command(execute, canExecute$, opts);
+	return command(execute, canExecute, opts);
 }
 
 /** Creates a {@link Command}. Must be used within an injection context.
@@ -26,14 +26,14 @@ export function commandAsync<TExecute extends ExecuteAsyncFn>(
  */
 export function command<TExecute extends ExecuteFn>(
 	execute: TExecute,
-	canExecute$?: CanExecute,
+	canExecute?: CanExecute,
 	opts?: CommandCreateOptions,
 ): Command<TExecute> {
 	if (!opts?.injector) {
 		assertInInjectionContext(command);
 	}
 	const injector = opts?.injector ?? inject(Injector);
-	const cmd = new Command(execute, canExecute$, injector);
+	const cmd = new Command(execute, canExecute, injector);
 	return cmd;
 }
 
@@ -101,7 +101,7 @@ export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand
 	}
 
 	#buildCanExecuteSignal(canExecute?: CanExecute, injector?: Injector): Signal<boolean> {
-		if (!canExecute) {
+		if (canExecute === undefined) {
 			return computed(() => true);
 		}
 		if (isSignal(canExecute)) {
@@ -109,6 +109,9 @@ export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand
 		}
 		if (typeof canExecute === "function") {
 			return computed(canExecute);
+		}
+		if (typeof canExecute === "boolean") {
+			return computed(() => canExecute);
 		}
 		return toSignal(canExecute, { initialValue: false, injector });
 	}

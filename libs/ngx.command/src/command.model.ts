@@ -17,7 +17,7 @@ export type ExecuteFn<TArgs extends any[] = any[], TReturn = unknown> = (...args
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ExecuteAsyncFn<TArgs extends any[] = any[], TReturn = unknown> = (...args: TArgs) => Observable<TReturn> | Promise<TReturn>;
 
-export type CanExecute = SignalLike<boolean> | Signal<boolean> | Observable<boolean>;
+export type CanExecute = SignalLike<boolean> | Signal<boolean> | Observable<boolean> | boolean;
 
 // todo: rename to Command and Command to CommandImpl or similar
 export interface ICommand<TExecute extends ExecuteFn = ExecuteFn> {

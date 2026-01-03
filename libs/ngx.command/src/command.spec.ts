@@ -197,6 +197,15 @@ describe("CommandSpecs", () => {
 		});
 	});
 
+	describe("given canExecute with a boolean", () => {
+		const executeFn = vi.fn();
+		const cmd = command(executeFn, false, { injector });
+
+		it("should have $canExecute signal set to false", () => {
+			expect(cmd.$canExecute()).toBe(false);
+		});
+	});
+
 	describe("Typed Parameters", () => {
 		describe("given a parameterless command", () => {
 			it("should type execute with no parameters", () => {

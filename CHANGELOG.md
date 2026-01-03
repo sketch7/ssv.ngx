@@ -6,6 +6,7 @@
 - **command:** `command.execute` now returns `T | Promise<T>` (based on the execute function)
 - **command:** `command.execute` when error is thrown it will bubble the error
 - **command:** `Command` is now typed based on the execute function
+- **command:** `Command` `canExecute` now support `boolean`
 - **command:** `SsvCommand/SsvCommandRef` is now typed
 
 ### BREAKING CHANGES
