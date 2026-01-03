@@ -1,7 +1,8 @@
 import type { Observable } from "rxjs";
 import type { Signal } from "@angular/core";
 
-import type { MaybeAsync } from "./private";
+/** Type that represents a sync or async value. */
+export type MaybeAsync<T> = T | Observable<T> | Promise<T>;
 
 type SignalLike<T> = (() => T);
 

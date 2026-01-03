@@ -71,7 +71,7 @@ export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand
 				? canExecute
 				: toSignal(canExecute, { initialValue: false, injector });
 		} else {
-			this.#canExecute = signal(true);
+			this.#canExecute = computed(() => true);
 		}
 	}
 
