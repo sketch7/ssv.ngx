@@ -15,7 +15,7 @@
 - **command:** `commandAsync` deprecated use `command` instead
 - **command:** `Observable` `isExecuting` will change to false only when it completes (previously when it emits)
 - **command:** `SsvCommand/SsvCommandRef` strict typings
-- **command:** `CommandAsync` has been removed - use `command` instead
+- **command:** `CommandAsync` has been removed - use `command` instead to create instance or use type `Command`
 
 ## 4.0.0 (2025-11-14)
 
