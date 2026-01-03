@@ -1,4 +1,4 @@
-import { createEnvironmentInjector } from "@angular/core";
+import { computed, createEnvironmentInjector, signal } from "@angular/core";
 import { BehaviorSubject, EMPTY, of, throwError } from "rxjs";
 import { vi } from "vitest";
 
@@ -143,6 +143,57 @@ describe("CommandSpecs", () => {
 
 		it("should have $canExecute signal set to false", () => {
 			expect(cmd.$canExecute()).toBe(false);
+		});
+	});
+
+	describe("given canExecute with a signal", () => {
+		const canExecuteSignal = signal(true);
+		const executeFn = vi.fn();
+		const cmd = command(executeFn, canExecuteSignal, { injector });
+
+		it("should have $canExecute signal set to true", () => {
+			expect(cmd.$canExecute()).toBe(true);
+		});
+
+		describe("when the canExecute signal changes", () => {
+			beforeEach(() => {
+				canExecuteSignal.set(false);
+			});
+
+			it("should update $canExecute signal", () => {
+				expect(cmd.$canExecute()).toBe(false);
+			});
+		});
+	});
+
+	describe("given canExecute with a computed signal", () => {
+		const isValid = signal(false);
+		const canExecuteComputed = computed(() => isValid());
+		const executeFn = vi.fn();
+		const cmd = command(executeFn, canExecuteComputed, { injector });
+
+		it("should have $canExecute signal set to false initially", () => {
+			expect(cmd.$canExecute()).toBe(false);
+		});
+
+		describe("when the computed signal changes to true", () => {
+			beforeEach(() => {
+				isValid.set(true);
+			});
+
+			it("should update $canExecute signal to true", () => {
+				expect(cmd.$canExecute()).toBe(true);
+			});
+		});
+
+		describe("when the computed signal changes back to false", () => {
+			beforeEach(() => {
+				isValid.set(false);
+			});
+
+			it("should update $canExecute signal to false", () => {
+				expect(cmd.$canExecute()).toBe(false);
+			});
 		});
 	});
 
