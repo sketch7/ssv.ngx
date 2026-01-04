@@ -53,9 +53,9 @@ class DivHostComponent {
 })
 class ParamsHostComponent {
 	readonly item = { id: 1, name: "Test" };
-	receivedArgs: unknown[] = [];
-	readonly removeCmd = command((...args: unknown[]) => {
-		this.receivedArgs = args;
+	receivedArgs: [typeof this.item, string] | undefined;
+	readonly removeCmd = command((item: typeof this.item, extra: string) => {
+		this.receivedArgs = [item, extra];
 		return of(null);
 	});
 }
@@ -288,11 +288,11 @@ describe("SsvCommand Directive", () => {
 			});
 
 			it("should pass the correct item object", () => {
-				expect(component.receivedArgs[0]).toEqual({ id: 1, name: "Test" });
+				expect(component.receivedArgs?.[0]).toEqual({ id: 1, name: "Test" });
 			});
 
 			it("should pass the correct second param", () => {
-				expect(component.receivedArgs[1]).toBe("extra");
+				expect(component.receivedArgs?.[1]).toBe("extra");
 			});
 		});
 	});
