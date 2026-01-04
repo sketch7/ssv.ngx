@@ -18,21 +18,22 @@ npm install @ssv/ngx.command
 
 Choose the version corresponding to your Angular version:
 
- | Angular | library |
+ | library | Angular |
  | ------- | ------- |
- | 17+     | 4.x+    |
- | 17+     | 3.x+    |
- | 10+     | 2.x+    |
- | 4 to 9  | 1.x+    |
+ | 5.x+    | 17+     |
+ | 4.x+    | 17+     |
+ | 3.x+    | 17+     |
+ | 2.x+    | 10+     |
+ | 1.x+    | 4 to 9  |
 
 
 # Usage
 
 ## Command
-In order to start working with Command, you need to create a new instance of it.
+Create a new instance of `Command`
 
 ```ts
-import { command, commandAsync } from "@ssv/ngx.command";
+import { command } from "@ssv/ngx.command";
 
 const isValid = signal(false);
 const isValid$ = new BehaviorSubject(false);
@@ -41,12 +42,13 @@ const isValid$ = new BehaviorSubject(false);
 saveCmd = command(() => this.save(), isValid);
 
 // async - returns an observable/promise.
-saveCmd = commandAsync(() => Observable.timer(2000), isValid);
+saveCmd = command(() => Observable.timer(2000), isValid);
 
 // can execute diff ways
 saveCmd = command(() => this.save(), () => isValid()); // reactive fn (signal)
 saveCmd = command(() => this.save(), isValid); // signal
 saveCmd = command(() => this.save(), isValid$); // rx
+saveCmd = command(() => this.save(), false); // boolean (perma disabled)
 ```
 
 ## Command Attribute (Directive)
@@ -124,10 +126,10 @@ Command creator ref, directive which allows creating Command in the template and
 ```html
 @for (hero of heroes; track hero.key) {
   <div #actionCmd="ssvCommandRef" [ssvCommandRef]="{host: this, execute: removeHero$, canExecute: isValid$}" class="button-group">
-    <button [ssvCommand]="actionCmd.command" [ssvCommandParams]="hero">
+    <button [ssvCommand]="actionCmd.command()" [ssvCommandParams]="hero">
       Remove
     </button>
-    <button [ssvCommand]="actionCmd.command" [ssvCommandParams]="hero">
+    <button [ssvCommand]="actionCmd.command()" [ssvCommandParams]="hero">
       Remove
     </button>
   </div>
@@ -141,17 +143,17 @@ In order to use with `NgForm` easily, you can use the following utility method.
 This will make canExecute respond to `form.valid` and for `form.dirty` - also can optionally disable validity or dirty.
 
 ```ts
-import { commandAsync, canExecuteFromNgForm, canExecuteFromSignals } from "@ssv/ngx.command";
+import { command, canExecuteFromNgForm, canExecuteFromSignals } from "@ssv/ngx.command";
 
-loginCmd = commandAsync(x => this.login(), canExecuteFromNgForm(this.form));
+loginCmd = command(x => this.login(), canExecuteFromNgForm(this.form));
 
 // options - disable dirty check
-loginCmd = commandAsync(x => this.login(), canExecuteFromNgForm(this.form, {
+loginCmd = command(x => this.login(), canExecuteFromNgForm(this.form, {
   dirty: false
 }));
 
 // similar functionality using custom signals (or form which provide signals)
-loginCmd = commandAsync(x => this.login(), canExecuteFromSignals({dirty: $dirty, valid: $valid}));
+loginCmd = command(x => this.login(), canExecuteFromSignals({dirty: $dirty, valid: $valid}));
 ```
 
 
