@@ -4,5 +4,5 @@ export { command, commandAsync, Command, type CommandCreateOptions } from "./com
 export { SsvCommand } from "./command.directive";
 export { SsvCommandRef } from "./command-ref.directive";
 export { type CanExecuteFormOptions, isCommand, isCommandCreator, canExecuteFromNgForm, canExecuteFromSignals } from "./command.util";
-export type { CommandCreator, ICommand, CanExecute, ExecuteFn } from "./command.model";
+export type { CommandCreator, ICommand, CanExecute, ExecuteFn, CommandInput } from "./command.model";
 export { VERSION } from "./version";

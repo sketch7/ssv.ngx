@@ -1,6 +1,8 @@
 import type { Observable } from "rxjs";
 import type { Signal } from "@angular/core";
 
+import type { Command } from "./command";
+
 /** Type that represents a sync or async value. */
 export type MaybeAsync<T> = T | Observable<T> | Promise<T>;
 
@@ -16,6 +18,27 @@ export type ExecuteReturnType<TExecute extends ExecuteFn> = ConvertObservableToP
 export type ExecuteFn<TArgs extends any[] = any[], TReturn = unknown> = (...args: TArgs) => MaybeAsync<TReturn>;
 
 export type CanExecute = SignalLike<boolean> | Signal<boolean> | Observable<boolean> | boolean;
+
+/** `command` input type convenience.
+ * @example
+ * For a command with multiple parameters:
+ * ```ts
+ * readonly myCmd = input.required<CommandInput<[param1: string, param2: number]>>();
+ * ```
+ * For a command with a single parameter:
+ * ```ts
+ * readonly myCmd = input.required<CommandInput<MyType>>();
+ * ```
+ */
+export type CommandInput<TArgs = unknown, R = unknown> =
+	TArgs extends readonly [unknown, ...unknown[]]  // Multi-element tuple?
+	? Command<(...args: TArgs) => R>
+	: TArgs extends readonly [infer Single]  // Single-element tuple?
+	? Command<(arg: Single) => R>
+	// : TArgs extends any[]  // Array type (not a tuple)?
+	// 	? never  // Ambiguous - use [T[]] wrapper instead
+	// 	: Command<(arg: TArgs) => R>;  // Single non-array type
+	: Command<(arg: TArgs) => R>;  // Single non-array type
 
 // todo: rename to Command and Command to CommandImpl or similar
 export interface ICommand<TExecute extends ExecuteFn = ExecuteFn> {
