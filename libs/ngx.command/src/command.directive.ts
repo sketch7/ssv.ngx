@@ -14,7 +14,7 @@ import {
 import { type CommandOptions, COMMAND_OPTIONS } from "./command.options";
 import { command, type Command } from "./command";
 import { isCommand, isCommandCreator } from "./command.util";
-import { CommandCreator, type ICommand, type CanExecute, type ExecuteFn } from "./command.model";
+import { CommandCreator, type ICommand, type CanExecute, type ExecuteFn, type CommandParams } from "./command.model";
 
 /**
  * Controls the state of a component in sync with `Command`.
@@ -36,13 +36,20 @@ import { CommandCreator, type ICommand, type CanExecute, type ExecuteFn } from "
  * This is useful for collections (loops) or using multiple actions with different args.
  * *NOTE: This will share the `isExecuting` when used with multiple controls.*
  *
- * #### With single param
+ * #### With single param (direct)
  *
  * ```html
- * <button [ssvCommand]="saveCmd" [ssvCommandParams]="{id: 1}">Save</button>
+ * <button [ssvCommand]="saveCmd" [ssvCommandParams]="hero">Save</button>
  * ```
+ *
+ * #### With single param (array)
+ *
+ * ```html
+ * <button [ssvCommand]="saveCmd" [ssvCommandParams]="[hero]">Save</button>
+ * ```
+ *
  * *NOTE: if you have only 1 argument as an array, it should be enclosed within an array e.g. `[['apple', 'banana']]`,
- * else it will spread and you will `arg1: "apple", arg2: "banana"`*
+ * else it will spread and you will get `arg1: "apple", arg2: "banana"`*
  *
  * #### With multi params
  * ```html
@@ -105,8 +112,15 @@ export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements O
 			...value,
 		};
 	});
-	readonly ssvCommandParams = input<Parameters<ExtractExecuteFn<T>>>();
-	readonly commandParams = computed(() => this.ssvCommandParams() || this.creatorParams);
+	readonly ssvCommandParams = input<CommandParams<ExtractExecuteFn<T>>>();
+	readonly commandParams = computed(() => {
+		const params = this.ssvCommandParams();
+		if (params === undefined) {
+			return this.creatorParams;
+		}
+		// Normalize single param to array format for consistent handling
+		return this.#normalizeParams(params);
+	});
 	readonly _hostClasses = computed(() => ["ssv-command", this.#executingClass()]);
 	readonly #executingClass = computed(() => this.#command.$isExecuting() ? this.commandOptions().executingCssClass : "");
 
@@ -132,7 +146,7 @@ export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements O
 		if (isCommand(commandOrCreator)) {
 			this.#command = commandOrCreator;
 		} else if (isCommandCreator(commandOrCreator)) {
-			this.creatorParams = commandOrCreator.params as Parameters<ExtractExecuteFn<T>> | undefined;
+			this.creatorParams = this.#normalizeParams(commandOrCreator.params as CommandParams<ExtractExecuteFn<T>>);
 
 			// todo: find something like this for ivy (or angular10+)
 			// const hostComponent = (this.viewContainer as any)._view.component;
@@ -176,6 +190,16 @@ export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements O
 			// console.warn(">>>> disabled", { id: this.id, disabled });
 			this.#renderer.setProperty(this.#element.nativeElement, "disabled", disabled);
 		}
+	}
+
+	/** Normalizes params to array format for consistent execution */
+	#normalizeParams(params: CommandParams<ExtractExecuteFn<T>>): Parameters<ExtractExecuteFn<T>> | undefined {
+		// If params is already an array, return as-is
+		if (Array.isArray(params)) {
+			return params as Parameters<ExtractExecuteFn<T>>;
+		}
+		// Single non-array param - wrap it
+		return [params] as Parameters<ExtractExecuteFn<T>>;
 	}
 
 }

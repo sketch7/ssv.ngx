@@ -19,6 +19,19 @@ export type ExecuteFn<TArgs extends any[] = any[], TReturn = unknown> = (...args
 
 export type CanExecute = SignalLike<boolean> | Signal<boolean> | Observable<boolean> | boolean;
 
+/**
+ * Type for command parameters that allows:
+ * - Single parameter passed directly (not in array)
+ * - Multiple parameters as tuple array
+ * - Single array parameter wrapped in array to prevent spreading
+ */
+export type CommandParams<TExec extends ExecuteFn> =
+	Parameters<TExec> extends [infer Single]
+	? Single | [Single]  // Allow single param directly OR in array
+	: Parameters<TExec> extends []
+	? never  // No params
+	: Parameters<TExec>;  // Multiple params as tuple
+
 /** `command` input type convenience.
  * @example
  * For a command with multiple parameters:
@@ -68,7 +81,7 @@ export interface CommandCreator<TExecute extends ExecuteFn = ExecuteFn> {
 	/** Determines whether the command can execute or not. Can be a signal, observable, or function. */
 	canExecute?: CanExecute | ((...args: Parameters<TExecute>) => CanExecute);
 	/** Parameters to pass to the execute function. */
-	params?: Parameters<TExecute>;
+	params?: CommandParams<TExecute>;
 	/** Host context for binding the execute function. */
 	host: unknown;
 }

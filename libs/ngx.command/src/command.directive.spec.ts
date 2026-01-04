@@ -65,7 +65,7 @@ class ParamsHostComponent {
 	imports: [SsvCommand],
 	template: `
 		<button
-			[ssvCommand]="{host: this, execute: executeAction, canExecute: canExecute$, params: [item]}"
+			[ssvCommand]="{host: this, execute: executeAction, canExecute: canExecute$, params: item}"
 			data-testid="creator-btn">
 			Execute
 		</button>
