@@ -16,6 +16,8 @@
 - **command:** `Observable` `isExecuting` will change to false only when it completes (previously when it emits)
 - **command:** `SsvCommand/SsvCommandRef` strict typings
 - **command:** `CommandAsync` has been removed - use `command` instead to create instance or use type `Command`
+- **command:** `ssvCommandParams` and commandCreator params must be in defined in `[]` e.g. `[hero]`
+- **command:** `ssvCommandRef` `command` is now as signal
 
 ## 4.0.0 (2025-11-14)
 

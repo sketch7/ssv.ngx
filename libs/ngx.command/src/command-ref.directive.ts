@@ -1,4 +1,4 @@
-import { Directive, OnInit, inject, Injector, input } from "@angular/core";
+import { Directive, OnInit, inject, Injector, input, signal } from "@angular/core";
 
 import type { ICommand, CommandCreator, CanExecute, ExecuteFn } from "./command.model";
 import { isCommandCreator } from "./command.util";
@@ -13,10 +13,10 @@ const NAME_CAMEL = "ssvCommandRef";
  * ### Most common usage
  * ```html
  * <div #actionCmd="ssvCommandRef" [ssvCommandRef]="{host: this, execute: removeHero$, canExecute: isValid$}">
- *    <button [ssvCommand]="actionCmd.command" [ssvCommandParams]="hero">
+ *    <button [ssvCommand]="actionCmd.command()" [ssvCommandParams]="[hero]">
  *      Remove
  *    </button>
- *    <button [ssvCommand]="actionCmd.command" [ssvCommandParams]="hero">
+ *    <button [ssvCommand]="actionCmd.command()" [ssvCommandParams]="[hero]">
  *       Remove
  *    </button>
  * </div>
@@ -36,8 +36,9 @@ export class SsvCommandRef<TExecute extends ExecuteFn = ExecuteFn> implements On
 		alias: `ssvCommandRef`
 	});
 
-	get command(): ICommand<TExecute> { return this._command; }
-	private _command!: ICommand<TExecute>;
+	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+	readonly #command = signal<ICommand<TExecute>>(undefined!);
+	readonly command = this.#command.asReadonly();
 
 	constructor() {
 		// const destroyRef = inject(DestroyRef);
@@ -54,7 +55,8 @@ export class SsvCommandRef<TExecute extends ExecuteFn = ExecuteFn> implements On
 
 			const execFn = commandCreator.execute.bind(commandCreator.host) as TExecute;
 
-			this._command = command(execFn, commandCreator.canExecute as CanExecute, { injector: this.#injector });
+			const cmd = command(execFn, commandCreator.canExecute as CanExecute, { injector: this.#injector });
+			this.#command.set(cmd);
 		} else {
 			throw new Error(`${NAME_CAMEL}: [${NAME_CAMEL}] is not defined properly!`);
 		}

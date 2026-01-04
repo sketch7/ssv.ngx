@@ -322,7 +322,7 @@
 								<button
 									mat-icon-button
 									color="warn"
-									[ssvCommand]="actionCmd.command"
+									[ssvCommand]="actionCmd.command()"
 									[ssvCommandParams]="[hero, undefined, undefined]"
 									title="shared with x2 (using ssvCommandRef + params)">
 									<mat-icon>delete</mat-icon> x2
@@ -330,7 +330,7 @@
 								<button
 									mat-icon-button
 									color="warn"
-									[ssvCommand]="actionCmd.command"
+									[ssvCommand]="actionCmd.command()"
 									[ssvCommandParams]="[hero, 1333, 'yo']"
 									title="shared with x2 (using ssvCommandRef + params)">
 									<mat-icon>delete</mat-icon> x2
