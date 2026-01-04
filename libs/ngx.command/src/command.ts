@@ -1,7 +1,7 @@
 
 import { isObservable, lastValueFrom } from "rxjs";
 import { toSignal } from "@angular/core/rxjs-interop";
-import type { CanExecute, ExecuteAsyncFn, ExecuteFn, ExecuteReturnType, ICommand } from "./command.model";
+import type { CanExecute, ExecuteFn, ExecuteReturnType, ICommand } from "./command.model";
 import { assertInInjectionContext, computed, inject, Injector, isSignal, signal, type Signal } from "@angular/core";
 
 export interface CommandCreateOptions {
@@ -10,20 +10,11 @@ export interface CommandCreateOptions {
 
 // todo: remove
 /** Creates an async {@link Command}. Must be used within an injection context.
- * NOTE: this auto injects `DestroyRef` and handles auto destroy. {@link ICommand.autoDestroy} should not be used.
  * @deprecated Use {@link command} instead, as it handles both sync and async execute functions.
  */
-export function commandAsync<TExecute extends ExecuteAsyncFn>(
-	execute: TExecute,
-	canExecute?: CanExecute,
-	opts?: CommandCreateOptions,
-): Command<TExecute> {
-	return command(execute, canExecute, opts);
-}
+export const commandAsync = command;
 
-/** Creates a {@link Command}. Must be used within an injection context.
- * NOTE: this auto injects `DestroyRef` and handles auto destroy. {@link ICommand.autoDestroy} should not be used.
- */
+/** Creates a {@link Command}. Must be used within an injection context (or the injector must be provided in the options). */
 export function command<TExecute extends ExecuteFn>(
 	execute: TExecute,
 	canExecute?: CanExecute,

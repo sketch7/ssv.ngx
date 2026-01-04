@@ -9,13 +9,11 @@ type SignalLike<T> = (() => T);
 /** Converts Observable<T> to Promise<T>, leaves other types unchanged */
 export type ConvertObservableToPromise<T> = T extends Observable<infer U> ? Promise<U> : T;
 
-/** Return type of Execute function, converting Observable to Promise if needed */
+/** Return type of Execute function, converting `Observable` to `Promise` if needed */
 export type ExecuteReturnType<TExecute extends ExecuteFn> = ConvertObservableToPromise<ReturnType<TExecute>>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ExecuteFn<TArgs extends any[] = any[], TReturn = unknown> = (...args: TArgs) => MaybeAsync<TReturn>;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ExecuteAsyncFn<TArgs extends any[] = any[], TReturn = unknown> = (...args: TArgs) => Observable<TReturn> | Promise<TReturn>;
 
 export type CanExecute = SignalLike<boolean> | Signal<boolean> | Observable<boolean> | boolean;
 
