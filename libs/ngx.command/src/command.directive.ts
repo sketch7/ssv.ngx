@@ -14,7 +14,20 @@ import {
 import { type CommandOptions, COMMAND_OPTIONS } from "./command.options";
 import { command, type Command } from "./command";
 import { isCommand, isCommandCreator } from "./command.util";
-import { CommandCreator, type ICommand, type CanExecute, type ExecuteFn, type CommandParams } from "./command.model";
+import { CommandCreator, type ICommand, type CanExecute, type ExecuteFn, type CommandParams, type Simplify } from "./command.model";
+
+/** Helper type to extract ExecuteFn from ICommand/Command or use ExecuteFn directly */
+type ExtractExecuteFn<T> = T extends Command<infer TExec>
+	? TExec
+	: T extends ICommand<infer TExec>
+	? TExec
+	: T extends ExecuteFn
+	? T
+	: never;
+
+const NAME_CAMEL = "ssvCommand";
+
+// let nextUniqueId = 0;
 
 /**
  * Controls the state of a component in sync with `Command`.
@@ -65,20 +78,6 @@ import { CommandCreator, type ICommand, type CanExecute, type ExecuteFn, type Co
  * ```
  *
  */
-
-const NAME_CAMEL = "ssvCommand";
-
-// let nextUniqueId = 0;
-
-/** Helper type to extract ExecuteFn from ICommand/Command or use ExecuteFn directly */
-type ExtractExecuteFn<T> = T extends Command<infer TExec>
-	? TExec
-	: T extends ICommand<infer TExec>
-	? TExec
-	: T extends ExecuteFn
-	? T
-	: never;
-
 @Directive({
 	selector: `[${NAME_CAMEL}]`,
 	host: {
@@ -112,14 +111,14 @@ export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements O
 			...value,
 		};
 	});
-	readonly ssvCommandParams = input<CommandParams<ExtractExecuteFn<T>>>();
+	readonly ssvCommandParams = input<Simplify<CommandParams<ExtractExecuteFn<T>>>>();
 	readonly commandParams = computed(() => {
 		const params = this.ssvCommandParams();
 		if (params === undefined) {
 			return this.creatorParams;
 		}
 		// Normalize single param to array format for consistent handling
-		return this.#normalizeParams(params);
+		return this.#normalizeParams(params as CommandParams<ExtractExecuteFn<T>>);
 	});
 	readonly _hostClasses = computed(() => ["ssv-command", this.#executingClass()]);
 	readonly #executingClass = computed(() => this.#command.$isExecuting() ? this.commandOptions().executingCssClass : "");

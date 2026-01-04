@@ -3,6 +3,8 @@ import type { Signal } from "@angular/core";
 
 import type { Command } from "./command";
 
+export type Simplify<T> = { [KeyType in keyof T]: T[KeyType] } & {};
+
 /** Type that represents a sync or async value. */
 export type MaybeAsync<T> = T | Observable<T> | Promise<T>;
 
