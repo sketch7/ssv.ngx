@@ -34,13 +34,13 @@ export type CommandParams<TExec extends ExecuteFn> =
 
 /** `command` input type convenience.
  * @example
- * For a command with multiple parameters:
- * ```ts
- * readonly myCmd = input.required<CommandInput<[param1: string, param2: number]>>();
- * ```
  * For a command with a single parameter:
  * ```ts
  * readonly myCmd = input.required<CommandInput<MyType>>();
+ * ```
+ * For a command with multiple parameters:
+ * ```ts
+ * readonly myCmd = input.required<CommandInput<[param1: string, param2: number]>>();
  * ```
  */
 export type CommandInput<TArgs = unknown, R = unknown> =

@@ -156,6 +156,19 @@ loginCmd = command(x => this.login(), canExecuteFromNgForm(this.form, {
 loginCmd = command(x => this.login(), canExecuteFromSignals({dirty: $dirty, valid: $valid}));
 ```
 
+### Command Input (type)
+Simplifies the definition when used as an input.
+
+```ts
+// For a command with a single parameter:
+readonly myCmd = input.required<CommandInput<MyType>>();
+// For a command with multiple parameters:
+readonly myCmd = input.required<CommandInput<[param1: string, param2: number]>>();
+
+// instead of
+readonly myCmd = input.required<Command<(param1: string, param2: number) => unknown>>();
+```
+
 
 ## Global options
 
