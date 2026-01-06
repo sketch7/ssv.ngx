@@ -1,6 +1,6 @@
 {
   "name": "@ssv/ngx",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "packageManager": "pnpm@9.15.4",
   "engines": {
     "node": ">=24.11.1",
