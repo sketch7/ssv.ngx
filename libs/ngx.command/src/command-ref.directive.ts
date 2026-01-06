@@ -40,13 +40,6 @@ export class SsvCommandRef<TExecute extends ExecuteFn = ExecuteFn> implements On
 	readonly #command = signal<ICommand<TExecute>>(undefined!);
 	readonly command = this.#command.asReadonly();
 
-	constructor() {
-		// const destroyRef = inject(DestroyRef);
-		// destroyRef.onDestroy(() => {
-		// 	this._command?.unsubscribe();
-		// });
-	}
-
 	// todo: use afterNextRender
 	ngOnInit(): void {
 		const commandOrCreator = this.commandCreator();
