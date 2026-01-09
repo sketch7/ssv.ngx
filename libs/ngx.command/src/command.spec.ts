@@ -1,54 +1,45 @@
-import { createEnvironmentInjector, EnvironmentInjector } from "@angular/core";
-import { BehaviorSubject, EMPTY, type Observable } from "rxjs";
-import { vi, type Mock } from "vitest";
+import { computed, createEnvironmentInjector, signal } from "@angular/core";
+import { BehaviorSubject, EMPTY, of, throwError } from "rxjs";
+import { vi } from "vitest";
 
-import { Command, command, commandAsync } from "./command";
+import { command } from "./command";
+
+interface Hero {
+	name: string;
+	power?: number;
+}
 
 describe("CommandSpecs", () => {
-	let SUT: Command;
-	let executeFn: Mock<(...args: unknown[]) => void>;
-	let asyncExecuteFn: Mock<(...args: unknown[]) => Observable<unknown>>;
-	let injector: EnvironmentInjector;
-	// let executeSpyFn: SpyInstance;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const injector = createEnvironmentInjector([], null as any);
 
-	beforeEach(() => {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		injector = createEnvironmentInjector([], null as any);
-		executeFn = vi.fn();
-		// executeSpyFn = executeFn;
-	});
-
-	afterEach(() => {
+	afterAll(() => {
 		injector?.destroy();
 	});
 
 	describe("given a command without canExecute$ param", () => {
-		beforeEach(() => {
-			SUT = command(executeFn, undefined, { injector, isAsync: false });
-			// executeSpyFn = jest.spyOn(SUT, "execute");
-		});
+		const executeFn = vi.fn();
+		const cmd = command(executeFn, undefined, { injector });
 
 		describe("when command is initialized", () => {
 			it("should have canExecute set to true", () => {
-				expect(SUT.canExecute).toBe(true);
+				expect(cmd.canExecute).toBe(true);
 			});
 
 			it("should have $canExecute signal set to true", () => {
-				expect(SUT.$canExecute()).toBe(true);
+				expect(cmd.$canExecute()).toBe(true);
 			});
 		});
 
 		describe("when execute is invoked", () => {
-			beforeEach(() => {
-				SUT.execute();
-			});
+			cmd.execute();
 
 			it("should have isExecuting set to false after execute finishes", () => {
-				expect(SUT.isExecuting).toBe(false);
+				expect(cmd.isExecuting).toBe(false);
 			});
 
 			it("should have canExecute set to true after execute finishes", () => {
-				expect(SUT.canExecute).toBe(true);
+				expect(cmd.canExecute).toBe(true);
 			});
 
 			it("should invoke execute function", () => {
@@ -59,50 +50,42 @@ describe("CommandSpecs", () => {
 
 	describe("given execute is invoked", () => {
 		describe("when canExecute is true", () => {
-			beforeEach(() => {
-				const isInitialValid = true;
-				SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector, isAsync: false });
-			});
+			const executeFn = vi.fn();
 
 			it("should invoke execute function passed", () => {
-				SUT.execute();
+				const cmd = command(executeFn, () => true, { injector })
+				cmd.execute();
 				expect(executeFn).toHaveBeenCalledTimes(1);
 			});
 		});
 
 		describe("when observable completes", () => {
-			beforeEach(() => {
-				const isInitialValid = true;
-				asyncExecuteFn = vi.fn().mockImplementation(() => EMPTY);
-				SUT = commandAsync(asyncExecuteFn, new BehaviorSubject<boolean>(isInitialValid), { injector });
-			});
+			const executeFn = vi.fn().mockImplementation(() => EMPTY);
 
-			it("should invoke multiple times", () => {
-				SUT.execute();
-				SUT.execute();
-				expect(SUT.isExecuting).toBeFalsy();
-				expect(asyncExecuteFn).toHaveBeenCalledTimes(2);
+			it("should invoke multiple times", async () => {
+				const cmd = command(executeFn, () => true, { injector })
+				await cmd.execute();
+				await cmd.execute();
+
+				expect(cmd.isExecuting).toBeFalsy();
+				expect(executeFn).toHaveBeenCalledTimes(2);
 			});
 		});
 
 		describe("when an error is thrown", () => {
 			const _errorFn = console.error;
+			const executeFn = vi.fn().mockImplementation(() => {
+				throw new Error("Execution failed!");
+			});
 			beforeAll(() => {
 				console.error = vi.fn();
 			});
 
-			beforeEach(() => {
-				const isInitialValid = true;
-				executeFn = vi.fn().mockImplementation(() => {
-					throw new Error("Execution failed!");
-				});
-				SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector, isAsync: false });
-			});
-
 			it("should invoke multiple times", () => {
-				SUT.execute();
-				SUT.execute();
-				expect(SUT.isExecuting).toBeFalsy();
+				const cmd = command(executeFn, () => true, { injector });
+				expect(() => cmd.execute()).toThrow();
+				expect(() => cmd.execute()).toThrow();
+				expect(cmd.isExecuting).toBeFalsy();
 				expect(executeFn).toHaveBeenCalledTimes(2);
 			});
 
@@ -111,63 +94,28 @@ describe("CommandSpecs", () => {
 			});
 		});
 
-		describe("when args are passed", () => {
-			beforeEach(() => {
-				const isInitialValid = true;
-				SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector, isAsync: false });
-			});
-
-			it("and has 1 param should receive 1 arg", () => {
-				const args = { name: "rexxar" };
-				SUT.execute(args);
-				expect(executeFn).toHaveBeenCalledTimes(1);
-				expect(executeFn).toHaveBeenCalledWith(args);
-			});
-
-			it("and is array param should not spread", () => {
-				const hero = { name: "rexxar" };
-				const args = [hero, "yello"];
-				SUT.execute(args);
-				expect(executeFn).toHaveBeenCalledTimes(1);
-				expect(executeFn).toHaveBeenCalledWith([hero, "yello"]);
-			});
-
-			it("and multi args are pass should receive all", () => {
-				const hero = { name: "rexxar" };
-				SUT.execute(hero, "yello");
-				expect(executeFn).toHaveBeenCalledTimes(1);
-				expect(executeFn).toHaveBeenCalledWith(hero, "yello");
-			});
-		});
-
 		describe("when canExecute is false", () => {
-			beforeEach(() => {
-				const isInitialValid = false;
-				SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector, isAsync: false });
-			});
+			const executeFn = vi.fn();
+			const cmd = command(executeFn, () => false, { injector });
 
 			it("should not execute the provided execute function", () => {
-				SUT.execute();
+				expect(() => cmd.execute()).toThrow();
 				expect(executeFn).not.toHaveBeenCalled();
 			});
 		});
 	});
 
 	describe("given canExecute with an initial value of true", () => {
-		let canExecute$: BehaviorSubject<boolean>;
-
-		beforeEach(() => {
-			const isInitialValid = true;
-			canExecute$ = new BehaviorSubject<boolean>(isInitialValid);
-			SUT = command(executeFn, canExecute$, { injector, isAsync: false });
-		});
+		const canExecute$ = new BehaviorSubject(true);
+		const executeFn = vi.fn();
+		const cmd = command(executeFn, canExecute$, { injector });
 
 		it("should have canExecute set to true", () => {
-			expect(SUT.canExecute).toBe(true);
+			expect(cmd.canExecute).toBe(true);
 		});
 
 		it("should have $canExecute signal set to true", () => {
-			expect(SUT.$canExecute()).toBe(true);
+			expect(cmd.$canExecute()).toBe(true);
 		});
 
 		describe("when the canExecute observable changes", () => {
@@ -176,38 +124,297 @@ describe("CommandSpecs", () => {
 			});
 
 			it("should update canExecute", () => {
-				expect(SUT.canExecute).toBe(false);
+				expect(cmd.canExecute).toBe(false);
 			});
 
 			it("should update $canExecute signal", () => {
-				expect(SUT.$canExecute()).toBe(false);
+				expect(cmd.$canExecute()).toBe(false);
 			});
 		});
 	});
 
 	describe("given canExecute with an initial value of false", () => {
-		beforeEach(() => {
-			const isInitialValid = false;
-			SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector, isAsync: false });
-		});
+		const executeFn = vi.fn();
+		const cmd = command(executeFn, new BehaviorSubject(false), { injector });
 
 		it("should have canExecute set to false", () => {
-			expect(SUT.canExecute).toBe(false);
+			expect(cmd.canExecute).toBe(false);
 		});
 
 		it("should have $canExecute signal set to false", () => {
-			expect(SUT.$canExecute()).toBe(false);
+			expect(cmd.$canExecute()).toBe(false);
 		});
 	});
 
-	describe("given destroy is invoked", () => {
-		beforeEach(() => {
-			const isInitialValid = false;
-			SUT = command(executeFn, new BehaviorSubject<boolean>(isInitialValid), { injector, isAsync: false });
+	describe("given canExecute with a signal", () => {
+		const canExecuteSignal = signal(true);
+		const executeFn = vi.fn();
+		const cmd = command(executeFn, canExecuteSignal, { injector });
+
+		it("should have $canExecute signal set to true", () => {
+			expect(cmd.$canExecute()).toBe(true);
 		});
 
-		it("should destroy successfully", () => {
-			SUT.destroy();
+		describe("when the canExecute signal changes", () => {
+			beforeEach(() => {
+				canExecuteSignal.set(false);
+			});
+
+			it("should update $canExecute signal", () => {
+				expect(cmd.$canExecute()).toBe(false);
+			});
+		});
+	});
+
+	describe("given canExecute with a computed signal", () => {
+		const isValid = signal(false);
+		const canExecuteComputed = computed(() => isValid());
+		const executeFn = vi.fn();
+		const cmd = command(executeFn, canExecuteComputed, { injector });
+
+		it("should have $canExecute signal set to false initially", () => {
+			expect(cmd.$canExecute()).toBe(false);
+		});
+
+		describe("when the computed signal changes to true", () => {
+			beforeEach(() => {
+				isValid.set(true);
+			});
+
+			it("should update $canExecute signal to true", () => {
+				expect(cmd.$canExecute()).toBe(true);
+			});
+		});
+
+		describe("when the computed signal changes back to false", () => {
+			beforeEach(() => {
+				isValid.set(false);
+			});
+
+			it("should update $canExecute signal to false", () => {
+				expect(cmd.$canExecute()).toBe(false);
+			});
+		});
+	});
+
+	describe("given canExecute with a boolean", () => {
+		const executeFn = vi.fn();
+		const cmd = command(executeFn, false, { injector });
+
+		it("should have $canExecute signal set to false", () => {
+			expect(cmd.$canExecute()).toBe(false);
+		});
+	});
+
+	describe("Typed Parameters", () => {
+		describe("given a parameterless command", () => {
+			it("should type execute with no parameters", () => {
+				const execute = vi.fn(() => "result");
+				const cmd = command(execute, undefined, { injector });
+
+				const result = cmd.execute();
+
+				expect(execute).toHaveBeenCalledTimes(1);
+				expect(execute).toHaveBeenCalledWith();
+				expect(result).toBe("result");
+			});
+		});
+
+		describe("given a command with single typed parameter", () => {
+			it("should infer parameter type correctly", () => {
+				const execute = vi.fn((hero: Hero) => hero.name);
+				const cmd = command(execute, undefined, { injector });
+
+				const hero: Hero = { name: "Rexxar", power: 100 };
+				const result = cmd.execute(hero);
+
+				expect(execute).toHaveBeenCalledTimes(1);
+				expect(execute).toHaveBeenCalledWith(hero);
+				expect(result).toBe("Rexxar");
+			});
+
+			it("should enforce type safety at compile time", () => {
+				const execute = (id: number) => `User ${id}`;
+				const cmd = command(execute, undefined, { injector });
+
+				const result = cmd.execute(42);
+				// TypeScript would error on: cmd.execute("string");
+
+				expect(result).toBe("User 42");
+			});
+		});
+
+		describe("given a command with multiple typed parameters", () => {
+			it("should infer all parameter types correctly", () => {
+				const execute = vi.fn((hero: Hero, action: string, power: number) => {
+					return `${hero.name} ${action} with ${power} power`;
+				});
+				const cmd = command(execute, undefined, { injector });
+
+				const hero: Hero = { name: "Thrall" };
+				const result = cmd.execute(hero, "attacks", 150);
+
+				expect(execute).toHaveBeenCalledTimes(1);
+				expect(execute).toHaveBeenCalledWith(hero, "attacks", 150);
+				expect(result).toBe("Thrall attacks with 150 power");
+			});
+		});
+
+		describe("given a command with array parameter", () => {
+			it("should not spread array parameter", () => {
+				const execute = vi.fn((heroes: Hero[]) => heroes.length);
+				const cmd = command(execute, undefined, { injector });
+
+				const heroes: Hero[] = [{ name: "Rexxar" }, { name: "Thrall" }];
+				const result = cmd.execute(heroes);
+
+				expect(execute).toHaveBeenCalledTimes(1);
+				expect(execute).toHaveBeenCalledWith(heroes);
+				expect(result).toBe(2);
+			});
+		});
+
+		describe("given a command with optional parameters", () => {
+			it("should handle optional parameters correctly", () => {
+				const execute = vi.fn((name: string, title?: string) => {
+					return title ? `${title} ${name}` : name;
+				});
+				const cmd = command(execute, undefined, { injector });
+
+				const result1 = cmd.execute("Rexxar");
+				const result2 = cmd.execute("Thrall", "Warchief");
+
+				expect(result1).toBe("Rexxar");
+				expect(result2).toBe("Warchief Thrall");
+			});
+		});
+	});
+
+	describe("Return Type Handling", () => {
+		describe("given a synchronous command", () => {
+			it("should return the value directly", () => {
+				const execute = vi.fn((x: number) => x * 2);
+				const cmd = command(execute, undefined, { injector });
+
+				const result = cmd.execute(5);
+
+				expect(result).toBe(10);
+				expect(cmd.isExecuting).toBe(false);
+			});
+
+			it("should return void for void functions", () => {
+				const execute = vi.fn(() => { /* no return */ });
+				const cmd = command(execute, undefined, { injector });
+
+				const result = cmd.execute();
+
+				expect(result).toBeUndefined();
+			});
+		});
+
+		describe("given a Promise-based command", () => {
+			const _errorFn = console.error;
+			beforeEach(() => {
+				console.error = vi.fn();
+			});
+
+			it("should return a Promise", async () => {
+				const execute = vi.fn((id: number) => Promise.resolve({ id, name: "User" }));
+				const cmd = command(execute, undefined, { injector });
+
+				const resultPromise = cmd.execute(1);
+
+				expect(cmd.isExecuting).toBe(true);
+				expect(resultPromise).toBeInstanceOf(Promise);
+				const result = await resultPromise;
+				expect(result).toEqual({ id: 1, name: "User" });
+				expect(cmd.isExecuting).toBe(false);
+			});
+
+			it("should handle Promise rejection", async () => {
+				const execute = vi.fn(() => Promise.reject(new Error("Failed")));
+				const cmd = command(execute, undefined, { injector });
+
+				await expect(cmd.execute()).rejects.toThrow("Failed");
+				expect(cmd.isExecuting).toBe(false);
+			});
+
+			afterAll(() => {
+				console.error = _errorFn;
+			});
+		});
+
+		describe("given an Observable-based command", () => {
+			const _errorFn = console.error;
+			beforeEach(() => {
+				console.error = vi.fn();
+			});
+
+			it("should return a Promise (converted from Observable)", async () => {
+				const execute = vi.fn((value: string) => of({ result: value }));
+				const cmd = command(execute, undefined, { injector });
+
+				const result = cmd.execute("test");
+
+				expect(cmd.isExecuting).toBe(true);
+				expect(result).toBeInstanceOf(Promise);
+
+				const value = await result;
+				expect(value).toEqual({ result: "test" });
+				expect(cmd.isExecuting).toBe(false);
+			});
+
+			it("should handle Observable errors (converted to Promise rejection)", async () => {
+				const execute = vi.fn(() => throwError(() => new Error("Observable error")));
+				const cmd = command(execute, undefined, { injector });
+
+				await expect(async () => {
+					await cmd.execute();
+				}).rejects.toThrow("Observable error");
+				expect(cmd.isExecuting).toBe(false);
+			});
+
+			it("should complete isExecuting after observable completes", async () => {
+				const execute = vi.fn(() => of(1, 2, 3));
+				const cmd = command(execute, undefined, { injector });
+
+				expect(cmd.isExecuting).toBe(false);
+				const result = cmd.execute();
+
+				expect(result).toBeInstanceOf(Promise);
+				// lastValueFrom returns the last emitted value (3 in this case)
+				const value = await result;
+
+				expect(value).toBe(3);
+				expect(cmd.isExecuting).toBe(false);
+			});
+
+			afterAll(() => {
+				console.error = _errorFn;
+			});
+		});
+
+		describe("given a complex return type", () => {
+			it("should preserve complex object types", () => {
+				interface ComplexResult {
+					heroes: Hero[];
+					count: number;
+					metadata: { timestamp: Date };
+				}
+
+				const execute = vi.fn((): ComplexResult => ({
+					heroes: [{ name: "Rexxar" }],
+					count: 1,
+					metadata: { timestamp: new Date() }
+				}));
+
+				const cmd = command(execute, undefined, { injector });
+				const result = cmd.execute();
+
+				expect(result.heroes).toHaveLength(1);
+				expect(result.count).toBe(1);
+				expect(result.metadata.timestamp).toBeInstanceOf(Date);
+			});
 		});
 	});
 });

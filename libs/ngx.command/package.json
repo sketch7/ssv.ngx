@@ -15,6 +15,11 @@
   "author": "Stephen Lautier <stephen.lautier@outlook.com>",
   "license": "MIT",
   "private": false,
+  "scripts": {
+    "build": "nx build ngx.command",
+    "test": "nx test ngx.command",
+    "lint": "nx lint ngx.command"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/sketch7/ssv.ngx.git"

@@ -5,7 +5,7 @@ import { BehaviorSubject, Observable, of, delay } from "rxjs";
 import { vi } from "vitest";
 
 import { SsvCommand } from "./command.directive";
-import { commandAsync } from "./command";
+import { command } from "./command";
 
 // Test host component for button element
 @Component({
@@ -20,7 +20,7 @@ import { commandAsync } from "./command";
 })
 class ButtonHostComponent {
 	readonly isValid$ = new BehaviorSubject(true);
-	readonly saveCmd = commandAsync(() => of(null).pipe(delay(100)), this.isValid$);
+	readonly saveCmd = command(() => of(null).pipe(delay(100)), this.isValid$);
 }
 
 // Test host component for div element
@@ -36,7 +36,7 @@ class ButtonHostComponent {
 })
 class DivHostComponent {
 	readonly $isValid = signal(true);
-	readonly actionCmd = commandAsync(() => of(null).pipe(delay(100)), this.$isValid);
+	readonly actionCmd = command(() => of(null).pipe(delay(100)), this.$isValid);
 }
 
 // Test host component with params
@@ -53,9 +53,9 @@ class DivHostComponent {
 })
 class ParamsHostComponent {
 	readonly item = { id: 1, name: "Test" };
-	receivedArgs: unknown[] = [];
-	readonly removeCmd = commandAsync((...args: unknown[]) => {
-		this.receivedArgs = args;
+	receivedArgs: [typeof this.item, string] | undefined;
+	readonly removeCmd = command((item: typeof this.item, extra: string) => {
+		this.receivedArgs = [item, extra];
 		return of(null);
 	});
 }
@@ -65,7 +65,7 @@ class ParamsHostComponent {
 	imports: [SsvCommand],
 	template: `
 		<button
-			[ssvCommand]="{host: this, execute: executeAction, canExecute: canExecute$, params: [item]}"
+			[ssvCommand]="{host: this, execute: executeAction, canExecute: canExecute$, params: item}"
 			data-testid="creator-btn">
 			Execute
 		</button>
@@ -74,9 +74,9 @@ class ParamsHostComponent {
 class CommandCreatorHostComponent {
 	readonly item = { id: 42 };
 	readonly canExecute$ = new BehaviorSubject(true);
-	executedWith: unknown = null;
+	executedWith: typeof this.item | null = null;
 
-	executeAction = (item: unknown): Observable<unknown> => {
+	executeAction = (item: typeof this.item): Observable<unknown> => {
 		this.executedWith = item;
 		return of(null).pipe(delay(50));
 	};
@@ -288,11 +288,11 @@ describe("SsvCommand Directive", () => {
 			});
 
 			it("should pass the correct item object", () => {
-				expect(component.receivedArgs[0]).toEqual({ id: 1, name: "Test" });
+				expect(component.receivedArgs?.[0]).toEqual({ id: 1, name: "Test" });
 			});
 
 			it("should pass the correct second param", () => {
-				expect(component.receivedArgs[1]).toBe("extra");
+				expect(component.receivedArgs?.[1]).toBe("extra");
 			});
 		});
 	});
@@ -314,12 +314,12 @@ describe("SsvCommand Directive", () => {
 
 			const buttonDebugEl = fixture.debugElement.query(By.css("[data-testid='creator-btn']"));
 			buttonEl = buttonDebugEl.nativeElement;
-			directiveInstance = buttonDebugEl.injector.get(SsvCommand);
+			directiveInstance = buttonDebugEl.injector.get<SsvCommand>(SsvCommand);
 		});
 
 		describe("when initialized", () => {
 			it("should create command from creator", () => {
-				expect(directiveInstance.command).toBeDefined();
+				expect(directiveInstance.command()).toBeDefined();
 			});
 
 			it("should not be disabled when canExecute is true", () => {
@@ -343,7 +343,7 @@ describe("SsvCommand Directive", () => {
 				buttonEl.click();
 				fixture.detectChanges();
 				await vi.waitFor(() => {
-					expect(directiveInstance.command.isExecuting).toBe(false);
+					expect(directiveInstance.command().isExecuting).toBe(false);
 				}, { timeout: 150 });
 				fixture.detectChanges();
 			});
@@ -373,7 +373,7 @@ describe("SsvCommand Directive", () => {
 				buttonEl.click();
 				fixture.detectChanges();
 				await vi.waitFor(() => {
-					expect(directiveInstance.command.isExecuting).toBe(false);
+					expect(directiveInstance.command().isExecuting).toBe(false);
 				}, { timeout: 150 });
 				fixture.detectChanges();
 				expect(buttonEl.classList.contains("executing")).toBe(false);
@@ -383,7 +383,7 @@ describe("SsvCommand Directive", () => {
 				buttonEl.click();
 				fixture.detectChanges();
 				await vi.waitFor(() => {
-					expect(directiveInstance.command.isExecuting).toBe(false);
+					expect(directiveInstance.command().isExecuting).toBe(false);
 				}, { timeout: 150 });
 				fixture.detectChanges();
 				expect(buttonEl.disabled).toBe(false);

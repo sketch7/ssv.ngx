@@ -1,3 +1,26 @@
+## 5.0.0 (2026-01-XX)
+
+### Features
+
+- **command:** `command` supports both sync/async
+- **command:** `command.execute` now returns `T | Promise<T>` (based on the execute function)
+- **command:** `command.execute` when error is thrown it will bubble the error
+- **command:** `Command` is now typed based on the execute function
+- **command:** `Command` `canExecute` now support `boolean`
+- **command:** `SsvCommand/SsvCommandRef` is now typed
+- **command:** add `CommandInput` type
+
+### BREAKING CHANGES
+
+- **command:** remove `autoDestroy`, `destroy`, `subscribe`, `unsubscribe` from `ICommand`/`Command`
+- **command:** `commandAsync` deprecated use `command` instead
+- **command:** `Observable` `isExecuting` will change to false only when it completes (previously when it emits)
+- **command:** `SsvCommand/SsvCommandRef` strict typings
+- **command:** `CommandAsync` has been removed - use `command` instead to create instance or use type `Command`
+- **command:** `ssvCommandParams` and commandCreator params must be in defined in `[]` e.g. `[hero]`
+- **command:** `ssvCommand` `command` is now signal
+- **command:** `ssvCommandRef` `command` is now signal
+
 ## 4.0.0 (2025-11-14)
 
 ### Features

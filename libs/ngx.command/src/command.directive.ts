@@ -9,13 +9,26 @@ import {
 	input,
 	Injector,
 	computed,
-	DestroyRef,
+	signal,
 } from "@angular/core";
 
 import { type CommandOptions, COMMAND_OPTIONS } from "./command.options";
-import { command } from "./command";
+import { command, type Command } from "./command";
 import { isCommand, isCommandCreator } from "./command.util";
-import { CommandCreator, type ICommand } from "./command.model";
+import { CommandCreator, type ICommand, type CanExecute, type ExecuteFn, type CommandParams, type Simplify } from "./command.model";
+
+/** Helper type to extract ExecuteFn from ICommand/Command or use ExecuteFn directly */
+type ExtractExecuteFn<T> = T extends Command<infer TExec>
+	? TExec
+	: T extends ICommand<infer TExec>
+	? TExec
+	: T extends ExecuteFn
+	? T
+	: never;
+
+const NAME_CAMEL = "ssvCommand";
+
+// let nextUniqueId = 0;
 
 /**
  * Controls the state of a component in sync with `Command`.
@@ -37,13 +50,20 @@ import { CommandCreator, type ICommand } from "./command.model";
  * This is useful for collections (loops) or using multiple actions with different args.
  * *NOTE: This will share the `isExecuting` when used with multiple controls.*
  *
- * #### With single param
+ * #### With single param (direct)
  *
  * ```html
- * <button [ssvCommand]="saveCmd" [ssvCommandParams]="{id: 1}">Save</button>
+ * <button [ssvCommand]="saveCmd" [ssvCommandParams]="hero">Save</button>
  * ```
+ *
+ * #### With single param (array)
+ *
+ * ```html
+ * <button [ssvCommand]="saveCmd" [ssvCommandParams]="[hero]">Save</button>
+ * ```
+ *
  * *NOTE: if you have only 1 argument as an array, it should be enclosed within an array e.g. `[['apple', 'banana']]`,
- * else it will spread and you will `arg1: "apple", arg2: "banana"`*
+ * else it will spread and you will get `arg1: "apple", arg2: "banana"`*
  *
  * #### With multi params
  * ```html
@@ -59,21 +79,17 @@ import { CommandCreator, type ICommand } from "./command.model";
  * ```
  *
  */
-
-const NAME_CAMEL = "ssvCommand";
-
-// let nextUniqueId = 0;
-
 @Directive({
 	selector: `[${NAME_CAMEL}]`,
 	host: {
 		"[class]": "_hostClasses()",
 		"(click)": "_handleClick()",
 	},
+	// todo: handle keydown/enter?
 	exportAs: NAME_CAMEL,
 	standalone: true,
 })
-export class SsvCommand implements OnInit {
+export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements OnInit {
 
 	// readonly id = `${NAME_CAMEL}-${nextUniqueId++}`;
 	readonly #options = inject(COMMAND_OPTIONS);
@@ -82,7 +98,7 @@ export class SsvCommand implements OnInit {
 	readonly #cdr = inject(ChangeDetectorRef);
 	readonly #injector = inject(Injector);
 
-	readonly commandOrCreator = input.required<ICommand | CommandCreator>({
+	readonly commandOrCreator = input.required<T extends ICommand ? T : (ICommand<ExtractExecuteFn<T>> | CommandCreator<ExtractExecuteFn<T>>)>({
 		alias: `ssvCommand`
 	});
 	readonly ssvCommandOptions = input<Partial<CommandOptions>>(this.#options);
@@ -96,69 +112,76 @@ export class SsvCommand implements OnInit {
 			...value,
 		};
 	});
-	readonly ssvCommandParams = input<unknown | unknown[]>(undefined);
-	readonly commandParams = computed<unknown | unknown[]>(() => this.ssvCommandParams() || this.creatorParams);
+	readonly ssvCommandParams = input<Simplify<CommandParams<ExtractExecuteFn<T>>>>();
+	readonly commandParams = computed(() => {
+		const params = this.ssvCommandParams();
+		if (params === undefined) {
+			return this.#creatorParams();
+		}
+		// Normalize single param to array format for consistent handling
+		return this.#normalizeParams(params as CommandParams<ExtractExecuteFn<T>>);
+	});
 	readonly _hostClasses = computed(() => ["ssv-command", this.#executingClass()]);
-	readonly #executingClass = computed(() => this._command.$isExecuting() ? this.commandOptions().executingCssClass : "");
+	readonly #executingClass = computed(() => this.#command().$isExecuting() ? this.commandOptions().executingCssClass : "");
 
-	private creatorParams: unknown | unknown[] = [];
+	readonly #creatorParams = signal<Parameters<ExtractExecuteFn<T>> | undefined>(undefined);
 
-	get command(): ICommand { return this._command; }
-
-	private _command!: ICommand;
+	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+	readonly #command = signal<ICommand<ExtractExecuteFn<T>>>(undefined!);
+	readonly command = this.#command.asReadonly();
 
 	constructor() {
-		const destroyRef = inject(DestroyRef);
-		destroyRef.onDestroy(() => {
-			this._command?.unsubscribe();
-		});
 		effect(() => {
-			const canExecute = this._command.$canExecute();
+			const canExecute = this.#command().$canExecute();
 			this.trySetDisabled(!canExecute);
 			// console.log("[ssvCommand::canExecute$]", { canExecute: x });
 			this.#cdr.markForCheck();
 		});
 	}
 
+	// todo: afterNextRender
 	ngOnInit(): void {
 		const commandOrCreator = this.commandOrCreator();
 		// console.log("[ssvCommand::init]", this.#options);
 		if (isCommand(commandOrCreator)) {
-			this._command = commandOrCreator;
+			this.#command.set(commandOrCreator);
 		} else if (isCommandCreator(commandOrCreator)) {
-			const isAsync = commandOrCreator.isAsync || commandOrCreator.isAsync === undefined;
-			this.creatorParams = commandOrCreator.params;
+			this.#creatorParams.set(this.#normalizeParams(commandOrCreator.params as CommandParams<ExtractExecuteFn<T>>));
 
 			// todo: find something like this for ivy (or angular10+)
 			// const hostComponent = (this.viewContainer as any)._view.component;
 
-			const execFn = commandOrCreator.execute.bind(commandOrCreator.host);
+			const execFn = commandOrCreator.execute.bind(commandOrCreator.host) as ExtractExecuteFn<T>;
 			const params = this.commandParams();
 
-			const canExec = commandOrCreator.canExecute instanceof Function
-				? commandOrCreator.canExecute.bind(commandOrCreator.host, params)()
-				: commandOrCreator.canExecute;
+			let canExec: CanExecute | undefined;
+			if (commandOrCreator.canExecute instanceof Function) {
+				const boundFn = commandOrCreator.canExecute.bind(commandOrCreator.host);
+				const result = Array.isArray(params) ? boundFn(...params) : boundFn();
+				canExec = result as CanExecute;
+			} else {
+				canExec = commandOrCreator.canExecute;
+			}
 
 			// console.log("[ssvCommand::init] command creator", {
 			// 	firstParam: params ? params[0] : null,
 			// 	params
 			// });
-
-			this._command = command(execFn, canExec, { isAsync, injector: this.#injector });
+			const cmd = command(execFn, canExec, { injector: this.#injector });
+			this.#command.set(cmd);
 		} else {
 			throw new Error(`${NAME_CAMEL}: [${NAME_CAMEL}] is not defined properly!`);
 		}
-
-		this._command.subscribe();
 	}
 
 	_handleClick(): void {
 		const commandParams = this.commandParams();
 		// console.log("[ssvCommand::onClick]", commandParams);
 		if (Array.isArray(commandParams)) {
-			this._command.execute(...commandParams);
+			this.#command().execute(...commandParams);
 		} else {
-			this._command.execute(commandParams);
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			(this.#command().execute as any)();
 		}
 	}
 
@@ -169,5 +192,14 @@ export class SsvCommand implements OnInit {
 		}
 	}
 
-}
+	/** Normalizes params to array format for consistent execution */
+	#normalizeParams(params: CommandParams<ExtractExecuteFn<T>>): Parameters<ExtractExecuteFn<T>> | undefined {
+		// If params is already an array, return as-is
+		if (Array.isArray(params)) {
+			return params as Parameters<ExtractExecuteFn<T>>;
+		}
+		// Single non-array param - wrap it
+		return [params] as Parameters<ExtractExecuteFn<T>>;
+	}
 
+}

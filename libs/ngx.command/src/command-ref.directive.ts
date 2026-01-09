@@ -1,6 +1,6 @@
-import { Directive, OnInit, inject, Injector, DestroyRef, input } from "@angular/core";
+import { Directive, OnInit, inject, Injector, input, signal } from "@angular/core";
 
-import type { ICommand, CommandCreator, CanExecute } from "./command.model";
+import type { ICommand, CommandCreator, CanExecute, ExecuteFn } from "./command.model";
 import { isCommandCreator } from "./command.util";
 import { command } from "./command";
 
@@ -13,10 +13,10 @@ const NAME_CAMEL = "ssvCommandRef";
  * ### Most common usage
  * ```html
  * <div #actionCmd="ssvCommandRef" [ssvCommandRef]="{host: this, execute: removeHero$, canExecute: isValid$}">
- *    <button [ssvCommand]="actionCmd.command" [ssvCommandParams]="hero">
+ *    <button [ssvCommand]="actionCmd.command()" [ssvCommandParams]="[hero]">
  *      Remove
  *    </button>
- *    <button [ssvCommand]="actionCmd.command" [ssvCommandParams]="hero">
+ *    <button [ssvCommand]="actionCmd.command()" [ssvCommandParams]="[hero]">
  *       Remove
  *    </button>
  * </div>
@@ -28,32 +28,28 @@ const NAME_CAMEL = "ssvCommandRef";
 	exportAs: NAME_CAMEL,
 	standalone: true,
 })
-export class SsvCommandRef implements OnInit {
+export class SsvCommandRef<TExecute extends ExecuteFn = ExecuteFn> implements OnInit {
 
 	readonly #injector = inject(Injector);
 
-	readonly commandCreator = input.required<CommandCreator>({
+	readonly commandCreator = input.required<CommandCreator<TExecute>>({
 		alias: `ssvCommandRef`
 	});
 
-	get command(): ICommand { return this._command; }
-	private _command!: ICommand;
+	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+	readonly #command = signal<ICommand<TExecute>>(undefined!);
+	readonly command = this.#command.asReadonly();
 
-	constructor() {
-		const destroyRef = inject(DestroyRef);
-		destroyRef.onDestroy(() => {
-			this._command?.unsubscribe();
-		});
-	}
-
+	// todo: use afterNextRender
 	ngOnInit(): void {
-		if (isCommandCreator(this.commandCreator())) {
-			const commandCreator = this.commandCreator();
-			const isAsync = commandCreator.isAsync || commandCreator.isAsync === undefined;
+		const commandOrCreator = this.commandCreator();
+		if (isCommandCreator(commandOrCreator)) {
+			const commandCreator = commandOrCreator;
 
-			const execFn = commandCreator.execute.bind(commandCreator.host);
+			const execFn = commandCreator.execute.bind(commandCreator.host) as TExecute;
 
-			this._command = command(execFn, commandCreator.canExecute as CanExecute, { isAsync, injector: this.#injector });
+			const cmd = command(execFn, commandCreator.canExecute as CanExecute, { injector: this.#injector });
+			this.#command.set(cmd);
 		} else {
 			throw new Error(`${NAME_CAMEL}: [${NAME_CAMEL}] is not defined properly!`);
 		}
