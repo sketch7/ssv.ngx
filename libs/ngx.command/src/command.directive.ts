@@ -9,6 +9,7 @@ import {
 	input,
 	Injector,
 	computed,
+	signal,
 } from "@angular/core";
 
 import { type CommandOptions, COMMAND_OPTIONS } from "./command.options";
@@ -115,23 +116,23 @@ export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements O
 	readonly commandParams = computed(() => {
 		const params = this.ssvCommandParams();
 		if (params === undefined) {
-			return this.creatorParams;
+			return this.#creatorParams();
 		}
 		// Normalize single param to array format for consistent handling
 		return this.#normalizeParams(params as CommandParams<ExtractExecuteFn<T>>);
 	});
 	readonly _hostClasses = computed(() => ["ssv-command", this.#executingClass()]);
-	readonly #executingClass = computed(() => this.#command.$isExecuting() ? this.commandOptions().executingCssClass : "");
+	readonly #executingClass = computed(() => this.#command().$isExecuting() ? this.commandOptions().executingCssClass : "");
 
-	private creatorParams: Parameters<ExtractExecuteFn<T>> | undefined;
+	readonly #creatorParams = signal<Parameters<ExtractExecuteFn<T>> | undefined>(undefined);
 
-	get command(): ICommand<ExtractExecuteFn<T>> { return this.#command; }
-
-	#command!: ICommand<ExtractExecuteFn<T>>;
+	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+	readonly #command = signal<ICommand<ExtractExecuteFn<T>>>(undefined!);
+	readonly command = this.#command.asReadonly();
 
 	constructor() {
 		effect(() => {
-			const canExecute = this.#command.$canExecute();
+			const canExecute = this.#command().$canExecute();
 			this.trySetDisabled(!canExecute);
 			// console.log("[ssvCommand::canExecute$]", { canExecute: x });
 			this.#cdr.markForCheck();
@@ -143,9 +144,9 @@ export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements O
 		const commandOrCreator = this.commandOrCreator();
 		// console.log("[ssvCommand::init]", this.#options);
 		if (isCommand(commandOrCreator)) {
-			this.#command = commandOrCreator;
+			this.#command.set(commandOrCreator);
 		} else if (isCommandCreator(commandOrCreator)) {
-			this.creatorParams = this.#normalizeParams(commandOrCreator.params as CommandParams<ExtractExecuteFn<T>>);
+			this.#creatorParams.set(this.#normalizeParams(commandOrCreator.params as CommandParams<ExtractExecuteFn<T>>));
 
 			// todo: find something like this for ivy (or angular10+)
 			// const hostComponent = (this.viewContainer as any)._view.component;
@@ -166,8 +167,8 @@ export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements O
 			// 	firstParam: params ? params[0] : null,
 			// 	params
 			// });
-
-			this.#command = command(execFn, canExec, { injector: this.#injector });
+			const cmd = command(execFn, canExec, { injector: this.#injector });
+			this.#command.set(cmd);
 		} else {
 			throw new Error(`${NAME_CAMEL}: [${NAME_CAMEL}] is not defined properly!`);
 		}
@@ -177,10 +178,10 @@ export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements O
 		const commandParams = this.commandParams();
 		// console.log("[ssvCommand::onClick]", commandParams);
 		if (Array.isArray(commandParams)) {
-			this.#command.execute(...commandParams);
+			this.#command().execute(...commandParams);
 		} else {
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			(this.#command.execute as any)();
+			(this.#command().execute as any)();
 		}
 	}
 

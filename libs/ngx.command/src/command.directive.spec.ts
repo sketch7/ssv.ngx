@@ -319,7 +319,7 @@ describe("SsvCommand Directive", () => {
 
 		describe("when initialized", () => {
 			it("should create command from creator", () => {
-				expect(directiveInstance.command).toBeDefined();
+				expect(directiveInstance.command()).toBeDefined();
 			});
 
 			it("should not be disabled when canExecute is true", () => {
@@ -343,7 +343,7 @@ describe("SsvCommand Directive", () => {
 				buttonEl.click();
 				fixture.detectChanges();
 				await vi.waitFor(() => {
-					expect(directiveInstance.command.isExecuting).toBe(false);
+					expect(directiveInstance.command().isExecuting).toBe(false);
 				}, { timeout: 150 });
 				fixture.detectChanges();
 			});
@@ -373,7 +373,7 @@ describe("SsvCommand Directive", () => {
 				buttonEl.click();
 				fixture.detectChanges();
 				await vi.waitFor(() => {
-					expect(directiveInstance.command.isExecuting).toBe(false);
+					expect(directiveInstance.command().isExecuting).toBe(false);
 				}, { timeout: 150 });
 				fixture.detectChanges();
 				expect(buttonEl.classList.contains("executing")).toBe(false);
@@ -383,7 +383,7 @@ describe("SsvCommand Directive", () => {
 				buttonEl.click();
 				fixture.detectChanges();
 				await vi.waitFor(() => {
-					expect(directiveInstance.command.isExecuting).toBe(false);
+					expect(directiveInstance.command().isExecuting).toBe(false);
 				}, { timeout: 150 });
 				fixture.detectChanges();
 				expect(buttonEl.disabled).toBe(false);
