@@ -45,13 +45,9 @@ The `canExecute` function receives same params as `execute`.
 Combine multiple validation sources with computed signals:
 
 ```typescript
-canSave = computed(() => 
-  this.formValid() && 
-  this.hasChanges() && 
-  this.isOnline()
-);
+readonly canSave = computed(() => this.formValid() &&  this.hasChanges() &&  this.isOnline());
 
-saveCmd = command(() => this.save$(), this.canSave);
+readonly saveCmd = command(() => this.save$(), this.canSave);
 ```
 
 ## CommandInput Type Helper
@@ -67,13 +63,13 @@ import type { CommandInput } from "@ssv/ngx.command";
 })
 export class ChildComponent {
   // Single parameter
-  onSave = input.required<CommandInput<User>>();
+  readonly onSave = input.required<CommandInput<User>>();
   
   // Multiple parameters (tuple)
-  onUpdate = input.required<CommandInput<[user: User, id: number]>>();
+  readonly onUpdate = input.required<CommandInput<[user: User, id: number]>>();
   
   // No parameters
-  onRefresh = input.required<CommandInput<void>>();
+  readonly onRefresh = input.required<CommandInput<void>>();
 }
 ```
 
@@ -84,7 +80,7 @@ Parent usage:
   template: `<app-child [onSave]="saveUserCmd" />`
 })
 export class ParentComponent {
-  saveUserCmd = command((user: User) => this.save$(user));
+  readonly saveUserCmd = command((user: User) => this.save$(user));
 }
 ```
 

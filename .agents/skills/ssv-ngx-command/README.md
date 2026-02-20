@@ -62,7 +62,7 @@ Modern API with `$isExecuting`, `$canExecute` signals. Observable support mainta
 
 ### Basic Command
 ```typescript
-saveCmd = command(() => this.save$(), this.isValid);
+readonly saveCmd = command(() => this.save$(), this.isValid);
 ```
 
 ### Directive

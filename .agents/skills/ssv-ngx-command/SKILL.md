@@ -14,16 +14,16 @@ Command pattern - encapsulates actions with auto state tracking (`isExecuting`, 
 ```typescript
 import { command } from "@ssv/ngx.command";
 
-isValid = signal(false);
-saveCmd = command(() => this.save$(), this.isValid);
+readonly isValid = signal(false);
+readonly saveCmd = command(() => this.save$(), this.isValid);
 
 // Observable, function, boolean also supported
-deleteCmd = command(() => this.delete$(), this.isValid$);
-computeCmd = command(
+readonly deleteCmd = command(() => this.delete$(), this.isValid$);
+readonly computeCmd = command(
   () => this.compute(),
   () => this.check(),
 );
-simpleCmd = command(() => this.action()); // No validation
+readonly simpleCmd = command(() => this.action()); // No validation
 ```
 
 ## Directive Usage
@@ -33,7 +33,7 @@ simpleCmd = command(() => this.action()); // No validation
 <button [ssvCommand]="saveCmd">Save</button>
 
 <!-- With loading UI -->
-<button [ssvCommand]="saveCmd">@if(saveCmd.isExecuting) { <mat-spinner diameter="20"></mat-spinner> } Save</button>
+<button [ssvCommand]="saveCmd">@if(saveCmd.$isExecuting()) { <mat-spinner diameter="20"></mat-spinner> } Save</button>
 
 <!-- Custom CSS class -->
 <button [ssvCommand]="saveCmd" [ssvCommandOptions]="{executingCssClass: 'is-loading'}">Save</button>
@@ -78,10 +78,10 @@ removeHero$(hero: Hero) {
 import { canExecuteFromNgForm, canExecuteFromSignals } from "@ssv/ngx.command";
 
 // NgForm
-loginCmd = command(() => this.login$(), canExecuteFromNgForm(this.form()));
+readonly loginCmd = command(() => this.login$(), canExecuteFromNgForm(this.form()));
 
 // Signal forms
-saveCmd = command(() => this.save$(), canExecuteFromSignals({ valid: form.valid, dirty: form.dirty }));
+readonly saveCmd = command(() => this.save$(), canExecuteFromSignals({ valid: form.valid, dirty: form.dirty }));
 ```
 
 ## State & Execution
@@ -107,19 +107,19 @@ await cmd.execute(); // Returns Promise for async
 
 ```typescript
 // Computed validation
-canSave = computed(() => isValid() && hasChanges());
-saveCmd = command(() => this.save$(), canSave);
+readonly canSave = computed(() => this.isValid() && this.hasChanges());
+readonly saveCmd = command(() => this.save$(), this.canSave);
 
 // Error handling
-saveCmd = command(() =>
+readonly saveCmd = command(() =>
   this.#http.post('/api/save', data).pipe(
     catchError(err => { this.showError(err); return EMPTY; })
   )
 );
 
 // Loading UI
-<button [ssvCommand]="saveCmd" [class.loading]="saveCmd.isExecuting">
-  @if (saveCmd.isExecuting) { <mat-spinner/> } @else { <mat-icon>save</mat-icon> }
+<button [ssvCommand]="saveCmd" [class.loading]="saveCmd.$isExecuting()">
+  @if (saveCmd.$isExecuting()) { <mat-spinner/> } @else { <mat-icon>save</mat-icon> }
   Save
 </button>
 ```
