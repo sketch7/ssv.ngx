@@ -1,250 +1,202 @@
 # GitHub Copilot Instructions
 
-Nx monorepo for publishable Angular utility libraries (`@ssv/ngx.command` and `@ssv/ngx.ux`) built with Angular 20+, TypeScript 5.9, and Vitest 4.x.
+Nx monorepo for publishable Angular utility libraries built with Angular 21+, TypeScript 5.9, and Vitest 4.x. Two standalone libraries: `@ssv/ngx.command` (command pattern) and `@ssv/ngx.ux` (viewport/responsive utilities).
 
-## Architecture & Structure
+## Quick Start
 
-**Monorepo Layout:**
+```bash
+pnpm start                    # Dev server (test-app:4200)
+pnpm nx run-many -t test      # Run all tests
+pnpm nx run-many -t build     # Build all libraries
+pnpm nx reset                 # Clear cache (use when builds seem stale)
+```
 
-- `libs/ngx.command/` - Command pattern implementation with signal & observable support
-- `libs/ngx.ux/` - Viewport/responsive utilities with SSR support
-- `apps/test-app/` - Development harness for testing both libraries
-- Each library: standalone exports, `ng-package.json`, separate `project.json` configs
+**Package manager:** pnpm 9.15+ (enforced via preinstall script)  
+**Stack:** Angular 21.0.3 • TypeScript 5.9.3 • RxJS 7.8.2 • Vitest 4.x • Nx 22.2.0
 
-**Dependency Flow:**
+## Architecture
 
-- Libraries are fully standalone (no cross-dependencies)
-- Test app imports both via `@ssv/ngx.command` and `@ssv/ngx.ux` path aliases
-- Build outputs to `dist/libs/{lib-name}` for npm publishing
+```
+libs/
+  ngx.command/    → Command pattern (signals + observables)
+  ngx.ux/         → Viewport/responsive (SSR support)
+apps/
+  test-app/       → Development harness for both libs
+```
 
-**Tech Stack (Angular 20 specific):**
+- **No cross-dependencies** between libraries (publish independently)
+- **Standalone only** - no NgModules in new code
+- **Build output:** `dist/libs/{lib-name}` for npm publishing
+- **Version sync:** Both libraries share root `package.json` version
 
-- Angular 20.3.7 with standalone components/directives (no NgModules in new code)
-- TypeScript 5.9.3 with strict mode + `isolatedModules`
-- RxJS 7.8.2 for observables (coexists with signals)
-- Vitest 4.x + @analogjs/vitest-angular for testing
-- pnpm 9.15+ as package manager (enforced via preinstall script)
-- Nx 22.0.1 for build orchestration and caching
+## Critical Patterns
 
-## Critical Development Patterns
-
-### Modern Angular 20 DI Pattern
-
-**Use `inject()` function with private fields** (not constructor injection):
+### 1. Modern Angular DI (inject() + private fields)
 
 ```typescript
 @Directive({ standalone: true })
 export class ExampleDirective {
-  #service = inject(SomeService); // Private field pattern
-  #renderer = inject(Renderer2);
+  #renderer = inject(Renderer2); // NOT constructor injection
+  #cdr = inject(ChangeDetectorRef);
 }
 ```
 
-- Aligns with Angular 20+ conventions
-- Enables better tree-shaking
-- Already migrated throughout codebase (see `viewport-matcher.directive.ts`)
+**Why:** Aligns with Angular 21+ conventions, enables better tree-shaking. Already migrated throughout codebase.
 
-### Command Pattern Implementation (`@ssv/ngx.command`)
+### 2. Command Pattern (`@ssv/ngx.command`)
 
-**Factory functions (not classes)** for command creation:
+**Use factory functions** (not `new Command()`):
 
 ```typescript
-// Preferred: Factory functions with auto-cleanup
-saveCmd = command(() => this.save(), this.isValid);        // Sync
-asyncCmd = commandAsync(() => this.http.post(...), this.canSave$);  // Async
+// Factory functions auto-inject DestroyRef (no cleanup needed)
+saveCmd = command(() => this.save(), this.isValid);         // Sync
+asyncCmd = command(() => this.http.post(...), this.canSave$);  // Async
 
-// Supports: signal, observable, or function for canExecute
-command(() => execute(), signal(true));           // Signal
-command(() => execute(), observable$);            // Observable
-command(() => execute(), () => this.check());     // Function
+// canExecute accepts: Signal | Observable | Function | boolean
+command(() => execute(), signal(true));           // Signal ✅
+command(() => execute(), this.valid$);            // Observable ✅
+command(() => execute(), () => this.check());     // Function ✅
 ```
 
-- `Command` class is **deprecated** - use factories only
-- Factories auto-inject `DestroyRef` → no manual cleanup needed
-- Commands expose `isExecuting`, `canExecute` as both snapshot values and observables
-
-**Directive Usage:**
+**Directive usage:**
 
 ```html
-<!-- Basic button binding -->
+<!-- Basic -->
 <button [ssvCommand]="saveCmd">Save</button>
 
-<!-- With parameters (NOTE: arrays must be double-wrapped) -->
+<!-- With params (NOTE: arrays MUST be double-wrapped) -->
 <button [ssvCommand]="deleteCmd" [ssvCommandParams]="[item]">Delete</button>
 <button [ssvCommand]="multiCmd" [ssvCommandParams]="[[arr]]">Pass Array</button>
 
-<!-- Command creator (for per-row commands in loops) -->
+<!-- Command creator (for loops - separate isExecuting per instance) -->
 <button [ssvCommand]="{host: this, execute: remove$, params: [hero]}">Remove</button>
 ```
 
-### Viewport/Responsive Patterns (`@ssv/ngx.ux`)
+**Key exports:**
 
-**Structural directives with tuple syntax** (preferred):
+- `command()` - Creates Command (handles sync/async automatically)
+- `commandAsync()` - **Deprecated** alias for `command()`
+- `Command` class - **Deprecated** (use factory functions)
+
+### 3. Viewport/Responsive (`@ssv/ngx.ux`)
+
+**Structural directive (tuple syntax preferred):**
 
 ```html
 <!-- Tuple syntax (recommended) -->
 <div *ssvViewportMatcher="['>=', 'xlarge']">Desktop UI</div>
 <div *ssvViewportMatcher="['<=', 'medium']">Mobile UI</div>
 
-<!-- Object syntax (verbose) -->
-<div *ssvViewportMatcher="{size: 'large', operation: '>='}">...</div>
-
-<!-- Include multiple sizes -->
+<!-- Multiple sizes (OR condition) -->
 <div *ssvViewportMatcher="['xsmall', 'small']">Small screens</div>
 
-<!-- Else clause support (use object syntax or tuple) -->
+<!-- Avoid else clause (Angular 21 TemplateRef typing issues) -->
 <div *ssvViewportMatcher="['>=', 'xlarge']">Large</div>
 <div *ssvViewportMatcher="['<', 'xlarge']">Not large</div>
 ```
 
-**ViewportService signal API:**
+**ViewportService (signals):**
 
 ```typescript
-constructor() {
-  const viewport = inject(ViewportService);
+class MyComponent {
+  #viewport = inject(ViewportService);
 
-  effect(() => {
-    const size = viewport.sizeType();  // Signal: { type, name, widthThreshold }
-    console.log('Current:', size.name);  // 'xsmall' | 'small' | 'medium' | ...
-  });
+  constructor() {
+    effect(() => {
+      const size = this.#viewport.sizeType(); // Signal<ViewportSizeTypeInfo>
+      console.log(size.name); // 'xsmall' | 'small' | 'medium' | 'large' | ...
+    });
+  }
 }
 ```
 
-**SSR Compatibility:**
+**Default breakpoints:**
+| Size | Range | | xsmall | ≤450 | | small | 451-767 | | medium | 768-992 | | large | 993-1200 | | xlarge | 1201-1500 | | xxlarge | 1501-1920 | | xxlarge1 | ≥1921 |
 
-- Always provide device type via `withViewportSsrDevice('mobile' | 'tablet' | 'desktop')`
-- See `viewport-server-size.service.ts` for custom implementations
-- Default breakpoints: xsmall (≤450), small (451-767), medium (768-992), large (993-1200), xlarge (1201-1500), xxlarge (1501-1920), xxlarge1 (≥1921)
+**SSR:** Always provide device type via `withViewportSsrDevice('mobile' | 'tablet' | 'desktop')` (see `viewport-server-size.service.ts`).
 
-## Development Workflows
+## Testing (Vitest 4.x)
 
-**Essential Commands:**
-
-```bash
-pnpm start                    # Dev server (test-app on port 4200)
-pnpm nx run-many -t build     # Build all libraries
-pnpm nx run-many -t test      # Run Vitest tests for all libs
-pnpm nx run-many -t lint      # ESLint all projects
-pnpm nx reset                 # Clear Nx cache (fixes stale builds)
-```
-
-**Release Process:**
-
-```bash
-pnpm run prepare-release      # Version bump + changelog (doesn't publish)
-pnpm run release              # Publish to npm (CI only)
-```
-
-- Versioning: Managed by `nx release` (updates `package.json` + `version.ts`)
-- CI publishes on `master`, `*.x` branches, or manual workflow trigger
-
-## Testing Conventions
-
-**Vitest 4.x + @analogjs/vitest-angular setup:**
+**Setup (`test-setup.ts`):**
 
 ```typescript
-// test-setup.ts
 import "@angular/compiler";
 import "@analogjs/vitest-angular/setup-zone";
-
-import {
-  BrowserTestingModule,
-  platformBrowserTesting,
-} from "@angular/platform-browser/testing";
 import { getTestBed } from "@angular/core/testing";
+import { BrowserTestingModule, platformBrowserTesting } from "@angular/platform-browser/testing";
 
-getTestBed().initTestEnvironment(
-  BrowserTestingModule,
-  platformBrowserTesting(),
-);
+getTestBed().initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
 ```
 
-**Test Structure:**
+**Test structure:**
 
 ```typescript
-import { vi, type Mock } from "vitest";
+import { vi } from "vitest";
 
 describe("Command", () => {
   it("should disable during execution", async () => {
     const cmd = command(() => delay(100));
     expect(cmd.canExecute).toBe(true);
     cmd.execute();
-    expect(cmd.isExecuting).toBe(true);
+    expect(cmd.isExecuting).toBe(true); // State transition
     await delay(150);
     expect(cmd.isExecuting).toBe(false);
   });
 });
 ```
 
-- Use `vi.fn()`, `vi.spyOn()` for mocking (vitest equivalents)
-- Command tests verify `isExecuting` state transitions
-- Viewport tests validate breakpoint calculations and condition matching
+**Run tests:** `pnpm nx run-many -t test` or `pnpm test`
 
-## Code Quality Standards
+## Code Quality
 
 **TypeScript:**
 
-- Strict mode enabled (`strict: true`, `isolatedModules: true`)
-- Use type guards: `isCommand()`, `isViewportSizeMatcherExpression()` (see `command.util.ts`, `viewport.util.ts`)
-- Avoid `any` - use `unknown` with type narrowing or suppress with `// eslint-disable-next-line @typescript-eslint/no-explicit-any`
+- Strict mode (`isolatedModules: true`)
+- Use type guards: `isCommand()`, `isViewportSizeMatcherExpression()`
+- Prefer `unknown` over `any` (suppress with `// eslint-disable-next-line @typescript-eslint/no-explicit-any` if needed)
 
 **ESLint:**
 
 - Double quotes enforced (`@stylistic/ts/quotes`)
-- Nx module boundaries enforced (no cross-lib dependencies)
-- Angular directive selector rules disabled (custom `ssv` prefix used)
+- No cross-lib dependencies (Nx module boundaries)
+- Custom `ssv` prefix for directives (selector rules disabled)
 
-**Deprecation Pattern:**
+**Deprecation pattern:**
 
 ```typescript
-/**
- * @deprecated Use {@link commandAsync} instead.
- */
-export class CommandAsync extends Command { ... }
+/** @deprecated Use {@link command} instead. */
+export const commandAsync = command;
 ```
 
-- Mark deprecated APIs with JSDoc + maintain for backward compatibility
-- Steer users to modern alternatives in documentation
+Maintain backward compatibility while steering to modern APIs.
 
-## Angular 20 Compatibility Notes
+## Release Process
 
-**Template Reference Typing (Breaking Change in Angular 20):**
+```bash
+pnpm run prepare-release      # Bump version + generate changelog (local)
+pnpm run release              # Publish to npm (CI only)
+```
 
-- `else` clause on structural directives may cause `TemplateRef<any>` incompatibility
-- Workaround: Use separate directives instead of `else`:
+- CI publishes on `master`, `*.x` branches, or manual workflow trigger
+- `nx release` updates `package.json` + `version.ts` in both libraries
+- **Version compatibility:** Angular 17+ → v3.x+ | Angular 10-16 → v2.x | Angular 4-9 → v1.x
 
-  ```html
-  <!-- Instead of this (can cause TS2322 errors): -->
-  <div *ssvViewportMatcher="['>=', 'large']; else smaller">...</div>
+## Known Issues
 
-  <!-- Use this: -->
-  <div *ssvViewportMatcher="['>=', 'large']">Large</div>
-  <div *ssvViewportMatcher="['<', 'large']">Smaller</div>
-  ```
+**Angular 21 TemplateRef typing:** `else` clauses on structural directives may cause `TS2322` errors. Use separate directives instead:
 
-**Signal & Observable Interop:**
+```html
+<!-- ❌ Causes TS2322 -->
+<div *ssvViewportMatcher="['>=', 'large']; else smaller">...</div>
 
-- `toSignal()` converts observables → signals (used in `ViewportService`)
-- `toObservable()` converts signals → observables (used in `Command` for `canExecute`)
-- Both coexist: Commands accept signal/observable/function for `canExecute`
+<!-- ✅ Use this -->
+<div *ssvViewportMatcher="['>=', 'large']">Large</div>
+<div *ssvViewportMatcher="['<', 'large']">Smaller</div>
+```
 
-## Library Publishing
-
-**What gets published:**
-
-- Built files from `dist/libs/{lib-name}` (excludes tests, specs, config)
-- Each library has separate npm package (`@ssv/ngx.command`, `@ssv/ngx.ux`)
-- Version sync: Both libraries share root `package.json` version
-
-**Version compatibility:**
-
-- Angular 17+ → library v3.x
-- Angular 10-16 → library v2.x
-- Angular 4-9 → library v1.x
-
-## Quick Reference Links
+## Reference
 
 - [Command README](../libs/ngx.command/README.md) - Full API docs
 - [Viewport README](../libs/ngx.ux/README.md) - Breakpoint config & SSR
 - [Angular Instructions](instructions/angular.instructions.md) - Team coding standards
-- [Nx Agent Guidelines](../AGENTS.md) - Nx-specific AI workflows
+- [AGENTS.md](../AGENTS.md) - Nx-specific AI workflows
