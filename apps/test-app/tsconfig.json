@@ -6,7 +6,8 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "target": "ES2022",
-    "module": "preserve"
+    "module": "preserve",
+    "lib": ["dom", "es2022"]
   },
   "files": [],
   "include": [],
