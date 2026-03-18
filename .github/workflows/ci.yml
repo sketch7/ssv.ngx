@@ -38,11 +38,9 @@ permissions:
 jobs:
   package:
     name: Package
-    # uses: sketch7/.github/.github/workflows/node-lib.yml@node-libs-v1
-    uses: sketch7/.github/.github/workflows/node-lib.yml@feature/nodelib-auth-token
+    uses: sketch7/.github/.github/workflows/node-lib.yml@node-libs-v1
     with:
       package-manager: "pnpm"
       publishable: ${{ contains(fromJSON('["develop", "master", "main", "workflow"]'), github.ref_name) || endsWith(github.ref_name, '.x') || github.event.inputs.publish == 'true' }}
       force-preid: ${{ github.event.inputs.force-prerelease == 'true' }}
-      # preid-branches: "master,workflow"
       version-replace-glob: "libs/**/{package.json,version.ts}"
