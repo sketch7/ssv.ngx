@@ -49,6 +49,10 @@ jobs:
       needs.publish.result == 'success' &&
       github.event_name == 'push' &&
       github.ref_name == 'main'
+    permissions:
+      contents: write
+      pull-requests: write
+      workflows: write
     uses: sketch7/.github/.github/workflows/prepare-release.yml@release-v1
     with:
       base-version: ${{ needs.publish.outputs.baseVersion }}
@@ -60,6 +64,8 @@ jobs:
     if: |
       needs.publish.result == 'success' &&
       !fromJSON(needs.publish.outputs.isPrerelease)
+    permissions:
+      contents: write
     uses: sketch7/.github/.github/workflows/create-release.yml@release-v1
     with:
       version: ${{ needs.publish.outputs.version }}
@@ -72,6 +78,9 @@ jobs:
       needs.release.result == 'success' &&
       needs.release.outputs.is-latest == 'true' &&
       github.event_name == 'push'
+    permissions:
+      contents: write
+      pull-requests: write
     uses: sketch7/.github/.github/workflows/node-bump-main.yml@release-v1
     with:
       released-version: ${{ needs.publish.outputs.version }}
