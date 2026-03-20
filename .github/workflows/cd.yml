@@ -55,6 +55,7 @@ jobs:
     uses: sketch7/.github/.github/workflows/prepare-release.yml@feature/release-public-repo-fix #@release-v1
     with:
       base-version: ${{ needs.publish.outputs.baseVersion }}
+    secrets:
       token: ${{ secrets.GH_PAT }}
 
   release:
