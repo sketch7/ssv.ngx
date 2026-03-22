@@ -1,7 +1,8 @@
-const nx = require("@nx/eslint-plugin");
-const stylisticTs = require("@stylistic/eslint-plugin-ts");
+import nx from "@nx/eslint-plugin";
+import stylisticTs from "@stylistic/eslint-plugin-ts";
+import jsoncParser from "jsonc-eslint-parser";
 
-module.exports = [
+export default [
 	...nx.configs["flat/base"],
 	...nx.configs["flat/typescript"],
 	...nx.configs["flat/javascript"],
@@ -35,13 +36,20 @@ module.exports = [
 	},
 	{
 		files: ["**/*.json"],
-		rules: { "@nx/dependency-checks": ["error", { ignoredFiles: [
-			"{projectRoot}/eslint.config.{js,cjs,mjs}",
-			"{projectRoot}/**/*.spec.ts",
-			"{projectRoot}/vitest.config.ts",
-			"{projectRoot}/src/test-setup.ts",
-		] }] },
-		languageOptions: { parser: require("jsonc-eslint-parser") },
+		rules: {
+			"@nx/dependency-checks": [
+				"error",
+				{
+					ignoredFiles: [
+						"{projectRoot}/eslint.config.{js,cjs,mjs}",
+						"{projectRoot}/**/*.spec.ts",
+						"{projectRoot}/vitest.config.ts",
+						"{projectRoot}/src/test-setup.ts",
+					],
+				},
+			],
+		},
+		languageOptions: { parser: jsoncParser },
 	},
 	{
 		files: ["**/*.ts", "**/*.tsx"],
