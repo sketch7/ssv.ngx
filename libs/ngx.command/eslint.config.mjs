@@ -1,19 +1,25 @@
-const nx = require("@nx/eslint-plugin");
-const baseConfig = require("../../eslint.config.js");
+import nx from "@nx/eslint-plugin";
+import jsoncParser from "jsonc-eslint-parser";
+import baseConfig from "../../eslint.config.mjs";
 
-module.exports = [
+export default [
 	...baseConfig,
 	{
 		files: ["**/*.json"],
 		rules: {
-			"@nx/dependency-checks": ["error", { ignoredFiles: [
-				"{projectRoot}/eslint.config.{js,cjs,mjs}",
-				"{projectRoot}/**/*.spec.ts",
-				"{projectRoot}/vitest.config.ts",
-				"{projectRoot}/src/test-setup.ts",
-			] }],
+			"@nx/dependency-checks": [
+				"error",
+				{
+					ignoredFiles: [
+						"{projectRoot}/eslint.config.{js,cjs,mjs}",
+						"{projectRoot}/**/*.spec.ts",
+						"{projectRoot}/vitest.config.ts",
+						"{projectRoot}/src/test-setup.ts",
+					],
+				},
+			],
 		},
-		languageOptions: { parser: require("jsonc-eslint-parser") },
+		languageOptions: { parser: jsoncParser },
 	},
 	...nx.configs["flat/angular"],
 	...nx.configs["flat/angular-template"],
