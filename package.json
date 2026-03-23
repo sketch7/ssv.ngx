@@ -20,6 +20,7 @@
     "test": "nx run-many -t test",
     "clean": "rimraf dist",
     "__CI__": "",
+    "pre-release-build": "nx release version $VERSION",
     "release": "nx release publish"
   },
   "private": true,
