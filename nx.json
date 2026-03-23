@@ -58,6 +58,15 @@
     }
   },
   "release": {
-    "projects": ["libs/*"]
+    "projects": ["libs/*"],
+    "version": {
+      "preserveLocalDependencyProtocols": false,
+      "git": {
+        "stageChanges": false
+      },
+      "versionActionsOptions": {
+        "skipLockFileUpdate": true
+      }
+    }
   }
 }
