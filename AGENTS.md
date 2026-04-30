@@ -1,3 +1,9 @@
+# ssv.ngx Agent Guidelines
+
+> **Primary instructions live in [.github/copilot-instructions.md](.github/copilot-instructions.md).**
+> That file covers architecture, the command pattern, viewport utilities, testing, and known issues.
+> The Nx-specific rules below apply to all task execution.
+
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->
 
