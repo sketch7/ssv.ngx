@@ -1,0 +1,11 @@
+{
+    "schema_version": 1,
+    "commit": "",
+    "indexed_at": "2026-06-24T07:39:32Z",
+    "project": "S-git-ssv.ssv.ngx",
+    "nodes": 1355,
+    "edges": 1670,
+    "original_size": 2490368,
+    "compressed_size": 330274,
+    "compression_level": 9
+}
