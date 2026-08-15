@@ -136,6 +136,13 @@ describe("viewportDataMatcher", () => {
 				});
 			});
 
+			describe("when no smaller type is defined and type is not the smallest", () => {
+				it("should return default", () => {
+					const result = matchViewportData({ default: dataConfig.default, large: 20 }, sizeRefs.small, strategy);
+					expect(result).toBe(dataConfig.default);
+				});
+			});
+
 		});
 
 

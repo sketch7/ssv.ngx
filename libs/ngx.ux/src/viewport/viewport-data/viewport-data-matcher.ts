@@ -116,8 +116,7 @@ function matchWithSmallerMatch<T>(
 		return undefined;
 	}
 
-	// eslint-disable-next-line for-direction
-	for (let index = currentSizeType.type; index < sizeTypes.length; index--) {
+	for (let index = currentSizeType.type; index >= 0; index--) {
 		const sizeType = sizeTypes[index];
 		data = dataConfig[sizeType.name];
 		if (data !== undefined) {
