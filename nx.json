@@ -36,7 +36,17 @@
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
     },
+    "strip-source-condition": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [{ "target": "build", "params": "forward" }],
+      "options": {
+        "cwd": "{workspaceRoot}",
+        "command": "node tools/strip-source-condition.mjs dist/{projectRoot}"
+      }
+    },
     "nx-release-publish": {
+      "dependsOn": ["strip-source-condition"],
       "options": {
         "packageRoot": "dist/{projectRoot}"
       }

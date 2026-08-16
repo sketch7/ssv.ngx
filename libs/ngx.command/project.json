@@ -29,6 +29,7 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint"
-    }
+    },
+    "strip-source-condition": {}
   }
 }
