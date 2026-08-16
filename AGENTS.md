@@ -28,8 +28,8 @@ pnpm install
 # Dev harness
 pnpm start                # = pnpm test-app = nx serve test-app
 
-# Build (strip-source-condition runs automatically as part of the Nx release/publish task graph — see Known Pitfalls)
-pnpm build                # nx run-many -t strip-source-condition (builds, then strips the @ssv/source condition)
+# Build (patch-pkgjson strips the @ssv/source condition, run automatically as part of the Nx release/publish task graph — see Known Pitfalls)
+pnpm build                # nx run-many -t patch-pkgjson (builds, then patches dist package.json)
 
 # Test (Vitest, one project per library)
 pnpm test                 # nx run-many -t test
@@ -60,7 +60,7 @@ rather than a globally installed CLI. Never guess CLI flags — check `--help` o
 
 ```bash
 pnpm pre-release-build    # nx release version $VERSION (expects $VERSION)
-pnpm release              # CI only: nx release publish (strip-source-condition runs automatically first)
+pnpm release              # CI only: nx release publish (patch-pkgjson runs automatically first)
 ```
 
 - `nx.json` `release.projects` is `["libs/*"]`. Library `package.json` versions are `"0.0.0-PLACEHOLDER"`
@@ -172,13 +172,14 @@ ng-packagr copies `exports` verbatim into `dist`, so a tarball published without
 consumers at an `index.ts` that isn't in the package — and consumers set the condition unconditionally,
 which breaks the **registry** path for everyone.
 
-`tools/strip-source-condition.mjs` (idempotent) is wired into the Nx task graph, not chained by hand in npm
-scripts: `nx.json` gives every library a `strip-source-condition` target
-(`dependsOn: [{ target: "build", params: "forward" }]`), and `nx-release-publish` depends on that target.
-So `nx release publish` — and therefore `pnpm release` / CD — cannot publish a package without stripping it
-first, regardless of build caching or which script triggered it. Don't reintroduce ad hoc
-`npm run strip-source-condition && ...` chaining in root scripts. The tool mirrors the one in
-`sketch7.arcane.ngx` — keep the two in sync.
+`tools/patch-pkgjson.mjs` (idempotent) applies small, targeted patches to built `dist/**/package.json` files
+— stripping `@ssv/source` is the first one; add more patches to its `PATCHES` array rather than writing a new
+script/target. It's wired into the Nx task graph, not chained by hand in npm scripts: `nx.json` gives every
+library a `patch-pkgjson` target (`dependsOn: [{ target: "build", params: "forward" }]`), and
+`nx-release-publish` depends on that target. So `nx release publish` — and therefore `pnpm release` / CD —
+cannot publish a package without patching it first, regardless of build caching or which script triggered
+it. Don't reintroduce ad hoc `npm run patch-pkgjson && ...` chaining in root scripts. The tool mirrors the
+one in `sketch7.arcane.ngx` — keep the two in sync.
 
 ### Flat `node_modules` is deliberate
 
