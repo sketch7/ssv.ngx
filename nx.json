@@ -39,7 +39,7 @@
     "patch-pkgjson": {
       "executor": "nx:run-commands",
       "cache": false,
-      "dependsOn": [{ "target": "build", "params": "forward" }],
+      "dependsOn": ["build"],
       "options": {
         "cwd": "{workspaceRoot}",
         "command": "node tools/patch-pkgjson.mjs dist/{projectRoot}"
