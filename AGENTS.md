@@ -175,11 +175,11 @@ which breaks the **registry** path for everyone.
 `tools/patch-pkgjson.mjs` (idempotent) applies small, targeted patches to built `dist/**/package.json` files
 — stripping `@ssv/source` is the first one; add more patches to its `PATCHES` array rather than writing a new
 script/target. It's wired into the Nx task graph, not chained by hand in npm scripts: `nx.json` gives every
-library a `patch-pkgjson` target (`dependsOn: [{ target: "build", params: "forward" }]`), and
-`nx-release-publish` depends on that target. So `nx release publish` — and therefore `pnpm release` / CD —
-cannot publish a package without patching it first, regardless of build caching or which script triggered
-it. Don't reintroduce ad hoc `npm run patch-pkgjson && ...` chaining in root scripts. The tool mirrors the
-one in `sketch7.arcane.ngx` — keep the two in sync.
+library a `patch-pkgjson` target (`dependsOn: ["build"]`), and `nx-release-publish` depends on that target.
+So `nx release publish` — and therefore `pnpm release` / CD — cannot publish a package without patching it
+first, regardless of build caching or which script triggered it. Don't reintroduce ad hoc
+`npm run patch-pkgjson && ...` chaining in root scripts. The tool mirrors the one in `sketch7.arcane.ngx` —
+keep the two in sync.
 
 ### Flat `node_modules` is deliberate
 
