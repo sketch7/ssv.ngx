@@ -36,7 +36,17 @@
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
     },
+    "patch-pkgjson": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [{ "target": "build", "params": "forward" }],
+      "options": {
+        "cwd": "{workspaceRoot}",
+        "command": "node tools/patch-pkgjson.mjs dist/{projectRoot}"
+      }
+    },
     "nx-release-publish": {
+      "dependsOn": ["patch-pkgjson"],
       "options": {
         "packageRoot": "dist/{projectRoot}"
       }
