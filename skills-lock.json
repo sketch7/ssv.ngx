@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "skills": {
+    "angular-developer": {
+      "source": "angular/skills",
+      "sourceType": "github",
+      "skillPath": "angular-developer/SKILL.md",
+      "computedHash": "d80a6375ce2ee27a978131da225c1402c6979e4ad6757a438f0640b553cf1911"
+    },
+    "arcane-agent-skills": {
+      "source": "sketch7/arcane.archives",
+      "sourceType": "github",
+      "skillPath": "skills/arcane-agent-skills/SKILL.md",
+      "computedHash": "95426be15dd36a5e825b5d365af5dd93b352f8d140fcefeaa4d0cdcca28668d0"
+    },
+    "arcane-ci-cd-workflows": {
+      "source": "sketch7/arcane.archives",
+      "sourceType": "github",
+      "skillPath": "skills/arcane-ci-cd-workflows/SKILL.md",
+      "computedHash": "76a887c16a674783b188f48e3d1cdb25d97edf0f8eebd613184ad64020a45d1d"
+    },
+    "arcane-conventional-commit": {
+      "source": "sketch7/arcane.archives",
+      "sourceType": "github",
+      "skillPath": "skills/arcane-conventional-commit/SKILL.md",
+      "computedHash": "8207b99098843b279ed8af1d4111f989ff13d63a82fdffa099adbfcaa8ae60e0"
+    },
+    "arcane-docs-style": {
+      "source": "sketch7/arcane.archives",
+      "sourceType": "github",
+      "skillPath": "skills/arcane-docs-style/SKILL.md",
+      "computedHash": "5fe58cb0eef2ca6b3bac873ca596340271af8133691e261fc6a49fcc7aa34ea4"
+    },
+    "arcane-ngx-testing": {
+      "source": "sketch7/arcane.archives",
+      "sourceType": "github",
+      "skillPath": "skills/arcane-ngx-testing/SKILL.md",
+      "computedHash": "329ead912e1db40298f477f8b455f2b75223f28b3540a7d4bbd6ef35351d1ca1"
+    },
+    "arcane-testing-principles": {
+      "source": "sketch7/arcane.archives",
+      "sourceType": "github",
+      "skillPath": "skills/arcane-testing-principles/SKILL.md",
+      "computedHash": "6e20bda04ca2a4fcde1b2be418fccb146348586fa3fbdf1c259e5b9990c7158e"
+    },
+    "arcane-ts": {
+      "source": "sketch7/arcane.archives",
+      "sourceType": "github",
+      "skillPath": "skills/arcane-ts/SKILL.md",
+      "computedHash": "e8819f9a33909b6334c1930f59c7eaa7180e71ec3603e80ebb87b82b3769d886"
+    },
+    "typescript-advanced-types": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "skillPath": "plugins/javascript-typescript/skills/typescript-advanced-types/SKILL.md",
+      "computedHash": "bc33bc9653d649a461e49abe45634b6b11a7aeeae552b05ec4d54d4589d16739"
+    },
+    "vitest": {
+      "source": "supabase/supabase",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/vitest/SKILL.md",
+      "computedHash": "2f576973fd4e6be3b8da52fd1b6bd00d8636115e5c771a3a3dfc95ef7c799a9f"
+    }
+  }
+}

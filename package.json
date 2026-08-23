@@ -15,10 +15,11 @@
     "preinstall": "npx only-allow pnpm",
     "start": "npm run test-app",
     "test-app": "nx serve test-app",
-    "build": "nx run-many -t build",
+    "build": "nx run-many -t patch-pkgjson",
+    "patch-pkgjson": "node tools/patch-pkgjson.mjs",
     "lint": "nx run-many -t lint",
     "test": "nx run-many -t test",
-    "clean": "rimraf dist",
+    "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\"",
     "__CI__": "",
     "pre-release-build": "nx release version $VERSION",
     "release": "nx release publish"
