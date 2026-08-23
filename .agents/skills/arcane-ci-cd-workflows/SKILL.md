@@ -3,6 +3,8 @@ name: arcane-ci-cd-workflows
 description: "Use when adding, editing, or debugging a .github/workflows/ci.yml or cd.yml/release.yml in any Arcane repo — deciding which reusable workflow track a repo belongs to (published package vs. deployed app), wiring workflow_call inputs/secrets, or tracing why a repo's CD didn't publish/deploy after a push to main."
 ---
 
+> **Source of truth: this repo (`sketch7/arcane.archives`).** Edit here, then run `npx skills update` in consuming repos. Never edit the installed copy under a consumer repo's `.agents/skills/<name>/` — it's a pulled artifact and gets silently overwritten on the next sync.
+
 # Arcane CI/CD Workflows
 
 No Arcane repo hand-rolls its own build/test/publish/deploy logic — every `.github/workflows/*.yml`

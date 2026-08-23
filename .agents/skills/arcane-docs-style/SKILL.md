@@ -3,6 +3,8 @@ name: arcane-docs-style
 description: "Use when writing or reviewing TSDoc/JSDoc comments, README files, or docs/<feature>.md pages in an Arcane TypeScript/JavaScript package (ngx libraries, schematics, blueprint.client, cosmowrench, or any other consumer) — covers example-first doc-block style, en-US spelling, README structure (install + snippet, use-when/avoid-when bullets vs. API tables), when to extract a feature section into its own docs file, and mermaid diagram conventions including the pastel color palette."
 ---
 
+> **Source of truth: this repo (`sketch7/arcane.archives`).** Edit here, then run `npx skills update` in consuming repos. Never edit the installed copy under a consumer repo's `.agents/skills/<name>/` — it's a pulled artifact and gets silently overwritten on the next sync.
+
 # Arcane Docs Style
 
 ## Principles

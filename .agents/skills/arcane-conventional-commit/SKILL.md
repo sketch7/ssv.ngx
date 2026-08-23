@@ -3,6 +3,8 @@ name: arcane-conventional-commit
 description: "Use when writing a commit message, drafting a PR title, or reviewing commit history in any Arcane repo — covers the platform's Conventional Commits dialect: the type list actually in use, scope conventions (lowercase, multi-word, `*` wildcard), PR-number suffixes, and hexgate's automated `deploy(...)` tag format. Not lint-enforced anywhere in the platform; this documents observed convention, not a tool config."
 ---
 
+> **Source of truth: this repo (`sketch7/arcane.archives`).** Edit here, then run `npx skills update` in consuming repos. Never edit the installed copy under a consumer repo's `.agents/skills/<name>/` — it's a pulled artifact and gets silently overwritten on the next sync.
+
 # Arcane Conventional Commit
 
 ## Format

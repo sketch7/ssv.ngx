@@ -3,6 +3,8 @@ name: arcane-testing-principles
 description: "Use when writing, reviewing, or planning unit/integration tests in any Arcane repo, regardless of stack (.NET, Angular/ngx, Node, or otherwise). Covers cutting test boilerplate via shared helpers, preferring data-driven/table tests over near-duplicate cases, League of Legends-themed test fixtures, RED-GREEN TDD discipline, testing at module boundaries instead of every internal unit, and pruning tests that don't earn their keep. For .NET syntax/tooling see arcane-dotnet-testing; for Angular/ngx syntax/tooling see arcane-ngx-testing."
 ---
 
+> **Source of truth: this repo (`sketch7/arcane.archives`).** Edit here, then run `npx skills update` in consuming repos. Never edit the installed copy under a consumer repo's `.agents/skills/<name>/` — it's a pulled artifact and gets silently overwritten on the next sync.
+
 # Arcane Testing Principles
 
 Cross-stack testing philosophy for the Arcane platform. These are judgment calls that don't

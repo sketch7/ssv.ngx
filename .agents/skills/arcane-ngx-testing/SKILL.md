@@ -3,6 +3,8 @@ name: arcane-ngx-testing
 description: "Use when writing or reviewing Vitest tests in an Arcane Angular repo (arcane.ngx, blueprint.client, cosmowrench, schematics). Covers Vitest-only tooling (no Jest, ever), @testing-library/angular render()/screen for component tests, TestBed for NGXS store/service tests, it.each data-driven tests, signal mocking, and .spec.ts naming. For framework-agnostic testing judgment (boilerplate, module boundaries, League of Legends theming) see arcane-testing-principles; for component/state/naming conventions themselves (not testing) see arcane-ngx-app-conventions."
 ---
 
+> **Source of truth: this repo (`sketch7/arcane.archives`).** Edit here, then run `npx skills update` in consuming repos. Never edit the installed copy under a consumer repo's `.agents/skills/<name>/` — it's a pulled artifact and gets silently overwritten on the next sync.
+
 # Arcane ngx Testing
 
 Test-writing conventions for Arcane's Angular repos — `arcane.ngx`, `blueprint.client`,
