@@ -5,13 +5,13 @@
       "source": "angular/skills",
       "sourceType": "github",
       "skillPath": "angular-developer/SKILL.md",
-      "computedHash": "d80a6375ce2ee27a978131da225c1402c6979e4ad6757a438f0640b553cf1911"
+      "computedHash": "b20b0c586bdc14f88265377031fad8f1763d899b64caca3a10ddf24cb5ac8e77"
     },
     "arcane-agent-skills": {
       "source": "sketch7/arcane.archives",
       "sourceType": "github",
       "skillPath": "skills/arcane-agent-skills/SKILL.md",
-      "computedHash": "95426be15dd36a5e825b5d365af5dd93b352f8d140fcefeaa4d0cdcca28668d0"
+      "computedHash": "18a6f92070d7d9c4866cfad8331e3d9345199961c55d4234a7cb2174f7aaecb8"
     },
     "arcane-ci-cd-workflows": {
       "source": "sketch7/arcane.archives",
@@ -30,6 +30,12 @@
       "sourceType": "github",
       "skillPath": "skills/arcane-docs-style/SKILL.md",
       "computedHash": "5fe58cb0eef2ca6b3bac873ca596340271af8133691e261fc6a49fcc7aa34ea4"
+    },
+    "arcane-git-workflow": {
+      "source": "sketch7/arcane.archives",
+      "sourceType": "github",
+      "skillPath": "skills/arcane-git-workflow/SKILL.md",
+      "computedHash": "3b6f8ddfc6087e1c27d505061f5b557c78e6532cfa70c6bea11b80f11c080cd8"
     },
     "arcane-ngx-testing": {
       "source": "sketch7/arcane.archives",

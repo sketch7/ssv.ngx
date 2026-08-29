@@ -23,7 +23,7 @@ via your existing `gh`/git credentials).
 | `arcane-dotnet-aspnet-conventions`      | `sketch7/arcane.archives` | Controllers, CQRS command layer, error-handling middleware/response shape, service registration, testing (cosmowrench.api, blueprint, foundry, gemstone, vault)                                                                                                                                                                               |
 | `arcane-dotnet-errors`                  | `sketch7/arcane.archives` | The `Arcane.Core.Error` `ErrorResult`/`ApiErrorException` fluent builder API — deciding request vs. field errors, error-code conventions, extending with reusable builders (cosmowrench.api, blueprint, foundry, gemstone, vault, and any other `Arcane.Core` consumer)                                                                       |
 | `arcane-dotnet-server-builder`          | `sketch7/arcane.archives` | `ArcaneServerBuilder`/`Use*` extension authoring + `Program.cs` wiring, used by every service repo                                                                                                                                                                                                                                            |
-| `arcane-dotnet-sibling-linking`         | `sketch7/arcane.archives` | The Debug `ProjectReference`/Release `PackageReference` split against sibling `arcane.dotnet`/`Sketch7.SignalR.Orleans` checkouts, `ArcaneLibsLinkPath`/`ArcaneLinkPath`, and the resulting sibling-checkout requirement (vault, foundry, gemstone, blueprint, cosmowrench.api)                                                               |
+| `arcane-dotnet-sibling-linking`         | `sketch7/arcane.archives` | The Debug `ProjectReference`/Release `PackageReference` split against sibling `arcane.dotnet`/`Sketch7.SignalR.Orleans` checkouts, `ArcaneLibsLinkPath`/`ArcaneLinkPath`, iterating in Debug without waiting for a publish, the `.slnx` (local) vs `.build.slnx` (CI/production) split, and why a non-sibling-level worktree breaks the relative link path (vault, foundry, gemstone, blueprint, cosmowrench.api)                                                               |
 | `arcane-entitymeta`                     | `sketch7/arcane.archives` | Shared `.entitymeta.json` structure (props, indices, enums, relationships) for `@arcane/schematics` — read before the platform-specific ones below                                                                                                                                                                                            |
 | `arcane-dotnet-entitymeta`              | `sketch7/arcane.archives` | .NET-specific `.entitymeta.json` deltas: type mapping, numeric enums, server-only options                                                                                                                                                                                                                                                     |
 | `arcane-ngx-entitymeta`                 | `sketch7/arcane.archives` | Angular-specific `.entitymeta.json` deltas: TS type mapping, string enums, NGXS state wiring                                                                                                                                                                                                                                                  |
@@ -32,7 +32,7 @@ via your existing `gh`/git credentials).
 | `arcane-ngx-datastore-extensibility`    | `sketch7/arcane.archives` | Extending `@arcane/ngx.store` framework internals: `IStoreAdapter`, `StoreBinder`/`EntityStoreResolver`, `EntityStorePlugin`/`crudFormViewPlugin` hooks, virtual indices, realtime builder, the configurable-feature DI-token pattern                                                                                                         |
 | `arcane-ngx-library-conventions`        | `sketch7/arcane.ngx`      | Authoring `@arcane/ngx.*` components themselves: module wrapper, options DI pattern, theming, barrels                                                                                                                                                                                                                                         |
 | `arcane-ngx-app-conventions`            | `sketch7/arcane.archives` | Consumer-app conventions shared across blueprint.client + cosmowrench: naming, signals, NGXS, testing, and the routed-container/presenter split with `inject()`-only DI                                                                                                                                                                       |
-| `arcane-ngx-workspace-linking`          | `sketch7/arcane.archives` | pnpm workspace linking of `@arcane/ngx.*`/`@ssv/ngx.*` for local sibling-repo iteration: the `.npmrc`/`.pnpmfile.cjs` opt-in switch and the nested-`node_modules`/duplicate-DI-token gotcha (blueprint.client, cosmowrench)                                                                                                                   |
+| `arcane-ngx-workspace-linking`          | `sketch7/arcane.archives` | pnpm workspace linking of `@arcane/ngx.*`/`@ssv/ngx.*` for local sibling-repo iteration: the `.npmrc`/`.pnpmfile.cjs` opt-in switch, leaving the link on for a whole branch (committing it, opening a PR with it enabled) until the package publishes, the nested-`node_modules`/duplicate-DI-token gotcha, and why a non-sibling-level worktree breaks the relative link path (blueprint.client, cosmowrench)                                                                                                                   |
 | `arcane-ngx-css-tokens`                 | `sketch7/arcane.archives` | The `--arc-*` CSS custom-property theming system: token catalog, where tokens are declared per-app, and the two valid consumption patterns (raw `var()` vs. `@app/fns` palette-colorize) (blueprint.client, cosmowrench)                                                                                                                      |
 | `arcane-scss`                           | `sketch7/arcane.archives` | SCSS authoring conventions: `@use`/`@forward` vs legacy `@import`, `styles/@app/` partial organization and the `@app/` path alias, public vs. private mixin conventions, and how BEM naming is actually applied in practice (blueprint.client, cosmowrench)                                                                                   |
 | `arcane-ngx-i18n`                       | `sketch7/arcane.archives` | Using `@arcane/ngx.i18n`'s `TranslationService`/`translate` pipe from consumer app code: fallback-key chain, `trCtx()` context convention, error-code-as-translation-key standard, translations.json key hygiene (blueprint.client, cosmowrench, other Nx client apps)                                                                        |
@@ -41,9 +41,13 @@ via your existing `gh`/git credentials).
 | `arcane-testing-principles`             | `sketch7/arcane.archives` | Framework-agnostic testing philosophy for any stack: cutting boilerplate with helpers, data-driven/table tests, League of Legends-themed fixtures, RED-GREEN TDD, testing module boundaries instead of every internal unit, pruning tests that don't earn their keep                                                                          |
 | `arcane-dotnet-testing`                 | `sketch7/arcane.archives` | xUnit + Shouldly test conventions for Arcane .NET services: naming, AAA structure, Theory/InlineData data-driven tests, the FluentAssertions→Shouldly migration status per repo, test-double placement, tenant scope wiring (cosmowrench.api, blueprint, foundry, gemstone, vault, hexgate, arcane.dotnet)                                    |
 | `arcane-ngx-testing`                    | `sketch7/arcane.archives` | Vitest (never Jest) + `@testing-library/angular` test conventions for Arcane Angular repos: `render()`/`screen` component tests, `TestBed`+NGXS store tests, `it.each` data-driven tests, signal mocking, `.spec.ts` naming (arcane.ngx, blueprint.client, cosmowrench, schematics)                                                           |
+| `arcane-e2e-testing`                    | `sketch7/arcane.archives` | Playwright e2e conventions as practiced in cosmowrench's `client-e2e`: one shared Aspire-launched stack per run (not per worker), `test.extend()` fixtures + a worker-scoped journey browser session, tight per-action/expect timeouts, `data-test-id`-first locator strategy vs. the legacy `etag` attribute, no-reload state verification, critical-journey file decomposition, duration as a monitored budget (cosmowrench, blueprint.client)                |
+| `arcane-dotnet-integration-testing`     | `sketch7/arcane.archives` | Real-DB integration-test conventions on top of `arcane-dotnet-aspnet-conventions` §5's WebApplicationFactory/DbTestFactory: nested/commented timeout budgeting per layer, sharing one Testcontainers instance per run with a duplicate-factory guard, config layering order, header-driven test auth, scenario builders for critical flows via real REST calls (cosmowrench.api, blueprint, foundry, gemstone, vault, hexgate)      |
 | `arcane-ci-cd-workflows`                | `sketch7/arcane.archives` | The two reusable-workflow tracks every Arcane repo's `ci.yml`/`cd.yml` wraps: `sketch7/.github` for CI + package-publish, `arcane.hexgate`'s own `release-dotnet(-fe)-app.yml` for deployable app repos — which track a repo belongs to, `workflow_call` inputs/secrets, and debugging a CD that didn't fire                                  |
+| `arcane-mass-exec`                      | `sketch7/arcane.archives` | `ssv.cli`'s `mass-exec` subcommand for running the same shell steps across many Arcane repos at once (config + jobs live under this repo's `ssv-cli/mass-exec/`): when it's worth a job vs. just running the command, setup/run/dry-run usage, the existing `ssv.arcane.yaml` job catalog, adding a new job, and suggested CLI gaps (no mutation confirm gate, no run summary, no job composition)                  |
 | `arcane-skill-authoring`                | `sketch7/arcane.archives` | How to author a new Arcane-family skill: naming, placement, directory/frontmatter structure, house style, and the registration checklist — read before writing a new `SKILL.md` anywhere in the family                                                                                                                                        |
 | `arcane-conventional-commit`            | `sketch7/arcane.archives` | The platform's Conventional Commits dialect as observed in commit history: type list, scope conventions (multi-word, `*` wildcard), PR-number suffixes, and hexgate's automated `deploy(...)` tag format                                                                                                                                      |
+| `arcane-git-workflow`                   | `sketch7/arcane.archives` | Branching and PR conventions: default to a branch + PR rather than committing to `main` directly (why a stray push to `main` can trigger a real publish/deploy), branching from `main` vs. an existing unmerged branch for a cascading change, `feature/`-first branch naming, squash-merge + `delete_branch_on_merge` norms                 |
 
 (Add a row here whenever a new Arcane-specific skill is authored somewhere in the family.)
 
@@ -96,8 +100,12 @@ npx skills add sketch7/arcane.archives --skill arcane-docs-style --agent '*' -y
 npx skills add sketch7/arcane.archives --skill arcane-testing-principles --agent '*' -y
 npx skills add sketch7/arcane.archives --skill arcane-dotnet-testing --agent '*' -y
 npx skills add sketch7/arcane.archives --skill arcane-ngx-testing --agent '*' -y
+npx skills add sketch7/arcane.archives --skill arcane-e2e-testing --agent '*' -y
+npx skills add sketch7/arcane.archives --skill arcane-dotnet-integration-testing --agent '*' -y
 npx skills add sketch7/arcane.archives --skill arcane-ci-cd-workflows --agent '*' -y
+npx skills add sketch7/arcane.archives --skill arcane-mass-exec --agent '*' -y
 npx skills add sketch7/arcane.archives --skill arcane-conventional-commit --agent '*' -y
+npx skills add sketch7/arcane.archives --skill arcane-git-workflow --agent '*' -y
 ```
 
 Or `--skill '*'` to pull every skill from a source repo at once. This materializes the real files
@@ -121,6 +129,34 @@ npx skills update
 ```
 
 Review the diff and commit it, same as any other dependency bump.
+
+## Install every Arcane skill globally instead (all repos, one machine, nothing to commit)
+
+The per-repo workflow above commits real files into each repo so teammates and CI see the same
+skills. If you just want the whole family available everywhere you personally work — scratch repos,
+a repo you haven't wired up yet, or you'd rather not touch `.agents/skills/`/`skills-lock.json` in a
+repo you don't intend to change — install at user level instead with `-g`:
+
+```bash
+npx skills add sketch7/arcane.archives --skill '*' --agent '*' -g -y
+npx skills add sketch7/arcane.ngx --skill arcane-ngx-library-conventions --agent '*' -g -y
+```
+
+(Two commands because `arcane-ngx-library-conventions` is the one skill that lives in `arcane.ngx`
+itself rather than `arcane.archives` — see the table above.) Global skills install under
+`~/.agents/skills/` (`C:\Users\<you>\.agents\skills\` on Windows), with no lockfile or symlink left
+behind in any project — which also means teammates and CI don't get them. Reach for the project-level
+install whenever the skill should travel with the repo (shared team convention, a CI agent reading
+it, Copilot's cloud agent); reach for global for your own local convenience across repos you don't
+plan to wire up individually.
+
+Update the same set later with the same flag:
+
+```bash
+npx skills update -g
+```
+
+`skills ls -g` lists what's currently installed globally; `skills remove -g` to prune one.
 
 ## Adding a new shared skill
 
