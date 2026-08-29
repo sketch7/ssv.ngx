@@ -30,4 +30,5 @@ jobs:
     name: node CI
     uses: sketch7/.github/.github/workflows/node-ci.yml@node-libs-v2
     with:
+      runs-on: '"blacksmith-4vcpu-ubuntu-2404"'
       package-manager: "pnpm"
