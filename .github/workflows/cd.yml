@@ -45,7 +45,7 @@ jobs:
       (contains(fromJSON('["main", "workflow"]'), github.ref_name) ||
       startsWith(github.ref_name, 'v') ||
       github.event.inputs.publish == 'true')
-    uses: sketch7/.github/.github/workflows/node-publish.yml@feature/promotable-app-release-cycle
+    uses: sketch7/.github/.github/workflows/node-publish.yml@node-libs-v3
     with:
       package-manager: "pnpm"
       force-preid: ${{ github.event.inputs.force-prerelease == 'true' }}
@@ -62,7 +62,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    uses: sketch7/.github/.github/workflows/prepare-release.yml@feature/promotable-app-release-cycle
+    uses: sketch7/.github/.github/workflows/prepare-release.yml@release-v2
     with:
       base-version: ${{ needs.publish.outputs.baseVersion }}
     secrets:
@@ -74,7 +74,7 @@ jobs:
     if: needs.publish.result == 'success'
     permissions:
       contents: write
-    uses: sketch7/.github/.github/workflows/create-release.yml@feature/promotable-app-release-cycle
+    uses: sketch7/.github/.github/workflows/create-release.yml@release-v2
     with:
       version: ${{ needs.publish.outputs.version }}
 
@@ -89,7 +89,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    uses: sketch7/.github/.github/workflows/node-bump-main.yml@feature/promotable-app-release-cycle
+    uses: sketch7/.github/.github/workflows/node-bump-main.yml@release-v2
     with:
       released-version: ${{ needs.publish.outputs.version }}
     secrets:
