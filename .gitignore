@@ -18,6 +18,7 @@ npm-debug.log
 .nx/workspace-data
 .nx/self-healing
 .nx/migrate-runs
+/.nx/*/
 .sass-cache/
 .eslintcache
 .angular

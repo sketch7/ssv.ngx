@@ -1,6 +1,6 @@
 import nx from "@nx/eslint-plugin";
 import stylisticTs from "@stylistic/eslint-plugin-ts";
-import jsoncParser from "jsonc-eslint-parser";
+import * as jsoncParser from "jsonc-eslint-parser";
 
 export default [
 	...nx.configs["flat/base"],
