@@ -50,7 +50,23 @@
       "options": {
         "packageRoot": "dist/{projectRoot}"
       }
-    }
+    },
+    "lint": [
+      {
+        "filter": {
+          "plugin": "@nx/eslint/plugin"
+        },
+        "inputs": [
+          "default",
+          "{workspaceRoot}/.eslintrc.json",
+          "{workspaceRoot}/.eslintignore",
+          "{workspaceRoot}/eslint.config.mjs",
+          {
+            "externalDependencies": ["eslint"]
+          }
+        ]
+      }
+    ]
   },
   "generators": {
     "@nx/angular:application": {
@@ -78,5 +94,20 @@
         "skipLockFileUpdate": true
       }
     }
-  }
+  },
+  "plugins": [
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
+    },
+    {
+      "plugin": "@nx/vitest",
+      "options": {
+        "testMode": "watch",
+        "testTargetName": "test"
+      }
+    }
+  ]
 }
