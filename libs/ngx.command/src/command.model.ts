@@ -19,6 +19,11 @@ export type ExecuteReturnType<TExecute extends ExecuteFn> = ConvertObservableToP
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ExecuteFn<TArgs extends any[] = any[], TReturn = unknown> = (...args: TArgs) => MaybeAsync<TReturn>;
 
+/** Reason why a command is disabled. */
+export interface CommandDisabledReason {
+	readonly message: string;
+}
+
 export type CanExecute = SignalLike<boolean> | Signal<boolean> | Observable<boolean> | boolean;
 
 /**
@@ -72,6 +77,9 @@ export interface ICommand<TExecute extends ExecuteFn = ExecuteFn> {
 
 	/** Determines whether the command can execute or not, as a signal. */
 	readonly $canExecute: Signal<boolean>;
+
+	/** Reasons why the command is disabled, empty when none. While non-empty, `$canExecute` is false. */
+	readonly $disabledReasons: Signal<readonly CommandDisabledReason[]>;
 
 	/** Execute function to invoke. Returns Promise if the execute function returns Observable, otherwise returns the original type. */
 	execute(...args: Parameters<TExecute>): ExecuteReturnType<TExecute>;

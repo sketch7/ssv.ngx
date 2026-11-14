@@ -1,11 +1,13 @@
 
 import { isObservable, lastValueFrom } from "rxjs";
 import { toSignal } from "@angular/core/rxjs-interop";
-import type { CanExecute, ExecuteFn, ExecuteReturnType, ICommand } from "./command.model";
+import type { CanExecute, CommandDisabledReason, ExecuteFn, ExecuteReturnType, ICommand } from "./command.model";
 import { assertInInjectionContext, computed, inject, Injector, isSignal, signal, type Signal } from "@angular/core";
 
 export interface CommandCreateOptions {
 	injector?: Injector;
+	/** Reasons why the command is disabled. While non-empty, the command cannot execute. */
+	disabledReasons?: Signal<readonly CommandDisabledReason[]> | (() => readonly CommandDisabledReason[]);
 }
 
 // todo: remove
@@ -24,7 +26,7 @@ export function command<TExecute extends ExecuteFn>(
 		assertInInjectionContext(command);
 	}
 	const injector = opts?.injector ?? inject(Injector);
-	const cmd = new Command(execute, canExecute, injector);
+	const cmd = new Command(execute, canExecute, injector, opts?.disabledReasons);
 	return cmd;
 }
 
@@ -38,7 +40,8 @@ export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand
 	get canExecute(): boolean { return this.$canExecute(); }
 
 	readonly $isExecuting = signal(false);
-	readonly $canExecute = computed(() => !this.$isExecuting() && this.#canExecute());
+	readonly $canExecute = computed(() => !this.$isExecuting() && this.#canExecute() && this.$disabledReasons().length === 0);
+	readonly $disabledReasons: Signal<readonly CommandDisabledReason[]>;
 
 	readonly #canExecute: Signal<boolean>;
 
@@ -47,13 +50,17 @@ export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand
 	 *
 	 * @param execute Execute function to invoke.
 	 * @param canExecute Observable which determines whether it can execute or not.
+	 * @param injector Injector used for converting an observable `canExecute`.
+	 * @param disabledReasons Reasons why the command is disabled, while non-empty it cannot execute.
 	 * @deprecated Use {@link command} or {@link commandAsync} instead for creating instances.
 	 */
 	constructor(
 		private readonly _execute: TExecute,
 		canExecute?: CanExecute,
 		injector?: Injector,
+		disabledReasons?: CommandCreateOptions["disabledReasons"],
 	) {
+		this.$disabledReasons = computed(() => disabledReasons?.() ?? []);
 		this.#canExecute = this.#buildCanExecuteSignal(canExecute, injector);
 	}
 

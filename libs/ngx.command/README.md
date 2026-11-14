@@ -109,6 +109,15 @@ canRemoveHero$(hero: Hero, id: number, param2): Observable<boolean> {
 }
 ```
 
+## Disabled reasons
+`command()` accepts `disabledReasons` (a signal or function returning `{ message }[]`). While any exist, `$canExecute` is false and `$disabledReasons()` exposes them, e.g. to show why a button is disabled.
+
+```ts
+saveCmd = command(() => this.save(), undefined, {
+  disabledReasons: () => this.locked() ? [{ message: "Invoice is locked" }] : [],
+});
+```
+
 ## Usage without Attribute
 It can also be used as below without the command attribute.
 

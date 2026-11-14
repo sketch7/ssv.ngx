@@ -417,4 +417,24 @@ describe("CommandSpecs", () => {
 			});
 		});
 	});
+
+	describe("disabled reasons", () => {
+		it("exposes disabled reasons and blocks execution while any exist", () => {
+			const blocked = signal(true);
+			const cmd = command(() => 1, undefined, {
+				injector,
+				disabledReasons: () => blocked() ? [{ message: "Invoice is locked" }] : [],
+			});
+			expect(cmd.$disabledReasons()).toEqual([{ message: "Invoice is locked" }]);
+			expect(cmd.$canExecute()).toBe(false);
+			blocked.set(false);
+			expect(cmd.$disabledReasons()).toEqual([]);
+			expect(cmd.$canExecute()).toBe(true);
+		});
+
+		it("has no reasons by default", () => {
+			const cmd = command(() => 1, undefined, { injector });
+			expect(cmd.$disabledReasons()).toEqual([]);
+		});
+	});
 });
