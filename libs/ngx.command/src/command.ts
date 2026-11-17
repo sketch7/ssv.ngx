@@ -60,15 +60,20 @@ function toState(value: CanExecuteResult | undefined): CanExecuteState {
 }
 
 function toCanExecuteState(canExecute: CanExecute | undefined, injector: Injector): Signal<CanExecuteState> {
+	// reasons arrays are detected before the observable branch, so they never reach `toSignal`
+	if (canExecute === undefined || typeof canExecute === "boolean" || isReasons(canExecute)) {
+		return signal(toState(canExecute)).asReadonly();
+	}
 	if (typeof canExecute === "function") {
 		return computed(() => toState(canExecute()));
 	}
-	// guarded explicitly (not a fallthrough), so a reasons array never reaches `toSignal`
-	if (isObservable(canExecute)) {
-		const value = toSignal(canExecute, { initialValue: false, injector });
-		return computed(() => toState(value()));
-	}
-	return signal(toState(canExecute)).asReadonly();
+	const value = toSignal(canExecute, { initialValue: false, injector });
+	return computed(() => toState(value()));
+}
+
+/** `Array.isArray` as a guard which also narrows `readonly` arrays. */
+function isReasons(value: unknown): value is readonly CommandDisabledReason[] {
+	return Array.isArray(value);
 }
 
 /**

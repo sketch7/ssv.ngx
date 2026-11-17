@@ -11,7 +11,7 @@
 - **command:** `ICommand` requires `$disabledReasons: Signal<readonly CommandDisabledReason[]>` (hand-written `ICommand` implementations and test doubles must add it, e.g. `$disabledReasons: signal([])`)
 - **command:** remove the `disabledReasons` option of `command()` (never released as stable) - return reasons from `canExecute` instead
 - **command:** `CanExecute` is now `CanExecuteResult | (() => CanExecuteResult) | Observable<CanExecuteResult>` (the redundant `Signal<boolean>` member is removed; signals still work, since they are functions)
-- **command:** `Command` constructor is now `(execute, opts?: CommandConstructorOptions)` - the `canExecute`/`injector` positional params are removed; use `command()` to create instances
+- **command:** `Command` constructor no longer accepts `canExecute`/`injector` (positional params removed); create instances with `command()`
 
 ```ts
 // before
