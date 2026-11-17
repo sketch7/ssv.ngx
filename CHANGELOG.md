@@ -6,6 +6,10 @@
 - **command:** add `CommandDisabledReason` (`{ code, params? }`, a stable code plus interpolation params, translated by the UI) and `CanExecuteResult` types
 - **command:** command creator (`{ host, execute, canExecute }`) supports reasons, and a `canExecute` function/signal is now reactive (previously evaluated once)
 
+### Bug Fixes
+
+- **command:** `ssvCommand` follows a bound command swapped after init (previously the first command stayed bound); command creators are still read once
+
 ### BREAKING CHANGES
 
 - **command:** `ICommand` requires `$disabledReasons: Signal<readonly CommandDisabledReason[]>` (hand-written `ICommand` implementations and test doubles must add it, e.g. `$disabledReasons: signal([])`)

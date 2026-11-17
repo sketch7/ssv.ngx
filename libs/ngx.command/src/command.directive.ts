@@ -9,6 +9,7 @@ import {
 	input,
 	Injector,
 	computed,
+	linkedSignal,
 	signal,
 } from "@angular/core";
 
@@ -128,8 +129,15 @@ export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements O
 
 	readonly #creatorParams = signal<Parameters<ExtractExecuteFn<T>> | undefined>(undefined);
 
-	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-	readonly #command = signal<ICommand<ExtractExecuteFn<T>>>(undefined!);
+	// the input is read from ngOnInit on, so reading `command()` earlier (e.g. while the host is created) gives undefined, not NG0950
+	readonly #initialized = signal(false);
+	// a bound command follows the input, so it can be swapped; a creator's command is built once, in ngOnInit
+	readonly #command = linkedSignal({
+		source: () => this.#initialized() ? this.commandOrCreator() : undefined,
+		computation: (source, previous?: { value: ICommand<ExtractExecuteFn<T>> }) =>
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			isCommand<ICommand<ExtractExecuteFn<T>>>(source) ? source : previous ? previous.value : undefined!,
+	});
 	readonly command = this.#command.asReadonly();
 
 	constructor() {
@@ -143,10 +151,12 @@ export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements O
 
 	// todo: afterNextRender
 	ngOnInit(): void {
+		this.#initialized.set(true);
 		const commandOrCreator = this.commandOrCreator();
 		// console.log("[ssvCommand::init]", this.#options);
 		if (isCommand(commandOrCreator)) {
-			this.#command.set(commandOrCreator);
+			// followed by #command
+			return;
 		} else if (isCommandCreator(commandOrCreator)) {
 			this.#creatorParams.set(this.#normalizeParams(commandOrCreator.params as CommandParams<ExtractExecuteFn<T>>));
 

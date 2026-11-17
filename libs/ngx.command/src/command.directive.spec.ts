@@ -1,4 +1,4 @@
-import { Component, signal } from "@angular/core";
+import { Component, Directive, inject, signal } from "@angular/core";
 import { ComponentFixture, fakeAsync, TestBed } from "@angular/core/testing";
 import { By } from "@angular/platform-browser";
 import { BehaviorSubject, Observable, of, delay } from "rxjs";
@@ -105,6 +105,34 @@ class CommandCreatorReasonsHostComponent {
 
 	recruit = (hero: typeof this.hero): string => hero.name;
 	canRecruit = (hero: typeof this.hero) => this.banned() ? [{ code: "hero.banned", params: { name: hero.name } }] : true;
+}
+
+// Test host component whose bound command is swapped after init
+@Component({
+	imports: [SsvCommand],
+	template: `<button [ssvCommand]="cmd()" data-testid="swap-btn">Recruit</button>`,
+})
+class SwapHostComponent {
+	readonly recruitRexxar = vi.fn();
+	readonly recruitJaina = vi.fn();
+	readonly rexxarCmd = command(this.recruitRexxar);
+	readonly jainaCmd = command(this.recruitJaina);
+	readonly thrallCmd = command(vi.fn(), [{ code: "hero.banned" }]);
+	readonly cmd = signal(this.rexxarCmd);
+}
+
+// Reads the command while the element's directives are created, before inputs are set
+@Directive({ selector: "[earlyRead]" })
+class EarlyReadDirective {
+	readonly command = inject(SsvCommand).command();
+}
+
+@Component({
+	imports: [SsvCommand, EarlyReadDirective],
+	template: `<button [ssvCommand]="recruitCmd" earlyRead data-testid="early-btn">Recruit</button>`,
+})
+class EarlyReadHostComponent {
+	readonly recruitCmd = command(vi.fn());
 }
 
 describe("SsvCommand Directive", () => {
@@ -454,6 +482,56 @@ describe("SsvCommand Directive", () => {
 			component.isOpen.set(true);
 			fixture.detectChanges();
 			expect(button.disabled).toBe(false);
+		});
+	});
+
+	describe("when the bound command is swapped", () => {
+		let fixture: ComponentFixture<SwapHostComponent>;
+		let component: SwapHostComponent;
+		let directive: SsvCommand;
+		let buttonEl: HTMLButtonElement;
+
+		beforeEach(async () => {
+			await TestBed.configureTestingModule({
+				imports: [SwapHostComponent],
+			}).compileComponents();
+
+			fixture = TestBed.createComponent(SwapHostComponent);
+			component = fixture.componentInstance;
+			fixture.detectChanges();
+			const el = fixture.debugElement.query(By.css("[data-testid='swap-btn']"));
+			buttonEl = el.nativeElement;
+			directive = el.injector.get(SsvCommand);
+			component.cmd.set(component.thrallCmd);
+			fixture.detectChanges();
+		});
+
+		it("should expose the new command", () => {
+			expect(directive.command()).toBe(component.thrallCmd);
+		});
+
+		it("should follow the new command's canExecute", () => {
+			expect(buttonEl.disabled).toBe(true);
+		});
+
+		it("should execute the new command", () => {
+			component.cmd.set(component.jainaCmd);
+			fixture.detectChanges();
+			buttonEl.click();
+			expect(component.recruitJaina).toHaveBeenCalledTimes(1);
+			expect(component.recruitRexxar).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("when the command is read before init", () => {
+		it("should be undefined until ngOnInit", async () => {
+			await TestBed.configureTestingModule({ imports: [EarlyReadHostComponent] }).compileComponents();
+			const fixture = TestBed.createComponent(EarlyReadHostComponent);
+			fixture.detectChanges();
+			const el = fixture.debugElement.query(By.css("[data-testid='early-btn']"));
+
+			expect(el.injector.get(EarlyReadDirective).command).toBeUndefined();
+			expect(el.injector.get(SsvCommand).command()).toBe(fixture.componentInstance.recruitCmd);
 		});
 	});
 
