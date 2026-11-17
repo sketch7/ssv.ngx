@@ -1,14 +1,30 @@
 
 import { isObservable, lastValueFrom } from "rxjs";
 import { toSignal } from "@angular/core/rxjs-interop";
-import type { CanExecute, CommandDisabledReason, ExecuteFn, ExecuteReturnType, ICommand } from "./command.model";
-import { assertInInjectionContext, computed, inject, Injector, isSignal, signal, type Signal } from "@angular/core";
+import type { CanExecute, CanExecuteResult, CommandDisabledReason, ExecuteFn, ExecuteReturnType, ICommand } from "./command.model";
+import { assertInInjectionContext, computed, inject, Injector, signal, type Signal } from "@angular/core";
 
 export interface CommandCreateOptions {
+	/** Injector used when not in an injection context, e.g. for converting an observable `canExecute`. */
 	injector?: Injector;
-	/** Reasons why the command is disabled. While non-empty, the command cannot execute. */
-	disabledReasons?: Signal<readonly CommandDisabledReason[]> | (() => readonly CommandDisabledReason[]);
 }
+
+/** Normalised `canExecute`. */
+export interface CanExecuteState {
+	readonly canExecute: boolean;
+	readonly reasons: readonly CommandDisabledReason[];
+}
+
+/** Options for the {@link Command} constructor. Prefer {@link command}, which builds them. */
+export interface CommandConstructorOptions {
+	/** Normalised can execute state (defaults: can execute). */
+	readonly canExecute?: Signal<CanExecuteState>;
+}
+
+const NO_REASONS: readonly CommandDisabledReason[] = Object.freeze([]);
+const ENABLED: CanExecuteState = Object.freeze({ canExecute: true, reasons: NO_REASONS });
+const DISABLED: CanExecuteState = Object.freeze({ canExecute: false, reasons: NO_REASONS });
+const ENABLED_STATE = signal(ENABLED).asReadonly();
 
 // todo: remove
 /** Creates an async {@link Command}. Must be used within an injection context.
@@ -16,7 +32,11 @@ export interface CommandCreateOptions {
  */
 export const commandAsync = command;
 
-/** Creates a {@link Command}. Must be used within an injection context (or the injector must be provided in the options). */
+/** Creates a {@link Command}. Must be used within an injection context (or the injector must be provided in the options).
+ *
+ * `canExecute` results: `undefined`, `true` or `[]` can execute; `false` cannot (no reasons);
+ * a non-empty array of {@link CommandDisabledReason} cannot, and is exposed as `$disabledReasons`.
+ */
 export function command<TExecute extends ExecuteFn>(
 	execute: TExecute,
 	canExecute?: CanExecute,
@@ -26,8 +46,29 @@ export function command<TExecute extends ExecuteFn>(
 		assertInInjectionContext(command);
 	}
 	const injector = opts?.injector ?? inject(Injector);
-	const cmd = new Command(execute, canExecute, injector, opts?.disabledReasons);
-	return cmd;
+	return new Command(execute, { canExecute: toCanExecuteState(canExecute, injector) });
+}
+
+function toState(value: CanExecuteResult | undefined): CanExecuteState {
+	if (value === undefined || value === true) {
+		return ENABLED;
+	}
+	if (value === false) {
+		return DISABLED;
+	}
+	return value.length ? { canExecute: false, reasons: value } : ENABLED;
+}
+
+function toCanExecuteState(canExecute: CanExecute | undefined, injector: Injector): Signal<CanExecuteState> {
+	if (typeof canExecute === "function") {
+		return computed(() => toState(canExecute()));
+	}
+	// guarded explicitly (not a fallthrough), so a reasons array never reaches `toSignal`
+	if (isObservable(canExecute)) {
+		const value = toSignal(canExecute, { initialValue: false, injector });
+		return computed(() => toState(value()));
+	}
+	return signal(toState(canExecute)).asReadonly();
 }
 
 /**
@@ -40,28 +81,23 @@ export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand
 	get canExecute(): boolean { return this.$canExecute(); }
 
 	readonly $isExecuting = signal(false);
-	readonly $canExecute = computed(() => !this.$isExecuting() && this.#canExecute() && this.$disabledReasons().length === 0);
-	readonly $disabledReasons: Signal<readonly CommandDisabledReason[]>;
+	readonly $canExecute = computed(() => !this.$isExecuting() && this.#state().canExecute);
+	readonly $disabledReasons = computed(() => this.#state().reasons);
 
-	readonly #canExecute: Signal<boolean>;
+	readonly #state: Signal<CanExecuteState>;
 
 	/**
 	 * Creates an instance of Command.
 	 *
 	 * @param execute Execute function to invoke.
-	 * @param canExecute Observable which determines whether it can execute or not.
-	 * @param injector Injector used for converting an observable `canExecute`.
-	 * @param disabledReasons Reasons why the command is disabled, while non-empty it cannot execute.
-	 * @deprecated Use {@link command} or {@link commandAsync} instead for creating instances.
+	 * @param opts Normalised options, as built by {@link command}.
+	 * @deprecated Use {@link command} instead for creating instances.
 	 */
 	constructor(
 		private readonly _execute: TExecute,
-		canExecute?: CanExecute,
-		injector?: Injector,
-		disabledReasons?: CommandCreateOptions["disabledReasons"],
+		opts?: CommandConstructorOptions,
 	) {
-		this.$disabledReasons = computed(() => disabledReasons?.() ?? []);
-		this.#canExecute = this.#buildCanExecuteSignal(canExecute, injector);
+		this.#state = opts?.canExecute ?? ENABLED_STATE;
 	}
 
 	/** Execute function to invoke. Returns Promise if the execute function returns Observable, otherwise returns the original type. */
@@ -96,22 +132,6 @@ export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand
 			this.$isExecuting.set(false);
 			throw err;
 		}
-	}
-
-	#buildCanExecuteSignal(canExecute?: CanExecute, injector?: Injector): Signal<boolean> {
-		if (canExecute === undefined) {
-			return computed(() => true);
-		}
-		if (isSignal(canExecute)) {
-			return canExecute;
-		}
-		if (typeof canExecute === "function") {
-			return computed(canExecute);
-		}
-		if (typeof canExecute === "boolean") {
-			return computed(() => canExecute);
-		}
-		return toSignal(canExecute, { initialValue: false, injector });
 	}
 
 }

@@ -3,6 +3,7 @@ import { BehaviorSubject, EMPTY, of, throwError } from "rxjs";
 import { vi } from "vitest";
 
 import { command } from "./command";
+import type { CommandDisabledReason } from "./command.model";
 
 interface Hero {
 	name: string;
@@ -419,22 +420,78 @@ describe("CommandSpecs", () => {
 	});
 
 	describe("disabled reasons", () => {
-		it("exposes disabled reasons and blocks execution while any exist", () => {
-			const blocked = signal(true);
-			const cmd = command(() => 1, undefined, {
-				injector,
-				disabledReasons: () => blocked() ? [{ message: "Invoice is locked" }] : [],
+		const banned = { code: "hero.banned" } as const;
+		const notOwner = { code: "hero.notOwner", params: { owner: "Thrall" } } as const;
+
+		describe("given a constant canExecute result", () => {
+			const noReasons = command(() => 1, undefined, { injector }).$disabledReasons();
+
+			it.each([
+				["undefined", undefined],
+				["true", true],
+				["[]", []],
+				["() => []", () => []],
+			] as const)("should be enabled with the shared frozen empty reasons for %s", (_, canExecute) => {
+				const cmd = command(() => 1, canExecute, { injector });
+				expect(cmd.$canExecute()).toBe(true);
+				expect(cmd.$disabledReasons()).toBe(noReasons);
+				expect(Object.isFrozen(cmd.$disabledReasons())).toBe(true);
 			});
-			expect(cmd.$disabledReasons()).toEqual([{ message: "Invoice is locked" }]);
-			expect(cmd.$canExecute()).toBe(false);
-			blocked.set(false);
-			expect(cmd.$disabledReasons()).toEqual([]);
-			expect(cmd.$canExecute()).toBe(true);
+
+			it("should be disabled without reasons for false", () => {
+				const cmd = command(() => 1, false, { injector });
+				expect(cmd.$canExecute()).toBe(false);
+				expect(cmd.$disabledReasons()).toBe(noReasons);
+			});
+
+			it("should be disabled with exactly the given reasons for a non-empty array", () => {
+				const reasons = [banned, notOwner];
+				const cmd = command(() => 1, reasons, { injector });
+				expect(cmd.$canExecute()).toBe(false);
+				expect(cmd.$disabledReasons()).toBe(reasons);
+			});
 		});
 
-		it("has no reasons by default", () => {
-			const cmd = command(() => 1, undefined, { injector });
-			expect(cmd.$disabledReasons()).toEqual([]);
+		describe("given a function reading a signal", () => {
+			const isBanned = signal(true);
+			const cmd = command(() => 1, () => isBanned() ? [banned] : true, { injector });
+
+			it("should be disabled with the reasons while it returns some", () => {
+				isBanned.set(true);
+				expect(cmd.$canExecute()).toBe(false);
+				expect(cmd.$disabledReasons()).toEqual([banned]);
+				expect(() => cmd.execute()).toThrow();
+			});
+
+			it("should become enabled with no reasons when it returns true", () => {
+				isBanned.set(false);
+				expect(cmd.$canExecute()).toBe(true);
+				expect(cmd.$disabledReasons()).toEqual([]);
+			});
+		});
+
+		describe("given an observable of reasons", () => {
+			it("should follow its emissions", () => {
+				const canExecute$ = new BehaviorSubject<boolean | readonly CommandDisabledReason[]>([notOwner]);
+				const cmd = command(() => 1, canExecute$, { injector });
+				expect(cmd.$canExecute()).toBe(false);
+				expect(cmd.$disabledReasons()).toEqual([notOwner]);
+
+				canExecute$.next(true);
+				expect(cmd.$canExecute()).toBe(true);
+				expect(cmd.$disabledReasons()).toEqual([]);
+			});
+		});
+
+		describe("when executing", () => {
+			it("should not be able to execute, without adding a reason", async () => {
+				const cmd = command(() => Promise.resolve(), true, { injector });
+				const result = cmd.execute();
+				expect(cmd.$canExecute()).toBe(false);
+				expect(cmd.$disabledReasons()).toEqual([]);
+				await result;
+				expect(cmd.$canExecute()).toBe(true);
+			});
 		});
 	});
 });

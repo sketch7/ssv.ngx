@@ -428,4 +428,40 @@
 			</mat-card-content>
 		</mat-card>
 	}
+	@if (true) {
+		<mat-card>
+			<mat-card-title>Disabled reasons</mat-card-title>
+			<mat-card-content>
+				<div
+					class="btn-group"
+					role="group">
+					<button
+						mat-flat-button
+						(click)="$isBanned.update(x => !x)">
+						{{ $isBanned() ? "Unban" : "Ban" }} hero
+					</button>
+				</div>
+				<div class="form-group">
+					<small>
+						<span class="type variable">$disabledReasons</span>
+						<span class="type value">{{ recruitCmd.$disabledReasons() | json }}</span>
+					</small>
+				</div>
+			</mat-card-content>
+			<mat-card-actions>
+				<button
+					mat-raised-button
+					color="primary"
+					[ssvCommand]="recruitCmd">
+					Recruit
+				</button>
+				<button
+					mat-raised-button
+					[ssvCommand]="{ host: this, execute: recruitHero$, canExecute: canRecruitHero, params: [heroes[0]] }"
+					title="command creator canExecute returning reasons">
+					Recruit {{ heroes[0].name }}
+				</button>
+			</mat-card-actions>
+		</mat-card>
+	}
 </div>

@@ -49,6 +49,7 @@ saveCmd = command(() => this.save(), () => isValid()); // reactive fn (signal)
 saveCmd = command(() => this.save(), isValid); // signal
 saveCmd = command(() => this.save(), isValid$); // rx
 saveCmd = command(() => this.save(), false); // boolean (perma disabled)
+saveCmd = command(() => this.save(), () => isBanned() ? [{ code: "hero.banned" }] : true); // with reasons, see below
 ```
 
 ## Command Attribute (Directive)
@@ -110,13 +111,31 @@ canRemoveHero$(hero: Hero, id: number, param2): Observable<boolean> {
 ```
 
 ## Disabled reasons
-`command()` accepts `disabledReasons` (a signal or function returning `{ message }[]`). While any exist, `$canExecute` is false and `$disabledReasons()` exposes them, e.g. to show why a button is disabled.
+`canExecute` can return *why* a command cannot execute: instead of `false`, return an array of
+`CommandDisabledReason` (`{ code, params? }`). `$disabledReasons()` exposes them, e.g. to explain a disabled button.
+
+A reason carries a stable `code` (e.g. `"hero.banned"`), plus optional interpolation `params`, and no display text;
+translate it in the UI layer (e.g. `code` as the translation key).
 
 ```ts
-saveCmd = command(() => this.save(), undefined, {
-  disabledReasons: () => this.locked() ? [{ message: "Invoice is locked" }] : [],
-});
+readonly recruitCmd = command(() => this.#party.recruit(this.hero()), () =>
+  this.hero().banned ? [{ code: "hero.banned" }]
+  : this.party().length >= 4 ? [{ code: "party.full", params: { max: 4 } }]
+  : true);
+
+recruitCmd.$canExecute(); // false
+recruitCmd.$disabledReasons(); // [{ code: "hero.banned" }]
 ```
+
+| `canExecute` result | `$canExecute` | `$disabledReasons` |
+| ------------------- | ------------- | ------------------ |
+| `undefined`, `true`, `[]` | `true` | `[]` (shared, frozen) |
+| `false` | `false` | `[]` |
+| `[{ code: "hero.banned" }]` | `false` | `[{ code: "hero.banned" }]` |
+
+It applies to all `canExecute` forms (value, function/signal, observable) and to the command creator
+(`{ host, execute, canExecute }`), including `canExecute(...params)`.
+While executing, `$canExecute` is `false` but `$disabledReasons` is unaffected (executing is not a reason).
 
 ## Usage without Attribute
 It can also be used as below without the command attribute.

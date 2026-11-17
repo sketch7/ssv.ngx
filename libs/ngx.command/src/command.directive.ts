@@ -12,10 +12,12 @@ import {
 	signal,
 } from "@angular/core";
 
+import { isObservable } from "rxjs";
+
 import { type CommandOptions, COMMAND_OPTIONS } from "./command.options";
 import { command, type Command } from "./command";
 import { isCommand, isCommandCreator } from "./command.util";
-import { CommandCreator, type ICommand, type CanExecute, type ExecuteFn, type CommandParams, type Simplify } from "./command.model";
+import { CommandCreator, type ICommand, type CanExecute, type CanExecuteResult, type ExecuteFn, type CommandParams, type Simplify } from "./command.model";
 
 /** Helper type to extract ExecuteFn from ICommand/Command or use ExecuteFn directly */
 type ExtractExecuteFn<T> = T extends Command<infer TExec>
@@ -155,10 +157,14 @@ export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements O
 			const params = this.commandParams();
 
 			let canExec: CanExecute | undefined;
-			if (commandOrCreator.canExecute instanceof Function) {
-				const boundFn = commandOrCreator.canExecute.bind(commandOrCreator.host);
-				const result = Array.isArray(params) ? boundFn(...params) : boundFn();
-				canExec = result as CanExecute;
+			if (typeof commandOrCreator.canExecute === "function") {
+				const boundFn = commandOrCreator.canExecute.bind(commandOrCreator.host) as (...args: unknown[]) => CanExecute;
+				const args: unknown[] = Array.isArray(params) ? params : [];
+				const result = boundFn(...args);
+				// a boolean/reasons result is re-evaluated reactively (signals read inside are tracked), same as `command(fn, () => ...)`
+				canExec = isObservable(result) || typeof result === "function"
+					? result
+					: () => boundFn(...args) as CanExecuteResult;
 			} else {
 				canExec = commandOrCreator.canExecute;
 			}

@@ -82,6 +82,31 @@ class CommandCreatorHostComponent {
 	};
 }
 
+// Test host component with command creator whose canExecute reads signals and returns reasons
+@Component({
+	imports: [SsvCommand],
+	template: `
+		<button
+			[ssvCommand]="{host: this, execute: recruit, canExecute: canRecruit, params: hero}"
+			data-testid="recruit-btn">
+			Recruit
+		</button>
+		<button
+			[ssvCommand]="{host: this, execute: recruit, canExecute: isOpen, params: hero}"
+			data-testid="recruit-signal-btn">
+			Recruit
+		</button>
+	`,
+})
+class CommandCreatorReasonsHostComponent {
+	readonly hero = { name: "Rexxar" };
+	readonly banned = signal(true);
+	readonly isOpen = signal(false);
+
+	recruit = (hero: typeof this.hero): string => hero.name;
+	canRecruit = (hero: typeof this.hero) => this.banned() ? [{ code: "hero.banned", params: { name: hero.name } }] : true;
+}
+
 describe("SsvCommand Directive", () => {
 
 	describe("on button element", () => {
@@ -388,6 +413,47 @@ describe("SsvCommand Directive", () => {
 				fixture.detectChanges();
 				expect(buttonEl.disabled).toBe(false);
 			});
+		});
+	});
+
+	describe("with command creator returning reasons", () => {
+		let fixture: ComponentFixture<CommandCreatorReasonsHostComponent>;
+		let component: CommandCreatorReasonsHostComponent;
+		const query = (testId: string) => {
+			const el = fixture.debugElement.query(By.css(`[data-testid='${testId}']`));
+			return { button: el.nativeElement as HTMLButtonElement, directive: el.injector.get<SsvCommand>(SsvCommand) };
+		};
+
+		beforeEach(async () => {
+			await TestBed.configureTestingModule({
+				imports: [CommandCreatorReasonsHostComponent],
+			}).compileComponents();
+
+			fixture = TestBed.createComponent(CommandCreatorReasonsHostComponent);
+			component = fixture.componentInstance;
+			fixture.detectChanges();
+		});
+
+		it("should be disabled with the reasons from a canExecute(...params) function", () => {
+			const { button, directive } = query("recruit-btn");
+			expect(button.disabled).toBe(true);
+			expect(directive.command().$disabledReasons()).toEqual([{ code: "hero.banned", params: { name: "Rexxar" } }]);
+		});
+
+		it("should re-evaluate a canExecute(...params) function when its signals change", () => {
+			const { button, directive } = query("recruit-btn");
+			component.banned.set(false);
+			fixture.detectChanges();
+			expect(button.disabled).toBe(false);
+			expect(directive.command().$disabledReasons()).toEqual([]);
+		});
+
+		it("should follow a signal canExecute", () => {
+			const { button } = query("recruit-signal-btn");
+			expect(button.disabled).toBe(true);
+			component.isOpen.set(true);
+			fixture.detectChanges();
+			expect(button.disabled).toBe(false);
 		});
 	});
 

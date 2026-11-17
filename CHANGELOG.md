@@ -1,3 +1,31 @@
+## Unreleased
+
+### Features
+
+- **command:** `canExecute` can return disabled reasons: `CanExecuteResult = boolean | readonly CommandDisabledReason[]`, exposed as `$disabledReasons`
+- **command:** add `CommandDisabledReason` (`{ code, params? }`, a stable code plus interpolation params, translated by the UI) and `CanExecuteResult` types
+- **command:** command creator (`{ host, execute, canExecute }`) supports reasons, and a `canExecute` function/signal is now reactive (previously evaluated once)
+
+### BREAKING CHANGES
+
+- **command:** `ICommand` requires `$disabledReasons: Signal<readonly CommandDisabledReason[]>` (hand-written `ICommand` implementations and test doubles must add it, e.g. `$disabledReasons: signal([])`)
+- **command:** remove the `disabledReasons` option of `command()` (never released as stable) - return reasons from `canExecute` instead
+- **command:** `CanExecute` is now `CanExecuteResult | (() => CanExecuteResult) | Observable<CanExecuteResult>` (the redundant `Signal<boolean>` member is removed; signals still work, since they are functions)
+- **command:** `Command` constructor is now `(execute, opts?: CommandConstructorOptions)` - the `canExecute`/`injector` positional params are removed; use `command()` to create instances
+
+```ts
+// before
+const recruitCmd = command(() => recruit(), undefined, {
+  disabledReasons: () => hero().banned ? [{ message: "Hero is banned" }] : [],
+});
+new Command(execute, canExecute$, injector);
+
+// after
+const recruitCmd = command(() => recruit(), () => hero().banned ? [{ code: "hero.banned" }] : true);
+recruitCmd.$disabledReasons(); // [{ code: "hero.banned" }]
+command(execute, canExecute$, { injector });
+```
+
 ## 5.0.0 (2026-03-11)
 
 ### Features

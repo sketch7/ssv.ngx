@@ -89,6 +89,7 @@ readonly saveCmd = command(() => this.save$(), canExecuteFromSignals({ valid: fo
 ```typescript
 cmd.$isExecuting(); // Signal<boolean>
 cmd.$canExecute(); // Signal<boolean>
+cmd.$disabledReasons(); // Signal<readonly CommandDisabledReason[]>, from canExecute returning e.g. [{ code: "hero.banned" }]
 cmd.isExecuting; // boolean (deprecated - use signals)
 cmd.canExecute; // boolean (deprecated - use signals)
 

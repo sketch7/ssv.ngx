@@ -110,7 +110,8 @@ This repo is the reference implementation of the pattern used across Sketch7 app
   (`Promise`/`Observable`) execute functions transparently.
 - State is signals: `$isExecuting`, `$canExecute`. The plain `isExecuting`/`canExecute` getters still
   exist but are `@deprecated` — new code reads the `$`-prefixed signals.
-- `canExecute` accepts a `Signal`, `Observable`, plain function, or `boolean`;
+- `canExecute` accepts a `boolean` or reasons array (`CanExecuteResult`), a function/signal returning one, or an
+  `Observable` of one; reasons (`{ code, params? }`) are exposed as `$disabledReasons` (translated by the UI, not here);
   `canExecuteFromNgForm()` / `canExecuteFromSignals()` adapt forms.
 - `SsvCommand` (`[ssvCommand]`) / `SsvCommandRef` directives wire a command to a control, with
   `[ssvCommandParams]` for arguments — a single array argument must be double-wrapped (`[[arr]]`) or it
