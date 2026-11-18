@@ -63,9 +63,19 @@ describe("canExecuteFromSignals", () => {
 });
 
 describe("Command", () => {
-	it("has no snapshot getters", () => {
-		expectTypeOf<Command>().not.toHaveProperty("isExecuting");
-		expectTypeOf<Command>().not.toHaveProperty("canExecute");
+	// guards the 6.0 rename: the old 5.x boolean getter names are now signals, so a missed `()` compiles and is always truthy
+	it("exposes isExecuting, canExecute and disabledReasons as signals, not booleans", () => {
+		expectTypeOf<Command["isExecuting"]>().toEqualTypeOf<Signal<boolean>>();
+		expectTypeOf<Command["canExecute"]>().toEqualTypeOf<Signal<boolean>>();
+		expectTypeOf<Command["disabledReasons"]>().toEqualTypeOf<Signal<readonly CommandDisabledReason[]>>();
+		expectTypeOf<Command["isExecuting"]>().not.toEqualTypeOf<boolean>();
+		expectTypeOf<Command["canExecute"]>().not.toEqualTypeOf<boolean>();
+	});
+
+	it("has no $-prefixed signals", () => {
+		expectTypeOf<Command>().not.toHaveProperty("$isExecuting");
+		expectTypeOf<Command>().not.toHaveProperty("$canExecute");
+		expectTypeOf<Command>().not.toHaveProperty("$disabledReasons");
 	});
 
 	it("is the only command type: ICommand is removed", () => {

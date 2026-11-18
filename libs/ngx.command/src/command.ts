@@ -11,18 +11,18 @@ export interface CommandCreateOptions {
 
 /** Normalised `canExecute`. @internal */
 export interface CanExecuteState {
-	readonly canExecute: boolean;
+	readonly enabled: boolean;
 	readonly reasons: readonly CommandDisabledReason[];
 }
 
 const NO_REASONS: readonly CommandDisabledReason[] = Object.freeze([]);
-const ENABLED: CanExecuteState = Object.freeze({ canExecute: true, reasons: NO_REASONS });
-const DISABLED: CanExecuteState = Object.freeze({ canExecute: false, reasons: NO_REASONS });
+const ENABLED: CanExecuteState = Object.freeze({ enabled: true, reasons: NO_REASONS });
+const DISABLED: CanExecuteState = Object.freeze({ enabled: false, reasons: NO_REASONS });
 
 /** Creates a {@link Command}. Must be used within an injection context (or the injector must be provided in the options).
  *
  * `canExecute` results: `undefined`, `true` or `[]` can execute; `false` cannot (no reasons);
- * a non-empty array of {@link CommandDisabledReason} cannot, and is exposed as `$disabledReasons`.
+ * a non-empty array of {@link CommandDisabledReason} cannot, and is exposed as `disabledReasons`.
  */
 export function command<TExecute extends ExecuteFn>(
 	execute: TExecute,
@@ -43,7 +43,7 @@ function toState(value: CanExecuteResult | undefined): CanExecuteState {
 	if (value === false) {
 		return DISABLED;
 	}
-	return value.length ? { canExecute: false, reasons: value } : ENABLED;
+	return value.length ? { enabled: false, reasons: value } : ENABLED;
 }
 
 function toCanExecuteState(canExecute: CanExecute | undefined, injector: Injector): Signal<CanExecuteState> {
@@ -66,9 +66,9 @@ function isReasons(value: unknown): value is readonly CommandDisabledReason[] {
 /** The {@link Command} implementation, created only by {@link command}. @internal */
 export class CommandImpl<TExecute extends ExecuteFn = ExecuteFn> implements Command<TExecute> {
 
-	readonly $isExecuting = signal(false);
-	readonly $canExecute = computed(() => !this.$isExecuting() && this.#state().canExecute);
-	readonly $disabledReasons = computed(() => this.#state().reasons);
+	readonly isExecuting = signal(false);
+	readonly canExecute = computed(() => !this.isExecuting() && this.#state().enabled);
+	readonly disabledReasons = computed(() => this.#state().reasons);
 
 	readonly #state: Signal<CanExecuteState>;
 
@@ -81,10 +81,10 @@ export class CommandImpl<TExecute extends ExecuteFn = ExecuteFn> implements Comm
 
 	/** Execute function to invoke. Returns Promise if the execute function returns Observable, otherwise returns the original type. */
 	execute(...args: Parameters<TExecute>): ExecuteReturnType<TExecute> {
-		if (!this.$canExecute()) {
+		if (!this.canExecute()) {
 			throw new Error("Command cannot execute in its current state.");
 		}
-		this.$isExecuting.set(true);
+		this.isExecuting.set(true);
 
 		try {
 			const result = args.length > 0 ? this._execute(...args) : this._execute();
@@ -94,18 +94,18 @@ export class CommandImpl<TExecute extends ExecuteFn = ExecuteFn> implements Comm
 				// This ensures fire-and-forget execution without requiring manual subscription
 				// Use defaultValue to handle empty observables (those that complete without emitting)
 				const promise = lastValueFrom(result, { defaultValue: undefined })
-					.finally(() => this.$isExecuting.set(false));
+					.finally(() => this.isExecuting.set(false));
 				return promise as ExecuteReturnType<TExecute>;
 			} else if (result instanceof Promise) {
 				// Return promise with proper cleanup
 				return result
-					.finally(() => this.$isExecuting.set(false)) as ExecuteReturnType<TExecute>;
+					.finally(() => this.isExecuting.set(false)) as ExecuteReturnType<TExecute>;
 			}
 			// Sync execution
-			this.$isExecuting.set(false);
+			this.isExecuting.set(false);
 			return result as ExecuteReturnType<TExecute>;
 		} catch (err) {
-			this.$isExecuting.set(false);
+			this.isExecuting.set(false);
 			throw err;
 		}
 	}

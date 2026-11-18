@@ -121,7 +121,7 @@ export class SsvCommand<T extends Command | ExecuteFn = ExecuteFn> implements On
 		return this.#normalizeParams(params as CommandParams<ExtractExecuteFn<T>>);
 	});
 	readonly _hostClasses = computed(() => ["ssv-command", this.#executingClass()]);
-	readonly #executingClass = computed(() => this.#command()?.$isExecuting() ? this.commandOptions().executingCssClass : "");
+	readonly #executingClass = computed(() => this.#command()?.isExecuting() ? this.commandOptions().executingCssClass : "");
 
 	readonly #creatorParams = signal<Parameters<ExtractExecuteFn<T>> | undefined>(undefined);
 
@@ -142,7 +142,7 @@ export class SsvCommand<T extends Command | ExecuteFn = ExecuteFn> implements On
 			if (!this.#initialized()) {
 				return;
 			}
-			this.trySetDisabled(!(this.#command()?.$canExecute() ?? false));
+			this.trySetDisabled(!(this.#command()?.canExecute() ?? false));
 			this.#cdr.markForCheck();
 		});
 	}

@@ -66,15 +66,15 @@ export type CommandInput<TArgs = unknown, R = unknown> =
  */
 export interface Command<TExecute extends ExecuteFn = ExecuteFn> {
 	/** Determines whether the command is currently executing, as a signal. */
-	readonly $isExecuting: Signal<boolean>;
+	readonly isExecuting: Signal<boolean>;
 
 	/** Determines whether the command can execute or not, as a signal. */
-	readonly $canExecute: Signal<boolean>;
+	readonly canExecute: Signal<boolean>;
 
 	/** Why the command cannot execute, as returned by `canExecute`. Empty when it can, or when no reason was given.
-	 * Executing is not a reason: while executing `$canExecute` is false but this is unaffected.
+	 * Executing is not a reason: while executing `canExecute()` is false but this is unaffected.
 	 */
-	readonly $disabledReasons: Signal<readonly CommandDisabledReason[]>;
+	readonly disabledReasons: Signal<readonly CommandDisabledReason[]>;
 
 	/** Execute function to invoke. Returns Promise if the execute function returns Observable, otherwise returns the original type. */
 	execute(...args: Parameters<TExecute>): ExecuteReturnType<TExecute>;

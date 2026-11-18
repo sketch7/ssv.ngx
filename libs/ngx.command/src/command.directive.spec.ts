@@ -214,7 +214,7 @@ describe("SsvCommand Directive", () => {
 			});
 
 			it("should have isExecuting set to true", () => {
-				expect(component.saveCmd.$isExecuting()).toBe(true);
+				expect(component.saveCmd.isExecuting()).toBe(true);
 			});
 
 			it("should disable the button during execution", () => {
@@ -227,7 +227,7 @@ describe("SsvCommand Directive", () => {
 				buttonEl.click();
 				fixture.detectChanges();
 				await vi.waitFor(() => {
-					expect(component.saveCmd.$isExecuting()).toBe(false);
+					expect(component.saveCmd.isExecuting()).toBe(false);
 				}, { timeout: 200 });
 				fixture.detectChanges();
 				expect(buttonEl.classList.contains("executing")).toBe(false);
@@ -237,7 +237,7 @@ describe("SsvCommand Directive", () => {
 				buttonEl.click();
 				fixture.detectChanges();
 				await vi.waitFor(() => {
-					expect(component.saveCmd.$isExecuting()).toBe(false);
+					expect(component.saveCmd.isExecuting()).toBe(false);
 				}, { timeout: 200 });
 			});
 
@@ -245,7 +245,7 @@ describe("SsvCommand Directive", () => {
 				buttonEl.click();
 				fixture.detectChanges();
 				await vi.waitFor(() => {
-					expect(component.saveCmd.$isExecuting()).toBe(false);
+					expect(component.saveCmd.isExecuting()).toBe(false);
 				}, { timeout: 200 });
 				fixture.detectChanges();
 				expect(buttonEl.disabled).toBe(false);
@@ -301,7 +301,7 @@ describe("SsvCommand Directive", () => {
 			});
 
 			it("should have isExecuting set to true", () => {
-				expect(component.actionCmd.$isExecuting()).toBe(true);
+				expect(component.actionCmd.isExecuting()).toBe(true);
 			});
 		});
 
@@ -310,7 +310,7 @@ describe("SsvCommand Directive", () => {
 				divEl.click();
 				fixture.detectChanges();
 				await vi.waitFor(() => {
-					expect(component.actionCmd.$isExecuting()).toBe(false);
+					expect(component.actionCmd.isExecuting()).toBe(false);
 				}, { timeout: 200 });
 				fixture.detectChanges();
 				expect(divEl.classList.contains("executing")).toBe(false);
@@ -320,7 +320,7 @@ describe("SsvCommand Directive", () => {
 				divEl.click();
 				fixture.detectChanges();
 				await vi.waitFor(() => {
-					expect(component.actionCmd.$isExecuting()).toBe(false);
+					expect(component.actionCmd.isExecuting()).toBe(false);
 				}, { timeout: 200 });
 			});
 		});
@@ -408,7 +408,7 @@ describe("SsvCommand Directive", () => {
 				buttonEl.click();
 				fixture.detectChanges();
 				await vi.waitFor(() => {
-					expect(directiveInstance.command()?.$isExecuting()).toBe(false);
+					expect(directiveInstance.command()?.isExecuting()).toBe(false);
 				}, { timeout: 150 });
 				fixture.detectChanges();
 			});
@@ -438,7 +438,7 @@ describe("SsvCommand Directive", () => {
 				buttonEl.click();
 				fixture.detectChanges();
 				await vi.waitFor(() => {
-					expect(directiveInstance.command()?.$isExecuting()).toBe(false);
+					expect(directiveInstance.command()?.isExecuting()).toBe(false);
 				}, { timeout: 150 });
 				fixture.detectChanges();
 				expect(buttonEl.classList.contains("executing")).toBe(false);
@@ -448,7 +448,7 @@ describe("SsvCommand Directive", () => {
 				buttonEl.click();
 				fixture.detectChanges();
 				await vi.waitFor(() => {
-					expect(directiveInstance.command()?.$isExecuting()).toBe(false);
+					expect(directiveInstance.command()?.isExecuting()).toBe(false);
 				}, { timeout: 150 });
 				fixture.detectChanges();
 				expect(buttonEl.disabled).toBe(false);
@@ -477,7 +477,7 @@ describe("SsvCommand Directive", () => {
 		it("should be disabled with the reasons from a canExecute(...params) function", () => {
 			const { button, directive } = query("recruit-btn");
 			expect(button.disabled).toBe(true);
-			expect(directive.command()?.$disabledReasons()).toEqual([{ code: "hero.banned", params: { name: "Rexxar" } }]);
+			expect(directive.command()?.disabledReasons()).toEqual([{ code: "hero.banned", params: { name: "Rexxar" } }]);
 		});
 
 		it("should re-evaluate a canExecute(...params) function when its signals change", () => {
@@ -485,7 +485,7 @@ describe("SsvCommand Directive", () => {
 			component.banned.set(false);
 			fixture.detectChanges();
 			expect(button.disabled).toBe(false);
-			expect(directive.command()?.$disabledReasons()).toEqual([]);
+			expect(directive.command()?.disabledReasons()).toEqual([]);
 		});
 
 		it("should follow a signal canExecute", () => {
