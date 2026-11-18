@@ -6,7 +6,7 @@ import { vi } from "vitest";
 
 import { SsvCommand } from "./command.directive";
 import { command } from "./command";
-import type { ICommand } from "./command.model";
+import type { Command } from "./command.model";
 
 // Test host component for button element
 @Component({
@@ -130,7 +130,7 @@ class SwapHostComponent {
 class PendingHostComponent {
 	readonly recruit = vi.fn();
 	readonly recruitCmd = command(this.recruit);
-	readonly cmd = signal<ICommand | undefined>(undefined);
+	readonly cmd = signal<Command | undefined>(undefined);
 }
 
 // Reads the command while the element's directives are created, before inputs are set

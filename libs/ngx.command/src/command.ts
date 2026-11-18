@@ -1,7 +1,7 @@
 
 import { isObservable, lastValueFrom } from "rxjs";
 import { toSignal } from "@angular/core/rxjs-interop";
-import type { CanExecute, CanExecuteResult, CommandDisabledReason, ExecuteFn, ExecuteReturnType, ICommand } from "./command.model";
+import type { CanExecute, CanExecuteResult, CommandDisabledReason, ExecuteFn, ExecuteReturnType, Command } from "./command.model";
 import { assertInInjectionContext, computed, inject, Injector, signal, type Signal } from "@angular/core";
 
 export interface CommandCreateOptions {
@@ -18,12 +18,6 @@ export interface CanExecuteState {
 const NO_REASONS: readonly CommandDisabledReason[] = Object.freeze([]);
 const ENABLED: CanExecuteState = Object.freeze({ canExecute: true, reasons: NO_REASONS });
 const DISABLED: CanExecuteState = Object.freeze({ canExecute: false, reasons: NO_REASONS });
-
-/**
- * Command object used to encapsulate information which is needed to perform an action.
- * Create one with {@link command}.
- */
-export type Command<TExecute extends ExecuteFn = ExecuteFn> = ICommand<TExecute>;
 
 /** Creates a {@link Command}. Must be used within an injection context (or the injector must be provided in the options).
  *
@@ -70,7 +64,7 @@ function isReasons(value: unknown): value is readonly CommandDisabledReason[] {
 }
 
 /** The {@link Command} implementation, created only by {@link command}. @internal */
-export class CommandImpl<TExecute extends ExecuteFn = ExecuteFn> implements ICommand<TExecute> {
+export class CommandImpl<TExecute extends ExecuteFn = ExecuteFn> implements Command<TExecute> {
 
 	readonly $isExecuting = signal(false);
 	readonly $canExecute = computed(() => !this.$isExecuting() && this.#state().canExecute);

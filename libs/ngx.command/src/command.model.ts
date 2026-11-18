@@ -1,8 +1,6 @@
 import type { Observable } from "rxjs";
 import type { Signal } from "@angular/core";
 
-import type { Command } from "./command";
-
 export type Simplify<T> = { [KeyType in keyof T]: T[KeyType] } & {};
 
 /** Type that represents a sync or async value. */
@@ -62,7 +60,11 @@ export type CommandInput<TArgs = unknown, R = unknown> =
 	? Command<(arg: Single) => R>
 	: Command<(arg: TArgs) => R>;  // Single non-array type
 
-export interface ICommand<TExecute extends ExecuteFn = ExecuteFn> {
+/**
+ * Command object used to encapsulate information which is needed to perform an action.
+ * Create one with `command()`.
+ */
+export interface Command<TExecute extends ExecuteFn = ExecuteFn> {
 	/** Determines whether the command is currently executing, as a signal. */
 	readonly $isExecuting: Signal<boolean>;
 

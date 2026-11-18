@@ -3,7 +3,8 @@ import { FormControl } from "@angular/forms";
 import { type Observable, of } from "rxjs";
 import { expectTypeOf } from "vitest";
 
-import type { CanExecute, CanExecuteResult, CommandCreator, CommandDisabledReason, ICommand } from "./command.model";
+import type { CanExecute, CanExecuteResult, CommandCreator, CommandDisabledReason } from "./command.model";
+import type * as api from "./index";
 import type { Command } from "./index";
 import type { SsvCommand } from "./command.directive";
 import type { SsvCommandRef } from "./command-ref.directive";
@@ -63,10 +64,13 @@ describe("canExecuteFromSignals", () => {
 
 describe("Command", () => {
 	it("has no snapshot getters", () => {
-		expectTypeOf<ICommand>().not.toHaveProperty("isExecuting");
-		expectTypeOf<ICommand>().not.toHaveProperty("canExecute");
 		expectTypeOf<Command>().not.toHaveProperty("isExecuting");
 		expectTypeOf<Command>().not.toHaveProperty("canExecute");
+	});
+
+	it("is the only command type: ICommand is removed", () => {
+		// @ts-expect-error `ICommand` is removed, use `Command`
+		expectTypeOf<api.ICommand>().toBeNever();
 	});
 
 	it("is a type: only command() creates instances", () => {
@@ -77,12 +81,12 @@ describe("Command", () => {
 
 describe("SsvCommand", () => {
 	it("types command as possibly undefined (it is until ngOnInit)", () => {
-		expectTypeOf<SsvCommand["command"]>().toEqualTypeOf<Signal<ICommand | undefined>>();
+		expectTypeOf<SsvCommand["command"]>().toEqualTypeOf<Signal<Command | undefined>>();
 	});
 });
 
 describe("SsvCommandRef", () => {
 	it("types command as possibly undefined (it is until ngOnInit)", () => {
-		expectTypeOf<SsvCommandRef["command"]>().toEqualTypeOf<Signal<ICommand | undefined>>();
+		expectTypeOf<SsvCommandRef["command"]>().toEqualTypeOf<Signal<Command | undefined>>();
 	});
 });

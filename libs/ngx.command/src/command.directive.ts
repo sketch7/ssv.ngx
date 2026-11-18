@@ -18,10 +18,10 @@ import { isObservable } from "rxjs";
 import { type CommandOptions, COMMAND_OPTIONS } from "./command.options";
 import { command } from "./command";
 import { isCommand, isCommandCreator } from "./command.util";
-import { CommandCreator, type ICommand, type CanExecute, type CanExecuteResult, type ExecuteFn, type CommandParams, type Simplify } from "./command.model";
+import { CommandCreator, type Command, type CanExecute, type CanExecuteResult, type ExecuteFn, type CommandParams, type Simplify } from "./command.model";
 
-/** Helper type to extract ExecuteFn from ICommand or use ExecuteFn directly */
-type ExtractExecuteFn<T> = T extends ICommand<infer TExec>
+/** Helper type to extract ExecuteFn from Command or use ExecuteFn directly */
+type ExtractExecuteFn<T> = T extends Command<infer TExec>
 	? TExec
 	: T extends ExecuteFn
 	? T
@@ -88,7 +88,7 @@ const NAME_CAMEL = "ssvCommand";
 	exportAs: NAME_CAMEL,
 	standalone: true,
 })
-export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements OnInit {
+export class SsvCommand<T extends Command | ExecuteFn = ExecuteFn> implements OnInit {
 
 	readonly #options = inject(COMMAND_OPTIONS);
 	readonly #renderer = inject(Renderer2);
@@ -97,7 +97,7 @@ export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements O
 	readonly #injector = inject(Injector);
 
 	/** The command, or a command creator; `undefined` is "no command yet": not executable, and a click does nothing. */
-	readonly commandOrCreator = input.required<(T extends ICommand ? T : (ICommand<ExtractExecuteFn<T>> | CommandCreator<ExtractExecuteFn<T>>)) | undefined>({
+	readonly commandOrCreator = input.required<(T extends Command ? T : (Command<ExtractExecuteFn<T>> | CommandCreator<ExtractExecuteFn<T>>)) | undefined>({
 		alias: `ssvCommand`
 	});
 	readonly ssvCommandOptions = input<Partial<CommandOptions>>(this.#options);
@@ -128,9 +128,9 @@ export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements O
 	// the input is read from ngOnInit on, so reading `command()` earlier (e.g. while the host is created) gives undefined, not NG0950
 	readonly #initialized = signal(false);
 	// a bound command follows the input, so it can be swapped or cleared; a creator's command is built once, in ngOnInit
-	readonly #command = linkedSignal<unknown, ICommand<ExtractExecuteFn<T>> | undefined>({
+	readonly #command = linkedSignal<unknown, Command<ExtractExecuteFn<T>> | undefined>({
 		source: () => this.#initialized() ? this.commandOrCreator() : undefined,
-		computation: (source, previous) => source === undefined || isCommand<ICommand<ExtractExecuteFn<T>>>(source)
+		computation: (source, previous) => source === undefined || isCommand<Command<ExtractExecuteFn<T>>>(source)
 			? source
 			: previous?.value,
 	});

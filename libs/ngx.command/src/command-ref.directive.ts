@@ -1,6 +1,6 @@
 import { Directive, OnInit, inject, Injector, input, signal } from "@angular/core";
 
-import type { ICommand, CommandCreator, CanExecute, ExecuteFn } from "./command.model";
+import type { Command, CommandCreator, CanExecute, ExecuteFn } from "./command.model";
 import { isCommandCreator } from "./command.util";
 import { command } from "./command";
 
@@ -36,7 +36,7 @@ export class SsvCommandRef<TExecute extends ExecuteFn = ExecuteFn> implements On
 		alias: `ssvCommandRef`
 	});
 
-	readonly #command = signal<ICommand<TExecute> | undefined>(undefined);
+	readonly #command = signal<Command<TExecute> | undefined>(undefined);
 	/** The created command: `undefined` until `ngOnInit`; `[ssvCommand]` accepts that as "no command yet". */
 	readonly command = this.#command.asReadonly();
 

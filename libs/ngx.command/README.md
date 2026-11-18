@@ -151,7 +151,7 @@ It can also be used as below without the command attribute.
 
 ### `command` signal
 `ssvCommand` exposes the command it controls as `command()` (e.g. `#cmd="ssvCommand"`, or injected as a host directive).
-It is `Signal<ICommand | undefined>`: `undefined` until the directive's `ngOnInit`, so anything reading it earlier (e.g. while the host is being created) must handle that.
+It is `Signal<Command | undefined>`: `undefined` until the directive's `ngOnInit`, so anything reading it earlier (e.g. while the host is being created) must handle that.
 A bound command that is swapped later is followed.
 
 ### No command yet
@@ -160,7 +160,7 @@ is not executable (`disabled`) and a click does nothing until a command is bound
 
 ## CommandRef Attribute (directive)
 Command creator ref, directive which allows creating Command in the template and associate it to a command (in order to share executions).
-Its `command()` is `Signal<ICommand | undefined>` (`undefined` until its `ngOnInit`), which `[ssvCommand]` accepts as is.
+Its `command()` is `Signal<Command | undefined>` (`undefined` until its `ngOnInit`), which `[ssvCommand]` accepts as is.
 
 ```html
 @for (hero of heroes; track hero.key) {
