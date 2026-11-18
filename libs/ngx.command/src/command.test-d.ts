@@ -78,6 +78,12 @@ describe("Command", () => {
 		expectTypeOf<Command>().not.toHaveProperty("$disabledReasons");
 	});
 
+	it("does not export the NgModule or the type guards", () => {
+		expectTypeOf<typeof api>().not.toHaveProperty("SsvCommandModule");
+		expectTypeOf<typeof api>().not.toHaveProperty("isCommand");
+		expectTypeOf<typeof api>().not.toHaveProperty("isCommandCreator");
+	});
+
 	it("is the only command type: ICommand is removed", () => {
 		// @ts-expect-error `ICommand` is removed, use `Command`
 		expectTypeOf<api.ICommand>().toBeNever();

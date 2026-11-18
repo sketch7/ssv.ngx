@@ -5,12 +5,12 @@ import type { CanExecuteResult, CommandCreator, CommandDisabledReason, Command }
 import { CommandImpl } from "./command";
 import { type Signal, computed } from "@angular/core";
 
-/** Determines whether the arg object is of type `Command`. */
+/** Determines whether the arg object is a `Command` (created by `command()`). @internal */
 export function isCommand<T extends Command>(arg: unknown | T): arg is T {
 	return arg instanceof CommandImpl;
 }
 
-/** Determines whether the arg object is of type `CommandCreator`. */
+/** Determines whether the arg object is a `CommandCreator`. @internal */
 export function isCommandCreator<T extends CommandCreator>(arg: unknown | T): arg is T {
 	if (arg instanceof CommandImpl) {
 		return false;
