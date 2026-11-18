@@ -17,6 +17,7 @@
 - **command:** remove the `disabledReasons` option of `command()` (never released as stable) - return reasons from `canExecute` instead
 - **command:** `CanExecute` is now `CanExecuteResult | (() => CanExecuteResult) | Observable<CanExecuteResult>` (the redundant `Signal<boolean>` member is removed; signals still work, since they are functions)
 - **command:** `Command` constructor no longer accepts `canExecute`/`injector` (positional params removed); create instances with `command()`
+- **command:** remove `commandAsync` (deprecated in 5.0.0) - use `command`
 - **command:** `canExecuteFromSignals` returns `Signal<CanExecuteResult>` (was `Signal<boolean>`): `true`, or the reasons (`form.invalid`, `form.unchanged`); passing it to `command()` is unchanged, reading it as a boolean is not (use `cmd.$canExecute()`)
 
 ```ts

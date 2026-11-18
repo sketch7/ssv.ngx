@@ -26,12 +26,6 @@ const ENABLED: CanExecuteState = Object.freeze({ canExecute: true, reasons: NO_R
 const DISABLED: CanExecuteState = Object.freeze({ canExecute: false, reasons: NO_REASONS });
 const ENABLED_STATE = signal(ENABLED).asReadonly();
 
-// todo: remove
-/** Creates an async {@link Command}. Must be used within an injection context.
- * @deprecated Use {@link command} instead, as it handles both sync and async execute functions.
- */
-export const commandAsync = command;
-
 /** Creates a {@link Command}. Must be used within an injection context (or the injector must be provided in the options).
  *
  * `canExecute` results: `undefined`, `true` or `[]` can execute; `false` cannot (no reasons);

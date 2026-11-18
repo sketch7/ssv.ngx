@@ -116,7 +116,7 @@ This repo is the reference implementation of the pattern used across Sketch7 app
 - `SsvCommand` (`[ssvCommand]`) / `SsvCommandRef` directives wire a command to a control, with
   `[ssvCommandParams]` for arguments — a single array argument must be double-wrapped (`[[arr]]`) or it
   spreads into multiple params.
-- `commandAsync` and the `Command` class remain exported but are `@deprecated` in favour of `command()`.
+- The `Command` class remains exported, but its constructor is `@deprecated`: create instances with `command()`.
 
 Full patterns live in the `ssv-ngx-command` skill; API docs in `libs/ngx.command/README.md`.
 
