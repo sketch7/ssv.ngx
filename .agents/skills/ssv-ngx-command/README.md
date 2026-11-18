@@ -56,7 +56,7 @@ Always use `command()` factory - never construct a `Command` (it is a type). Req
 Use command creator syntax in loops for per-item `isExecuting` tracking.
 
 ### Signal-Based
-Modern API with `$isExecuting`, `$canExecute` signals. Observable support maintained.
+State is signals: `isExecuting()`, `canExecute()`, `disabledReasons()` (always call them). Observable `canExecute` still supported.
 
 ## Quick Examples
 

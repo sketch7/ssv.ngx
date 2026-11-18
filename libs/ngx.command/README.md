@@ -53,8 +53,12 @@ saveCmd = command(() => this.save(), false); // boolean (perma disabled)
 saveCmd = command(() => this.save(), () => isBanned() ? [{ code: "hero.banned" }] : true); // with reasons, see below
 ```
 
+Its state is signals: `isExecuting()`, `canExecute()` and `disabledReasons()`. Always call them:
+`!saveCmd.canExecute` (no `()`) compiles and is always `false`, and `saveCmd.isExecuting` is always truthy.
+Set Angular's `extendedDiagnostics.checks.interpolatedSignalNotInvoked` to `"error"` to catch it in templates.
+
 ## Command Attribute (Directive)
-Handles the command `$canExecute`, `$isExecuting` and `execute` functions of the `Command`, in order to
+Handles the command `canExecute`, `isExecuting` and `execute` functions of the `Command`, in order to
 enable/disable, add/remove a cssClass while executing in order alter styling during execution (if desired)
 and execute when its enabled and clicked.
 
@@ -66,9 +70,9 @@ Generally used on a `<button>` as below.
 <!-- simple usage -->
 <button [ssvCommand]="saveCmd">Save</button>
 
-<!-- using $isExecuting + showing spinner -->
+<!-- using isExecuting + showing spinner -->
 <button [ssvCommand]="saveCmd">
-  @if(saveCmd.$isExecuting()) {
+  @if(saveCmd.isExecuting()) {
     <i class="ai-circled ai-indicator ai-dark-spin small"></i>
   }
   Save
@@ -113,7 +117,7 @@ canRemoveHero$(hero: Hero, id: number, param2): Observable<boolean> {
 
 ## Disabled reasons
 `canExecute` can return *why* a command cannot execute: instead of `false`, return an array of
-`CommandDisabledReason` (`{ code, params? }`). `$disabledReasons()` exposes them, e.g. to explain a disabled button.
+`CommandDisabledReason` (`{ code, params? }`). `disabledReasons()` exposes them, e.g. to explain a disabled button.
 
 A reason carries a stable `code` (e.g. `"hero.banned"`), plus optional interpolation `params`, and no display text;
 translate it in the UI layer (e.g. `code` as the translation key).
@@ -124,11 +128,11 @@ readonly recruitCmd = command(() => this.#party.recruit(this.hero()), () =>
   : this.party().length >= 4 ? [{ code: "party.full", params: { max: 4 } }]
   : true);
 
-recruitCmd.$canExecute(); // false
-recruitCmd.$disabledReasons(); // [{ code: "hero.banned" }]
+recruitCmd.canExecute(); // false
+recruitCmd.disabledReasons(); // [{ code: "hero.banned" }]
 ```
 
-| `canExecute` result | `$canExecute` | `$disabledReasons` |
+| `canExecute` result | `canExecute` | `disabledReasons` |
 | ------------------- | ------------- | ------------------ |
 | `undefined`, `true`, `[]` | `true` | `[]` (shared, frozen) |
 | `false` | `false` | `[]` |
@@ -136,14 +140,14 @@ recruitCmd.$disabledReasons(); // [{ code: "hero.banned" }]
 
 It applies to all `canExecute` forms (value, function/signal, observable) and to the command creator
 (`{ host, execute, canExecute }`), including `canExecute(...params)`.
-While executing, `$canExecute` is `false` but `$disabledReasons` is unaffected (executing is not a reason).
+While executing, `canExecute()` is `false` but `disabledReasons()` is unaffected (executing is not a reason).
 
 ## Usage without Attribute
 It can also be used as below without the command attribute.
 
 ```html
 <button
-    [disabled]="!saveCmd.$canExecute()"
+    [disabled]="!saveCmd.canExecute()"
     (click)="saveCmd.execute()">
     Save
 </button>
@@ -161,6 +165,8 @@ is not executable (`disabled`) and a click does nothing until a command is bound
 ## CommandRef Attribute (directive)
 Command creator ref, directive which allows creating Command in the template and associate it to a command (in order to share executions).
 Its `command()` is `Signal<Command | undefined>` (`undefined` until its `ngOnInit`), which `[ssvCommand]` accepts as is.
+The creator is built the same way as `ssvCommand`'s (`execute`/`canExecute` bound to `host`, every `canExecute` form), but
+without params: each `ssvCommand` passes its own `[ssvCommandParams]`.
 
 ```html
 @for (hero of heroes; track hero.key) {
@@ -213,7 +219,7 @@ readonly recruitCmd = command(() => this.recruit(), canExecuteFromSignals({
 }));
 
 // name cleared on a pristine form
-recruitCmd.$disabledReasons(); // [{ code: "form.invalid" }, { code: "form.unchanged" }]
+recruitCmd.disabledReasons(); // [{ code: "form.invalid" }, { code: "form.unchanged" }]
 // the same with an `NgForm`/reactive form: command(() => this.recruit(), canExecuteFromNgForm(this.heroForm))
 CommandFormReason.invalid; // "form.invalid", e.g. the translation key of "Fill in the hero's details"
 ```

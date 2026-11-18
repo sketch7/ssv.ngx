@@ -5,7 +5,7 @@ description: Implement command pattern in Angular using @ssv/ngx.command library
 
 # @ssv/ngx.command
 
-Command pattern - encapsulates actions with auto state tracking (`$isExecuting`, `$canExecute`, `$disabledReasons`). Primary use: disable buttons during execution, show loading indicators.
+Command pattern - encapsulates actions with auto state tracking (signals `isExecuting()`, `canExecute()`, `disabledReasons()`). Primary use: disable buttons during execution, show loading indicators.
 
 ## Creating Commands
 
@@ -40,14 +40,14 @@ readonly recruitCmd = command(
   () => this.recruit$(),
   () => this.hero().banned ? [{ code: "hero.banned" }] : true,
 );
-recruitCmd.$disabledReasons(); // [{ code: "hero.banned" }]
+recruitCmd.disabledReasons(); // [{ code: "hero.banned" }]
 ```
 
 ```html
-@for (reason of recruitCmd.$disabledReasons(); track reason.code) { <small>{{ reason.code | translate: reason.params }}</small> }
+@for (reason of recruitCmd.disabledReasons(); track reason.code) { <small>{{ reason.code | translate: reason.params }}</small> }
 ```
 
-Executing is not a reason: `$disabledReasons` is unaffected while `$isExecuting()`.
+Executing is not a reason: `disabledReasons` is unaffected while `isExecuting()`.
 
 ## Directive Usage
 
@@ -56,7 +56,7 @@ Executing is not a reason: `$disabledReasons` is unaffected while `$isExecuting(
 <button [ssvCommand]="saveCmd">Save</button>
 
 <!-- With loading UI -->
-<button [ssvCommand]="saveCmd">@if(saveCmd.$isExecuting()) { <mat-spinner diameter="20"></mat-spinner> } Save</button>
+<button [ssvCommand]="saveCmd">@if(saveCmd.isExecuting()) { <mat-spinner diameter="20"></mat-spinner> } Save</button>
 
 <!-- Custom CSS class -->
 <button [ssvCommand]="saveCmd" [ssvCommandOptions]="{executingCssClass: 'is-loading'}">Save</button>
@@ -89,7 +89,7 @@ Why: `[items]` spreads. Use `[[items]]` for single array arg.
 }
 ```
 
-`ssvCommand` follows a bound command swapped after init. A creator object is read once (its `canExecute` is still reactive, and may return reasons).
+`ssvCommand` follows a bound command swapped after init. A creator object is read once (its `canExecute` is still reactive, follows `[ssvCommandParams]`, and may return reasons). `ssvCommandRef` builds its creator the same way, without params.
 
 ```typescript
 removeHero$(hero: Hero) {
@@ -109,14 +109,15 @@ readonly loginCmd = command(() => this.login$(), canExecuteFromNgForm(this.form(
 readonly saveCmd = command(() => this.save$(), canExecuteFromSignals({ valid: form.valid, dirty: form.dirty }));
 ```
 
-Both return `true` or reasons `form.invalid` / `form.unchanged` (`CommandFormReason`, in that order), not a boolean: read `cmd.$canExecute()` / `cmd.$disabledReasons()`. Opt out per check with `{ validity: false }` / `{ dirty: false }`: that check needs no signal (`canExecuteFromSignals({ valid }, { dirty: false })`) and its signal is never read.
+Both return `true` or reasons `form.invalid` / `form.unchanged` (`CommandFormReason`, in that order), not a boolean: read `cmd.canExecute()` / `cmd.disabledReasons()`. Opt out per check with `{ validity: false }` / `{ dirty: false }`: that check needs no signal (`canExecuteFromSignals({ valid }, { dirty: false })`) and its signal is never read.
 
 ## State & Execution
 
 ```typescript
-cmd.$isExecuting(); // Signal<boolean>
-cmd.$canExecute(); // Signal<boolean>
-cmd.$disabledReasons(); // Signal<readonly CommandDisabledReason[]>, from canExecute returning e.g. [{ code: "hero.banned" }]
+// all three are signals: always call them
+cmd.isExecuting(); // boolean
+cmd.canExecute(); // boolean
+cmd.disabledReasons(); // readonly CommandDisabledReason[], from canExecute returning e.g. [{ code: "hero.banned" }]
 
 cmd.execute(); // Direct
 cmd.execute(arg1, arg2); // With params
@@ -125,8 +126,9 @@ await cmd.execute(); // Returns Promise for async
 
 ## Anti-Patterns
 
-❌ `Command` has no constructor and no `isExecuting`/`canExecute` snapshot getters - use `command()` and the `$` signals
-❌ `ssvCommand`'s and `ssvCommandRef`'s `command()` are `undefined` until `ngOnInit` (`Signal<ICommand | undefined>`) - handle it when reading early; `[ssvCommand]` itself accepts `undefined` ("no command yet": disabled, click does nothing)
+❌ `!cmd.canExecute` / `@if (cmd.isExecuting)` without `()` - they are signals (5.x booleans had these names): it compiles and is always truthy. Call them, and set `extendedDiagnostics.checks.interpolatedSignalNotInvoked: "error"`
+❌ `new Command(...)` / `ICommand` / `SsvCommandModule` - removed: use `command()`, the `Command` type, and the standalone `SsvCommand`/`SsvCommandRef`
+❌ `ssvCommand`'s and `ssvCommandRef`'s `command()` are `undefined` until `ngOnInit` (`Signal<Command | undefined>`) - handle it when reading early; `[ssvCommand]` itself accepts `undefined` ("no command yet": disabled, click does nothing)
 ❌ `[ssvCommandParams]="[items]"` spreads - use `[[items]]`
 ❌ Sharing `isExecuting` in loops - use command creator `{host, execute, params}`
 
@@ -145,8 +147,8 @@ readonly saveCmd = command(() =>
 );
 
 // Loading UI
-<button [ssvCommand]="saveCmd" [class.loading]="saveCmd.$isExecuting()">
-  @if (saveCmd.$isExecuting()) { <mat-spinner/> } @else { <mat-icon>save</mat-icon> }
+<button [ssvCommand]="saveCmd" [class.loading]="saveCmd.isExecuting()">
+  @if (saveCmd.isExecuting()) { <mat-spinner/> } @else { <mat-icon>save</mat-icon> }
   Save
 </button>
 ```
