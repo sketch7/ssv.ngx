@@ -1,7 +1,7 @@
 import { type AbstractControl, PristineChangeEvent, StatusChangeEvent } from "@angular/forms";
 import { Observable, map, distinctUntilChanged, filter, combineLatest, of, defer, concat } from "rxjs";
 
-import type { CommandCreator, ICommand } from "./command.model";
+import type { CanExecuteResult, CommandCreator, CommandDisabledReason, ICommand } from "./command.model";
 import { Command } from "./command";
 import { type Signal, computed } from "@angular/core";
 
@@ -68,17 +68,39 @@ export function canExecuteFromNgForm(
 	);
 }
 
-/** Can executed based on valid/dirty signal inputs. */
+/** Disabled reason codes of {@link canExecuteFromSignals}. */
+export const CommandFormReason = {
+	/** The validity check is enabled and the form is invalid. */
+	invalid: "form.invalid",
+	/** The dirty check is enabled and nothing changed. */
+	unchanged: "form.unchanged",
+} as const;
+
+const INVALID_REASON: CommandDisabledReason = Object.freeze({ code: CommandFormReason.invalid });
+const UNCHANGED_REASON: CommandDisabledReason = Object.freeze({ code: CommandFormReason.unchanged });
+
+/**
+ * Can execute based on valid/dirty signal inputs: `true`, or the reasons it cannot
+ * (`form.invalid` then `form.unchanged`, see {@link CommandFormReason}).
+ */
 export function canExecuteFromSignals(
 	signals: { valid: Signal<boolean>, dirty: Signal<boolean> },
 	options?: CanExecuteFormOptions
-): Signal<boolean> {
+): Signal<CanExecuteResult> {
 	const opts: CanExecuteFormOptions = options ?
 		{ ...CAN_EXECUTE_FORM_OPTIONS_DEFAULTS, ...options }
 		: CAN_EXECUTE_FORM_OPTIONS_DEFAULTS;
-	return computed(() => !!(!opts.validity || signals.valid()) && !!(!opts.dirty || signals.dirty()));
+	return computed(() => {
+		const reasons: CommandDisabledReason[] = [];
+		if (opts.validity && !signals.valid()) {
+			reasons.push(INVALID_REASON);
+		}
+		if (opts.dirty && !signals.dirty()) {
+			reasons.push(UNCHANGED_REASON);
+		}
+		return reasons.length ? reasons : true;
+	});
 }
-
 
 function isAssumedType<T = Record<string, unknown>>(x: unknown): x is Partial<T> {
 	return x !== null && typeof x === "object";

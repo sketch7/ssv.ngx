@@ -1,4 +1,4 @@
-import { computed, signal } from "@angular/core";
+import { computed, signal, type Signal } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { of } from "rxjs";
 import { expectTypeOf } from "vitest";
@@ -21,6 +21,7 @@ describe("CanExecute", () => {
 		expectTypeOf(() => isBanned ? [{ code: "party.full", params: { max: 4 } }] : true).toExtend<CanExecute>();
 		expectTypeOf(of([{ code: "hero.notOwner" }])).toExtend<CanExecute>();
 		expectTypeOf(canExecuteFromSignals({ valid: signal(true), dirty: signal(true) })).toExtend<CanExecute>();
+		expectTypeOf(canExecuteFromSignals({ valid: signal(true), dirty: signal(true) })).toEqualTypeOf<Signal<CanExecuteResult>>();
 		expectTypeOf(canExecuteFromNgForm(new FormControl())).toExtend<CanExecute>();
 	});
 

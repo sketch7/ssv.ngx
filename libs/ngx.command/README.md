@@ -184,6 +184,23 @@ loginCmd = command(x => this.login(), canExecuteFromNgForm(this.form, {
 loginCmd = command(x => this.login(), canExecuteFromSignals({dirty: $dirty, valid: $valid}));
 ```
 
+`canExecuteFromSignals` also returns why it cannot execute, as disabled reasons (see `CommandFormReason`):
+`form.invalid` (validity check, invalid form) then `form.unchanged` (dirty check, nothing changed), or `true`.
+
+```ts
+import { command, canExecuteFromSignals, CommandFormReason } from "@ssv/ngx.command";
+
+readonly recruitForm = form(this.hero);
+readonly recruitCmd = command(() => this.recruit(), canExecuteFromSignals({
+  valid: this.recruitForm().valid,
+  dirty: this.recruitForm().dirty,
+}));
+
+// name cleared on a pristine form
+recruitCmd.$disabledReasons(); // [{ code: "form.invalid" }, { code: "form.unchanged" }]
+CommandFormReason.invalid; // "form.invalid", e.g. the translation key of "Fill in the hero's details"
+```
+
 ### Command Input (type)
 Simplifies the definition when used as an input.
 

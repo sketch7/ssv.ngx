@@ -3,6 +3,6 @@ export { provideSsvCommandOptions, COMMAND_OPTIONS, type CommandOptions } from "
 export { command, commandAsync, Command, type CommandCreateOptions } from "./command";
 export { SsvCommand } from "./command.directive";
 export { SsvCommandRef } from "./command-ref.directive";
-export { type CanExecuteFormOptions, isCommand, isCommandCreator, canExecuteFromNgForm, canExecuteFromSignals } from "./command.util";
+export { type CanExecuteFormOptions, CommandFormReason, isCommand, isCommandCreator, canExecuteFromNgForm, canExecuteFromSignals } from "./command.util";
 export type { CommandCreator, ICommand, CanExecute, CanExecuteResult, CommandDisabledReason, ExecuteFn, CommandInput } from "./command.model";
 export { VERSION } from "./version";

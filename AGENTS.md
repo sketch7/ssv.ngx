@@ -112,7 +112,7 @@ This repo is the reference implementation of the pattern used across Sketch7 app
   exist but are `@deprecated` — new code reads the `$`-prefixed signals.
 - `canExecute` accepts a `boolean` or reasons array (`CanExecuteResult`), a function/signal returning one, or an
   `Observable` of one; reasons (`{ code, params? }`) are exposed as `$disabledReasons` (translated by the UI, not here);
-  `canExecuteFromNgForm()` / `canExecuteFromSignals()` adapt forms.
+  `canExecuteFromNgForm()` (boolean) / `canExecuteFromSignals()` (reasons: `CommandFormReason`) adapt forms.
 - `SsvCommand` (`[ssvCommand]`) / `SsvCommandRef` directives wire a command to a control, with
   `[ssvCommandParams]` for arguments — a single array argument must be double-wrapped (`[[arr]]`) or it
   spreads into multiple params.
