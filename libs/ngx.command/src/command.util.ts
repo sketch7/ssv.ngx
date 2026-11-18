@@ -33,14 +33,41 @@ const CAN_EXECUTE_FORM_OPTIONS_DEFAULTS = Object.freeze<CanExecuteFormOptions>({
 	dirty: true,
 })
 
-/** Get can execute from form validity/pristine as an observable. */
+/** Disabled reason codes of {@link canExecuteFromNgForm} and {@link canExecuteFromSignals}. */
+export const CommandFormReason = {
+	/** The validity check is enabled and the form is invalid. */
+	invalid: "form.invalid",
+	/** The dirty check is enabled and nothing changed. */
+	unchanged: "form.unchanged",
+} as const;
+
+const INVALID_REASON: CommandDisabledReason = Object.freeze({ code: CommandFormReason.invalid });
+const UNCHANGED_REASON: CommandDisabledReason = Object.freeze({ code: CommandFormReason.unchanged });
+
+function withDefaults(options?: CanExecuteFormOptions): CanExecuteFormOptions {
+	return options ? { ...CAN_EXECUTE_FORM_OPTIONS_DEFAULTS, ...options } : CAN_EXECUTE_FORM_OPTIONS_DEFAULTS;
+}
+
+function formResult(opts: CanExecuteFormOptions, valid: boolean, dirty: boolean): CanExecuteResult {
+	const reasons: CommandDisabledReason[] = [];
+	if (opts.validity && !valid) {
+		reasons.push(INVALID_REASON);
+	}
+	if (opts.dirty && !dirty) {
+		reasons.push(UNCHANGED_REASON);
+	}
+	return reasons.length ? reasons : true;
+}
+
+/**
+ * Can execute from form validity/pristine as an observable: `true`, or the reasons it cannot
+ * (`form.invalid` then `form.unchanged`, see {@link CommandFormReason}).
+ */
 export function canExecuteFromNgForm(
 	form: AbstractControl,
 	options?: CanExecuteFormOptions
-): Observable<boolean> {
-	const opts: CanExecuteFormOptions = options ?
-		{ ...CAN_EXECUTE_FORM_OPTIONS_DEFAULTS, ...options }
-		: CAN_EXECUTE_FORM_OPTIONS_DEFAULTS;
+): Observable<CanExecuteResult> {
+	const opts = withDefaults(options);
 
 	const pristine$ = opts.dirty
 		? concat(
@@ -62,22 +89,11 @@ export function canExecuteFromNgForm(
 		).pipe(distinctUntilChanged(),)
 		: of(true);
 
+	// each distinct (valid, pristine) pair maps to a distinct result, so no further dedupe
 	return combineLatest([pristine$, valid$]).pipe(
-		map(([pristine, valid]) => !!(!opts.validity || valid) && !!(!opts.dirty || !pristine)),
-		distinctUntilChanged(),
+		map(([pristine, valid]) => formResult(opts, valid, !pristine)),
 	);
 }
-
-/** Disabled reason codes of {@link canExecuteFromSignals}. */
-export const CommandFormReason = {
-	/** The validity check is enabled and the form is invalid. */
-	invalid: "form.invalid",
-	/** The dirty check is enabled and nothing changed. */
-	unchanged: "form.unchanged",
-} as const;
-
-const INVALID_REASON: CommandDisabledReason = Object.freeze({ code: CommandFormReason.invalid });
-const UNCHANGED_REASON: CommandDisabledReason = Object.freeze({ code: CommandFormReason.unchanged });
 
 /**
  * Can execute based on valid/dirty signal inputs: `true`, or the reasons it cannot
@@ -87,19 +103,8 @@ export function canExecuteFromSignals(
 	signals: { valid: Signal<boolean>, dirty: Signal<boolean> },
 	options?: CanExecuteFormOptions
 ): Signal<CanExecuteResult> {
-	const opts: CanExecuteFormOptions = options ?
-		{ ...CAN_EXECUTE_FORM_OPTIONS_DEFAULTS, ...options }
-		: CAN_EXECUTE_FORM_OPTIONS_DEFAULTS;
-	return computed(() => {
-		const reasons: CommandDisabledReason[] = [];
-		if (opts.validity && !signals.valid()) {
-			reasons.push(INVALID_REASON);
-		}
-		if (opts.dirty && !signals.dirty()) {
-			reasons.push(UNCHANGED_REASON);
-		}
-		return reasons.length ? reasons : true;
-	});
+	const opts = withDefaults(options);
+	return computed(() => formResult(opts, signals.valid(), signals.dirty()));
 }
 
 function isAssumedType<T = Record<string, unknown>>(x: unknown): x is Partial<T> {

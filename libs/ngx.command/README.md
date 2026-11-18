@@ -184,7 +184,7 @@ loginCmd = command(x => this.login(), canExecuteFromNgForm(this.form, {
 loginCmd = command(x => this.login(), canExecuteFromSignals({dirty: $dirty, valid: $valid}));
 ```
 
-`canExecuteFromSignals` also returns why it cannot execute, as disabled reasons (see `CommandFormReason`):
+Both also return why it cannot execute, as disabled reasons (see `CommandFormReason`; `canExecuteFromNgForm` as an `Observable<CanExecuteResult>`, `canExecuteFromSignals` as a `Signal<CanExecuteResult>`):
 `form.invalid` (validity check, invalid form) then `form.unchanged` (dirty check, nothing changed), or `true`.
 
 ```ts
@@ -198,6 +198,7 @@ readonly recruitCmd = command(() => this.recruit(), canExecuteFromSignals({
 
 // name cleared on a pristine form
 recruitCmd.$disabledReasons(); // [{ code: "form.invalid" }, { code: "form.unchanged" }]
+// the same with an `NgForm`/reactive form: command(() => this.recruit(), canExecuteFromNgForm(this.heroForm))
 CommandFormReason.invalid; // "form.invalid", e.g. the translation key of "Fill in the hero's details"
 ```
 

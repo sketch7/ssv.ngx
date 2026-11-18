@@ -6,6 +6,7 @@
 - **command:** add `CommandDisabledReason` (`{ code, params? }`, a stable code plus interpolation params, translated by the UI) and `CanExecuteResult` types
 - **command:** command creator (`{ host, execute, canExecute }`) supports reasons, and a `canExecute` function/signal is now reactive (previously evaluated once)
 - **command:** `canExecuteFromSignals` returns disabled reasons: `form.invalid` and/or `form.unchanged` (exported as `CommandFormReason`)
+- **command:** `canExecuteFromNgForm` returns the same disabled reasons
 
 ### Bug Fixes
 
@@ -18,7 +19,7 @@
 - **command:** `CanExecute` is now `CanExecuteResult | (() => CanExecuteResult) | Observable<CanExecuteResult>` (the redundant `Signal<boolean>` member is removed; signals still work, since they are functions)
 - **command:** `Command` constructor no longer accepts `canExecute`/`injector` (positional params removed); create instances with `command()`
 - **command:** remove `commandAsync` (deprecated in 5.0.0) - use `command`
-- **command:** `canExecuteFromSignals` returns `Signal<CanExecuteResult>` (was `Signal<boolean>`): `true`, or the reasons (`form.invalid`, `form.unchanged`); passing it to `command()` is unchanged, reading it as a boolean is not (use `cmd.$canExecute()`)
+- **command:** `canExecuteFromSignals` returns `Signal<CanExecuteResult>` (was `Signal<boolean>`) and `canExecuteFromNgForm` returns `Observable<CanExecuteResult>` (was `Observable<boolean>`): `true`, or the reasons (`form.invalid`, `form.unchanged`); passing them to `command()` is unchanged, reading them as a boolean is not (use `cmd.$canExecute()`)
 
 ```ts
 // before
@@ -33,6 +34,7 @@ recruitCmd.$disabledReasons(); // [{ code: "hero.banned" }]
 command(execute, canExecute$, { injector });
 const invalidHero = canExecuteFromSignals({ valid: signal(false), dirty: signal(true) });
 invalidHero(); // before: false, after: [{ code: "form.invalid" }]
+canExecuteFromNgForm(invalidForm).subscribe(x => x); // before: false, after: [{ code: "form.invalid" }]
 ```
 
 ## 5.0.0 (2026-03-11)
