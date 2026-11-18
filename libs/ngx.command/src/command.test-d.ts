@@ -3,7 +3,9 @@ import { FormControl } from "@angular/forms";
 import { type Observable, of } from "rxjs";
 import { expectTypeOf } from "vitest";
 
-import type { CanExecute, CanExecuteResult, CommandCreator, CommandDisabledReason } from "./command.model";
+import type { CanExecute, CanExecuteResult, CommandCreator, CommandDisabledReason, ICommand } from "./command.model";
+import type { Command } from "./index";
+import type { SsvCommand } from "./command.directive";
 import { canExecuteFromNgForm, canExecuteFromSignals } from "./command.util";
 
 declare const isBanned: boolean;
@@ -36,5 +38,44 @@ describe("CanExecute", () => {
 		type Creator = CommandCreator<(hero: { banned: boolean }) => void>;
 		expectTypeOf((hero: { banned: boolean }) => hero.banned ? [{ code: "hero.banned" }] : true)
 			.toExtend<NonNullable<Creator["canExecute"]>>();
+	});
+});
+
+describe("canExecuteFromSignals", () => {
+	it("requires a signal for each enabled check", () => {
+		// @ts-expect-error dirty is required while the dirty check is on
+		canExecuteFromSignals({ valid: signal(true) });
+		// @ts-expect-error valid is required while the validity check is on
+		canExecuteFromSignals({ dirty: signal(true) });
+		// @ts-expect-error dirty is required when only the validity check is turned off
+		canExecuteFromSignals({}, { validity: false });
+		// @ts-expect-error dirty is required when the option is not a literal false
+		canExecuteFromSignals({ valid: signal(true) }, { dirty: true });
+	});
+
+	it("does not require the signal of a disabled check", () => {
+		expectTypeOf(canExecuteFromSignals({ valid: signal(true) }, { dirty: false })).toEqualTypeOf<Signal<CanExecuteResult>>();
+		expectTypeOf(canExecuteFromSignals({ dirty: signal(true) }, { validity: false })).toEqualTypeOf<Signal<CanExecuteResult>>();
+		expectTypeOf(canExecuteFromSignals({}, { validity: false, dirty: false })).toEqualTypeOf<Signal<CanExecuteResult>>();
+	});
+});
+
+describe("Command", () => {
+	it("has no snapshot getters", () => {
+		expectTypeOf<ICommand>().not.toHaveProperty("isExecuting");
+		expectTypeOf<ICommand>().not.toHaveProperty("canExecute");
+		expectTypeOf<Command>().not.toHaveProperty("isExecuting");
+		expectTypeOf<Command>().not.toHaveProperty("canExecute");
+	});
+
+	it("is a type: only command() creates instances", () => {
+		// @ts-expect-error `Command` only refers to a type
+		new Command(() => undefined);
+	});
+});
+
+describe("SsvCommand", () => {
+	it("types command as possibly undefined (it is until ngOnInit)", () => {
+		expectTypeOf<SsvCommand["command"]>().toEqualTypeOf<Signal<ICommand | undefined>>();
 	});
 });

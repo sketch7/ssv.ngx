@@ -41,22 +41,26 @@ export const CommandFormReason = {
 	unchanged: "form.unchanged",
 } as const;
 
+export type CommandFormReason = (typeof CommandFormReason)[keyof typeof CommandFormReason];
+
 const INVALID_REASON: CommandDisabledReason = Object.freeze({ code: CommandFormReason.invalid });
 const UNCHANGED_REASON: CommandDisabledReason = Object.freeze({ code: CommandFormReason.unchanged });
+// shared, so an unchanged outcome keeps its identity (no new array per evaluation)
+const INVALID_ONLY: readonly CommandDisabledReason[] = Object.freeze([INVALID_REASON]);
+const UNCHANGED_ONLY: readonly CommandDisabledReason[] = Object.freeze([UNCHANGED_REASON]);
+const INVALID_AND_UNCHANGED: readonly CommandDisabledReason[] = Object.freeze([INVALID_REASON, UNCHANGED_REASON]);
 
 function withDefaults(options?: CanExecuteFormOptions): CanExecuteFormOptions {
 	return options ? { ...CAN_EXECUTE_FORM_OPTIONS_DEFAULTS, ...options } : CAN_EXECUTE_FORM_OPTIONS_DEFAULTS;
 }
 
 function formResult(opts: CanExecuteFormOptions, valid: boolean, dirty: boolean): CanExecuteResult {
-	const reasons: CommandDisabledReason[] = [];
-	if (opts.validity && !valid) {
-		reasons.push(INVALID_REASON);
+	const isInvalid = opts.validity && !valid;
+	const isUnchanged = opts.dirty && !dirty;
+	if (isInvalid) {
+		return isUnchanged ? INVALID_AND_UNCHANGED : INVALID_ONLY;
 	}
-	if (opts.dirty && !dirty) {
-		reasons.push(UNCHANGED_REASON);
-	}
-	return reasons.length ? reasons : true;
+	return isUnchanged ? UNCHANGED_ONLY : true;
 }
 
 /**
@@ -95,16 +99,23 @@ export function canExecuteFromNgForm(
 	);
 }
 
+/** The signal of each enabled check: a check turned off with `false` in the options needs none. */
+type FormSignals<TOptions extends CanExecuteFormOptions> =
+	(TOptions extends { validity: false } ? { valid?: Signal<boolean> } : { valid: Signal<boolean> })
+	& (TOptions extends { dirty: false } ? { dirty?: Signal<boolean> } : { dirty: Signal<boolean> });
+
 /**
  * Can execute based on valid/dirty signal inputs: `true`, or the reasons it cannot
  * (`form.invalid` then `form.unchanged`, see {@link CommandFormReason}).
+ * A check turned off in the options needs no signal, and its signal is never read.
  */
-export function canExecuteFromSignals(
-	signals: { valid: Signal<boolean>, dirty: Signal<boolean> },
-	options?: CanExecuteFormOptions
+export function canExecuteFromSignals<const TOptions extends CanExecuteFormOptions = CanExecuteFormOptions>(
+	signals: FormSignals<TOptions>,
+	options?: TOptions
 ): Signal<CanExecuteResult> {
 	const opts = withDefaults(options);
-	return computed(() => formResult(opts, signals.valid(), signals.dirty()));
+	// a missing signal of an enabled check (untyped callers) fails the check rather than passing it
+	return computed(() => formResult(opts, !opts.validity || (signals.valid?.() ?? false), !opts.dirty || (signals.dirty?.() ?? false)));
 }
 
 function isAssumedType<T = Record<string, unknown>>(x: unknown): x is Partial<T> {
