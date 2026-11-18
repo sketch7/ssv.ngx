@@ -1,9 +1,10 @@
 import { type AbstractControl, PristineChangeEvent, StatusChangeEvent } from "@angular/forms";
 import { Observable, map, distinctUntilChanged, filter, combineLatest, of, defer, concat } from "rxjs";
 
-import type { CanExecuteResult, CommandCreator, CommandDisabledReason, Command } from "./command.model";
-import { CommandImpl } from "./command";
-import { type Signal, computed } from "@angular/core";
+import type { CanExecute, CanExecuteResult, CommandCreator, CommandDisabledReason, Command, ExecuteFn } from "./command.model";
+import { command, CommandImpl } from "./command";
+import { type Injector, type Signal, computed, untracked } from "@angular/core";
+import { isObservable } from "rxjs";
 
 /** Determines whether the arg object is a `Command` (created by `command()`). @internal */
 export function isCommand<T extends Command>(arg: unknown | T): arg is T {
@@ -18,6 +19,41 @@ export function isCommandCreator<T extends CommandCreator>(arg: unknown | T): ar
 		return true;
 	}
 	return false;
+}
+
+/**
+ * Creates the command of a {@link CommandCreator}: `execute` and a `canExecute` function are bound to `host`.
+ * `params` are read reactively, so a `canExecute(...params)` function follows param changes. Shared by `ssvCommand` and `ssvCommandRef`.
+ * @internal
+ */
+export function commandFromCreator<TExecute extends ExecuteFn>(
+	creator: CommandCreator<TExecute>,
+	injector: Injector,
+	params: () => readonly unknown[] | undefined = () => undefined,
+): Command<TExecute> {
+	const execute = creator.execute.bind(creator.host) as TExecute;
+	return command(execute, creatorCanExecute(creator, params), { injector });
+}
+
+function creatorCanExecute(creator: CommandCreator, params: () => readonly unknown[] | undefined): CanExecute | undefined {
+	const canExecute = creator.canExecute;
+	if (typeof canExecute !== "function") {
+		return canExecute;
+	}
+	const fn = (canExecute as (...args: readonly unknown[]) => CanExecute).bind(creator.host);
+	// an observable result must be converted (`toSignal`) outside a reactive context, so the result kind is probed once
+	const probe = untracked(() => fn(...(params() ?? [])));
+	if (isObservable(probe)) {
+		// shortcut: an observable result is taken with the params at creation; switchMap over the params if it needs to follow them
+		return probe;
+	}
+	return () => {
+		const result = fn(...(params() ?? []));
+		if (isObservable(result)) {
+			throw new Error("command creator: canExecute must return an Observable always or never.");
+		}
+		return typeof result === "function" ? result() : result;
+	};
 }
 
 export interface CanExecuteFormOptions {

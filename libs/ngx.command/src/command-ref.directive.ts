@@ -1,8 +1,7 @@
 import { Directive, OnInit, inject, Injector, input, signal } from "@angular/core";
 
-import type { Command, CommandCreator, CanExecute, ExecuteFn } from "./command.model";
-import { isCommandCreator } from "./command.util";
-import { command } from "./command";
+import type { Command, CommandCreator, ExecuteFn } from "./command.model";
+import { commandFromCreator, isCommandCreator } from "./command.util";
 
 const NAME_CAMEL = "ssvCommandRef";
 
@@ -32,6 +31,7 @@ export class SsvCommandRef<TExecute extends ExecuteFn = ExecuteFn> implements On
 
 	readonly #injector = inject(Injector);
 
+	/** Built like `ssvCommand`'s creator, but without params: each `ssvCommand` passes its own `[ssvCommandParams]`, and a `canExecute` function is called with none. */
 	readonly commandCreator = input.required<CommandCreator<TExecute>>({
 		alias: `ssvCommandRef`
 	});
@@ -42,14 +42,9 @@ export class SsvCommandRef<TExecute extends ExecuteFn = ExecuteFn> implements On
 
 	// todo: use afterNextRender
 	ngOnInit(): void {
-		const commandOrCreator = this.commandCreator();
-		if (isCommandCreator(commandOrCreator)) {
-			const commandCreator = commandOrCreator;
-
-			const execFn = commandCreator.execute.bind(commandCreator.host) as TExecute;
-
-			const cmd = command(execFn, commandCreator.canExecute as CanExecute, { injector: this.#injector });
-			this.#command.set(cmd);
+		const commandCreator = this.commandCreator();
+		if (isCommandCreator(commandCreator)) {
+			this.#command.set(commandFromCreator(commandCreator, this.#injector));
 		} else {
 			throw new Error(`${NAME_CAMEL}: [${NAME_CAMEL}] is not defined properly!`);
 		}

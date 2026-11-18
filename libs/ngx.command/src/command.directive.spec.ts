@@ -97,12 +97,22 @@ class CommandCreatorHostComponent {
 			data-testid="recruit-signal-btn">
 			Recruit
 		</button>
+		<button
+			[ssvCommand]="{host: this, execute: recruitTarget, canExecute: canRecruitTarget}"
+			[ssvCommandParams]="target()"
+			data-testid="recruit-target-btn">
+			Recruit
+		</button>
 	`,
 })
 class CommandCreatorReasonsHostComponent {
 	readonly hero = { name: "Rexxar" };
 	readonly banned = signal(true);
 	readonly isOpen = signal(false);
+	readonly target = signal({ name: "Thrall", banned: true });
+
+	recruitTarget = (hero: { name: string; banned: boolean }): string => hero.name;
+	canRecruitTarget = (hero: { name: string; banned: boolean }) => hero.banned ? [{ code: "hero.banned" }] : true;
 
 	recruit = (hero: typeof this.hero): string => hero.name;
 	canRecruit = (hero: typeof this.hero) => this.banned() ? [{ code: "hero.banned", params: { name: hero.name } }] : true;
@@ -492,6 +502,14 @@ describe("SsvCommand Directive", () => {
 			const { button } = query("recruit-signal-btn");
 			expect(button.disabled).toBe(true);
 			component.isOpen.set(true);
+			fixture.detectChanges();
+			expect(button.disabled).toBe(false);
+		});
+
+		it("should re-evaluate a canExecute(...params) function when [ssvCommandParams] change", () => {
+			const { button } = query("recruit-target-btn");
+			expect(button.disabled).toBe(true);
+			component.target.set({ name: "Jaina", banned: false });
 			fixture.detectChanges();
 			expect(button.disabled).toBe(false);
 		});
