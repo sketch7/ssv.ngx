@@ -5,7 +5,7 @@ description: Implement command pattern in Angular using @ssv/ngx.command library
 
 # @ssv/ngx.command
 
-Command pattern - encapsulates actions with auto state tracking (`isExecuting`, `canExecute`). Primary use: disable buttons during execution, show loading indicators.
+Command pattern - encapsulates actions with auto state tracking (`$isExecuting`, `$canExecute`, `$disabledReasons`). Primary use: disable buttons during execution, show loading indicators.
 
 ## Creating Commands
 
@@ -29,7 +29,7 @@ readonly simpleCmd = command(() => this.action()); // No validation
 readonly outsideCmd = command(() => this.save$(), this.isValid, { injector: this.#injector });
 ```
 
-`canExecute` result: `true`/`[]` enabled; `false` disabled (no reason); non-empty `CommandDisabledReason[]` (`{ code, params? }`) disabled with reasons. A function/signal is reactive. `commandAsync`/`new Command()` are removed - use `command()`.
+`canExecute` result: `true`/`[]` enabled; `false` disabled (no reason); non-empty `CommandDisabledReason[]` (`{ code, params? }`) disabled with reasons. A function/signal is reactive. `commandAsync` and the `Command` constructor are removed: `Command` is a type and `command()` is the only way to create one.
 
 ## Disabled Reasons
 
@@ -109,7 +109,7 @@ readonly loginCmd = command(() => this.login$(), canExecuteFromNgForm(this.form(
 readonly saveCmd = command(() => this.save$(), canExecuteFromSignals({ valid: form.valid, dirty: form.dirty }));
 ```
 
-Both return `true` or reasons `form.invalid` / `form.unchanged` (`CommandFormReason`, in that order), not a boolean: read `cmd.$canExecute()` / `cmd.$disabledReasons()`. Opt out per check with `{ validity: false }` / `{ dirty: false }`.
+Both return `true` or reasons `form.invalid` / `form.unchanged` (`CommandFormReason`, in that order), not a boolean: read `cmd.$canExecute()` / `cmd.$disabledReasons()`. Opt out per check with `{ validity: false }` / `{ dirty: false }`: that check needs no signal (`canExecuteFromSignals({ valid }, { dirty: false })`) and its signal is never read.
 
 ## State & Execution
 
@@ -117,8 +117,6 @@ Both return `true` or reasons `form.invalid` / `form.unchanged` (`CommandFormRea
 cmd.$isExecuting(); // Signal<boolean>
 cmd.$canExecute(); // Signal<boolean>
 cmd.$disabledReasons(); // Signal<readonly CommandDisabledReason[]>, from canExecute returning e.g. [{ code: "hero.banned" }]
-cmd.isExecuting; // boolean (deprecated - use signals)
-cmd.canExecute; // boolean (deprecated - use signals)
 
 cmd.execute(); // Direct
 cmd.execute(arg1, arg2); // With params
@@ -127,7 +125,8 @@ await cmd.execute(); // Returns Promise for async
 
 ## Anti-Patterns
 
-❌ Never use `new Command()` - use `command()` factory
+❌ `Command` has no constructor and no `isExecuting`/`canExecute` snapshot getters - use `command()` and the `$` signals
+❌ `ssvCommand`'s `command()` is `undefined` until `ngOnInit` (`Signal<ICommand | undefined>`) - handle it when reading early
 ❌ `[ssvCommandParams]="[items]"` spreads - use `[[items]]`
 ❌ Sharing `isExecuting` in loops - use command creator `{host, execute, params}`
 

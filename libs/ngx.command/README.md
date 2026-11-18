@@ -30,7 +30,8 @@ Choose the version corresponding to your Angular version:
 # Usage
 
 ## Command
-Create a new instance of `Command`
+Create a `Command` with `command()` (the only way to create one: `Command` is a type, there is no constructor).
+It must be used in an injection context, or be given an `injector` (`command(execute, canExecute, { injector })`).
 
 ```ts
 import { command } from "@ssv/ngx.command";
@@ -53,7 +54,7 @@ saveCmd = command(() => this.save(), () => isBanned() ? [{ code: "hero.banned" }
 ```
 
 ## Command Attribute (Directive)
-Handles the command `canExecute$`, `isExecuting` and `execute` functions of the `Command`, in order to
+Handles the command `$canExecute`, `$isExecuting` and `execute` functions of the `Command`, in order to
 enable/disable, add/remove a cssClass while executing in order alter styling during execution (if desired)
 and execute when its enabled and clicked.
 
@@ -65,9 +66,9 @@ Generally used on a `<button>` as below.
 <!-- simple usage -->
 <button [ssvCommand]="saveCmd">Save</button>
 
-<!-- using isExecuting + showing spinner -->
+<!-- using $isExecuting + showing spinner -->
 <button [ssvCommand]="saveCmd">
-  @if(saveCmd.isExecuting) {
+  @if(saveCmd.$isExecuting()) {
     <i class="ai-circled ai-indicator ai-dark-spin small"></i>
   }
   Save
@@ -142,11 +143,16 @@ It can also be used as below without the command attribute.
 
 ```html
 <button
-    [disabled]="!saveCmd.canExecute"
+    [disabled]="!saveCmd.$canExecute()"
     (click)="saveCmd.execute()">
     Save
 </button>
 ```
+
+### `command` signal
+`ssvCommand` exposes the command it controls as `command()` (e.g. `#cmd="ssvCommand"`, or injected as a host directive).
+It is `Signal<ICommand | undefined>`: `undefined` until the directive's `ngOnInit`, so anything reading it earlier (e.g. while the host is being created) must handle that.
+A bound command that is swapped later is followed.
 
 ## CommandRef Attribute (directive)
 Command creator ref, directive which allows creating Command in the template and associate it to a command (in order to share executions).
@@ -182,7 +188,12 @@ loginCmd = command(x => this.login(), canExecuteFromNgForm(this.form, {
 
 // similar functionality using custom signals (or form which provide signals)
 loginCmd = command(x => this.login(), canExecuteFromSignals({dirty: $dirty, valid: $valid}));
+
+// a disabled check needs no signal, and its signal is never read
+loginCmd = command(x => this.login(), canExecuteFromSignals({valid: $valid}, {dirty: false}));
 ```
+
+A signal is required for each enabled check (`valid` unless `validity: false`, `dirty` unless `dirty: false`).
 
 Both also return why it cannot execute, as disabled reasons (see `CommandFormReason`; `canExecuteFromNgForm` as an `Observable<CanExecuteResult>`, `canExecuteFromSignals` as a `Signal<CanExecuteResult>`):
 `form.invalid` (validity check, invalid form) then `form.unchanged` (dirty check, nothing changed), or `true`.

@@ -1,11 +1,12 @@
-## Unreleased
+## 6.0.0
 
 ### Features
 
 - **command:** `canExecute` can return disabled reasons: `CanExecuteResult = boolean | readonly CommandDisabledReason[]`, exposed as `$disabledReasons`
 - **command:** add `CommandDisabledReason` (`{ code, params? }`, a stable code plus interpolation params, translated by the UI) and `CanExecuteResult` types
 - **command:** command creator (`{ host, execute, canExecute }`) supports reasons, and a `canExecute` function/signal is now reactive (previously evaluated once)
-- **command:** `canExecuteFromSignals` returns disabled reasons: `form.invalid` and/or `form.unchanged` (exported as `CommandFormReason`)
+- **command:** `canExecuteFromSignals` returns disabled reasons: `form.invalid` and/or `form.unchanged` (exported as `CommandFormReason`, with a derived `CommandFormReason` code type); the reasons arrays are shared and frozen
+- **command:** `canExecuteFromSignals` needs a `valid`/`dirty` signal only while that check is enabled (`canExecuteFromSignals({ valid }, { dirty: false })`), and never reads the signal of a disabled check
 - **command:** `canExecuteFromNgForm` returns the same disabled reasons
 
 ### Bug Fixes
@@ -15,26 +16,29 @@
 ### BREAKING CHANGES
 
 - **command:** `ICommand` requires `$disabledReasons: Signal<readonly CommandDisabledReason[]>` (hand-written `ICommand` implementations and test doubles must add it, e.g. `$disabledReasons: signal([])`)
-- **command:** remove the `disabledReasons` option of `command()` (never released as stable) - return reasons from `canExecute` instead
 - **command:** `CanExecute` is now `CanExecuteResult | (() => CanExecuteResult) | Observable<CanExecuteResult>` (the redundant `Signal<boolean>` member is removed; signals still work, since they are functions)
-- **command:** `Command` constructor no longer accepts `canExecute`/`injector` (positional params removed); create instances with `command()`
+- **command:** `Command` is now a type (`ICommand`), not a class: there is no public constructor and no `instanceof Command`; create instances only with `command()` (`new Command(execute, canExecute$, injector)` becomes `command(execute, canExecute$, { injector })`)
+- **command:** remove the deprecated snapshot getters `isExecuting` and `canExecute` from `Command`/`ICommand` - use the `$isExecuting()` / `$canExecute()` signals
+- **command:** `SsvCommand.command` is now `Signal<ICommand | undefined>` (was `Signal<ICommand>`, though it was `undefined` before `ngOnInit`): handle `undefined` when reading it, or drop an existing `| undefined` workaround
 - **command:** remove `commandAsync` (deprecated in 5.0.0) - use `command`
 - **command:** `canExecuteFromSignals` returns `Signal<CanExecuteResult>` (was `Signal<boolean>`) and `canExecuteFromNgForm` returns `Observable<CanExecuteResult>` (was `Observable<boolean>`): `true`, or the reasons (`form.invalid`, `form.unchanged`); passing them to `command()` is unchanged, reading them as a boolean is not (use `cmd.$canExecute()`)
 
 ```ts
 // before
-const recruitCmd = command(() => recruit(), undefined, {
-  disabledReasons: () => hero().banned ? [{ message: "Hero is banned" }] : [],
-});
 new Command(execute, canExecute$, injector);
+cmd.isExecuting; cmd.canExecute;
+const invalidHero = canExecuteFromSignals({ valid: signal(false), dirty: signal(true) });
+invalidHero(); // false
+canExecuteFromNgForm(invalidForm).subscribe(x => x); // false
 
 // after
+command(execute, canExecute$, { injector });
+cmd.$isExecuting(); cmd.$canExecute();
 const recruitCmd = command(() => recruit(), () => hero().banned ? [{ code: "hero.banned" }] : true);
 recruitCmd.$disabledReasons(); // [{ code: "hero.banned" }]
-command(execute, canExecute$, { injector });
 const invalidHero = canExecuteFromSignals({ valid: signal(false), dirty: signal(true) });
-invalidHero(); // before: false, after: [{ code: "form.invalid" }]
-canExecuteFromNgForm(invalidForm).subscribe(x => x); // before: false, after: [{ code: "form.invalid" }]
+invalidHero(); // [{ code: "form.invalid" }]
+canExecuteFromNgForm(invalidForm).subscribe(x => x); // [{ code: "form.invalid" }]
 ```
 
 ## 5.0.0 (2026-03-11)

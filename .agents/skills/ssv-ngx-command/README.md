@@ -47,7 +47,7 @@ This skill triggers on:
 ## Key Concepts
 
 ### Factory Functions
-Always use `command()` factory - never `new Command()`. Requires injection context.
+Always use `command()` factory - never construct a `Command` (it is a type). Requires injection context.
 
 ### Array Parameter Wrapping
 **Critical**: Single array arguments must be double-wrapped: `[[items]]`
