@@ -79,14 +79,14 @@
 					</div>
 					<div>
 						<small>
-							<span class="type variable">saveCmd.isExecuting</span>
-							<span class="type boolean value">{{ saveCmd.isExecuting }}</span>
+							<span class="type variable">saveCmd.$isExecuting()</span>
+							<span class="type boolean value">{{ saveCmd.$isExecuting() }}</span>
 						</small>
 					</div>
 					<div>
 						<small>
-							<span class="type variable">saveCmd.canExecute</span>
-							<span class="type boolean value">{{ saveCmd.canExecute }}</span>
+							<span class="type variable">saveCmd.$canExecute()</span>
+							<span class="type boolean value">{{ saveCmd.$canExecute() }}</span>
 						</small>
 					</div>
 				</div>
@@ -95,7 +95,7 @@
 				<button
 					mat-raised-button
 					color="primary"
-					[disabled]="!saveCmd.canExecute"
+					[disabled]="!saveCmd.$canExecute()"
 					(click)="saveCmd.execute()">
 					Save
 					<small>execute</small>
@@ -105,7 +105,7 @@
 					color="primary"
 					disabled
 					[ssvCommand]="saveCmd">
-					@if (saveCmd.isExecuting) {
+					@if (saveCmd.$isExecuting()) {
 						<i class="ai-circled ai-indicator ai-dark-spin small"></i>
 					}
 					Save
@@ -115,7 +115,7 @@
 					mat-raised-button
 					color="primary"
 					[ssvCommand]="saveCmd">
-					@if (saveCmd.isExecuting) {
+					@if (saveCmd.$isExecuting()) {
 						<i class="ai-circled ai-indicator ai-dark-spin small"></i>
 					}
 					Save
@@ -125,7 +125,7 @@
 					mat-raised-button
 					color="primary"
 					[ssvCommand]="saveSignalCmd">
-					@if (saveSignalCmd.isExecuting) {
+					@if (saveSignalCmd.$isExecuting()) {
 						<i class="ai-circled ai-indicator ai-dark-spin small"></i>
 					}
 					Save
@@ -134,7 +134,7 @@
 				<button
 					color="primary"
 					[ssvCommand]="saveCmdNoValidation">
-					@if (saveCmdNoValidation.isExecuting) {
+					@if (saveCmdNoValidation.$isExecuting()) {
 						<i class="ai-circled ai-indicator ai-dark-spin small"></i>
 					}
 					Save
@@ -145,7 +145,7 @@
 					color="primary"
 					disabled
 					[ssvCommand]="saveCmdNoValidation">
-					@if (saveCmdNoValidation.isExecuting) {
+					@if (saveCmdNoValidation.$isExecuting()) {
 						<i class="ai-circled ai-indicator ai-dark-spin small"></i>
 					}
 					Save
@@ -156,7 +156,7 @@
 					color="primary"
 					[ssvCommand]="saveCmd"
 					[ssvCommandOptions]="{ executingCssClass: 'is-loading' }">
-					@if (saveCmd.isExecuting) {
+					@if (saveCmd.$isExecuting()) {
 						<mat-icon>
 							<mat-progress-spinner
 								mode="indeterminate"
@@ -170,7 +170,7 @@
 				<button
 					mat-raised-button
 					color="primary"
-					[disabled]="!saveCmd.canExecute"
+					[disabled]="!saveCmd.$canExecute()"
 					[ssvCommand]="saveCmd"
 					[ssvCommandOptions]="{ handleDisabled: false }">
 					Save
@@ -179,7 +179,7 @@
 				<button
 					mat-raised-button
 					color="primary"
-					[disabled]="!saveCmd.canExecute"
+					[disabled]="!saveCmd.$canExecute()"
 					[ssvCommand]="saveCmd"
 					[ssvCommandOptions]="{ handleDisabled: false }">
 					Save
@@ -211,14 +211,14 @@
 					</div>
 					<div>
 						<small>
-							<span class="type variable">saveReduxCmd.isExecuting</span>
-							<span class="type boolean value">{{ saveReduxCmd.isExecuting }}</span>
+							<span class="type variable">saveReduxCmd.$isExecuting()</span>
+							<span class="type boolean value">{{ saveReduxCmd.$isExecuting() }}</span>
 						</small>
 					</div>
 					<div>
 						<small>
-							<span class="type variable">saveReduxCmd.canExecute</span>
-							<span class="type boolean value">{{ saveReduxCmd.canExecute }}</span>
+							<span class="type variable">saveReduxCmd.$canExecute()</span>
+							<span class="type boolean value">{{ saveReduxCmd.$canExecute() }}</span>
 						</small>
 					</div>
 				</div>
@@ -227,7 +227,7 @@
 				<button
 					mat-raised-button
 					color="primary"
-					[disabled]="!saveReduxCmd.canExecute"
+					[disabled]="!saveReduxCmd.$canExecute()"
 					(click)="saveReduxCmd.execute()">
 					Save
 					<small>execute</small>
@@ -236,7 +236,7 @@
 					mat-raised-button
 					color="primary"
 					[ssvCommand]="saveReduxCmd">
-					@if (saveReduxCmd.isExecuting) {
+					@if (saveReduxCmd.$isExecuting()) {
 						<mat-icon>
 							<mat-progress-spinner
 								mode="indeterminate"
@@ -252,7 +252,7 @@
 					color="primary"
 					[ssvCommand]="saveReduxCmd"
 					[ssvCommandOptions]="{ executingCssClass: 'is-loading' }">
-					@if (saveReduxCmd.isExecuting) {
+					@if (saveReduxCmd.$isExecuting()) {
 						<mat-icon>
 							<mat-progress-spinner
 								mode="indeterminate"
