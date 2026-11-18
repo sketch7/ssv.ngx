@@ -24,7 +24,30 @@ readonly computeCmd = command(
   () => this.check(),
 );
 readonly simpleCmd = command(() => this.action()); // No validation
+
+// Options object (3rd arg): outside an injection context pass the injector
+readonly outsideCmd = command(() => this.save$(), this.isValid, { injector: this.#injector });
 ```
+
+`canExecute` result: `true`/`[]` enabled; `false` disabled (no reason); non-empty `CommandDisabledReason[]` (`{ code, params? }`) disabled with reasons. A function/signal is reactive. `commandAsync`/`new Command()` are removed - use `command()`.
+
+## Disabled Reasons
+
+Return reasons from `canExecute` (codes only, the UI translates them):
+
+```typescript
+readonly recruitCmd = command(
+  () => this.recruit$(),
+  () => this.hero().banned ? [{ code: "hero.banned" }] : true,
+);
+recruitCmd.$disabledReasons(); // [{ code: "hero.banned" }]
+```
+
+```html
+@for (reason of recruitCmd.$disabledReasons(); track reason.code) { <small>{{ reason.code | translate: reason.params }}</small> }
+```
+
+Executing is not a reason: `$disabledReasons` is unaffected while `$isExecuting()`.
 
 ## Directive Usage
 
@@ -62,9 +85,11 @@ Why: `[items]` spreads. Use `[[items]]` for single array arg.
 
 ```html
 @for (hero of heroes; track hero.id) {
-<button [ssvCommand]="{host: this, execute: removeHero$, params: [hero]}">Remove</button>
+<button [ssvCommand]="{host: this, execute: removeHero$, canExecute: canRemove, params: [hero]}">Remove</button>
 }
 ```
+
+`ssvCommand` follows a bound command swapped after init. A creator object is read once (its `canExecute` is still reactive, and may return reasons).
 
 ```typescript
 removeHero$(hero: Hero) {
@@ -83,6 +108,8 @@ readonly loginCmd = command(() => this.login$(), canExecuteFromNgForm(this.form(
 // Signal forms
 readonly saveCmd = command(() => this.save$(), canExecuteFromSignals({ valid: form.valid, dirty: form.dirty }));
 ```
+
+Both return `true` or reasons `form.invalid` / `form.unchanged` (`CommandFormReason`, in that order), not a boolean: read `cmd.$canExecute()` / `cmd.$disabledReasons()`. Opt out per check with `{ validity: false }` / `{ dirty: false }`.
 
 ## State & Execution
 
