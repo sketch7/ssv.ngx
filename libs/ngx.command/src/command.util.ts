@@ -2,17 +2,17 @@ import { type AbstractControl, PristineChangeEvent, StatusChangeEvent } from "@a
 import { Observable, map, distinctUntilChanged, filter, combineLatest, of, defer, concat } from "rxjs";
 
 import type { CanExecuteResult, CommandCreator, CommandDisabledReason, ICommand } from "./command.model";
-import { Command } from "./command";
+import { CommandImpl } from "./command";
 import { type Signal, computed } from "@angular/core";
 
 /** Determines whether the arg object is of type `Command`. */
 export function isCommand<T extends ICommand>(arg: unknown | T): arg is T {
-	return arg instanceof Command;
+	return arg instanceof CommandImpl;
 }
 
 /** Determines whether the arg object is of type `CommandCreator`. */
 export function isCommandCreator<T extends CommandCreator>(arg: unknown | T): arg is T {
-	if (arg instanceof Command) {
+	if (arg instanceof CommandImpl) {
 		return false;
 	} else if (isAssumedType<T>(arg) && arg.execute && arg.host) {
 		return true;

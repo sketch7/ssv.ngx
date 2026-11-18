@@ -9,22 +9,21 @@ export interface CommandCreateOptions {
 	injector?: Injector;
 }
 
-/** Normalised `canExecute`. */
+/** Normalised `canExecute`. @internal */
 export interface CanExecuteState {
 	readonly canExecute: boolean;
 	readonly reasons: readonly CommandDisabledReason[];
 }
 
-/** Options for the {@link Command} constructor. Prefer {@link command}, which builds them. */
-export interface CommandConstructorOptions {
-	/** Normalised can execute state (defaults: can execute). */
-	readonly canExecute?: Signal<CanExecuteState>;
-}
-
 const NO_REASONS: readonly CommandDisabledReason[] = Object.freeze([]);
 const ENABLED: CanExecuteState = Object.freeze({ canExecute: true, reasons: NO_REASONS });
 const DISABLED: CanExecuteState = Object.freeze({ canExecute: false, reasons: NO_REASONS });
-const ENABLED_STATE = signal(ENABLED).asReadonly();
+
+/**
+ * Command object used to encapsulate information which is needed to perform an action.
+ * Create one with {@link command}.
+ */
+export type Command<TExecute extends ExecuteFn = ExecuteFn> = ICommand<TExecute>;
 
 /** Creates a {@link Command}. Must be used within an injection context (or the injector must be provided in the options).
  *
@@ -40,7 +39,7 @@ export function command<TExecute extends ExecuteFn>(
 		assertInInjectionContext(command);
 	}
 	const injector = opts?.injector ?? inject(Injector);
-	return new Command(execute, { canExecute: toCanExecuteState(canExecute, injector) });
+	return new CommandImpl(execute, toCanExecuteState(canExecute, injector));
 }
 
 function toState(value: CanExecuteResult | undefined): CanExecuteState {
@@ -70,14 +69,8 @@ function isReasons(value: unknown): value is readonly CommandDisabledReason[] {
 	return Array.isArray(value);
 }
 
-/**
- * Command object used to encapsulate information which is needed to perform an action.
- */
-export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand<TExecute> {
-
-	get isExecuting(): boolean { return this.$isExecuting(); }
-
-	get canExecute(): boolean { return this.$canExecute(); }
+/** The {@link Command} implementation, created only by {@link command}. @internal */
+export class CommandImpl<TExecute extends ExecuteFn = ExecuteFn> implements ICommand<TExecute> {
 
 	readonly $isExecuting = signal(false);
 	readonly $canExecute = computed(() => !this.$isExecuting() && this.#state().canExecute);
@@ -85,29 +78,19 @@ export class Command<TExecute extends ExecuteFn = ExecuteFn> implements ICommand
 
 	readonly #state: Signal<CanExecuteState>;
 
-	/**
-	 * Creates an instance of Command.
-	 *
-	 * @param execute Execute function to invoke.
-	 * @param opts Normalised options, as built by {@link command}.
-	 * @deprecated Use {@link command} instead for creating instances.
-	 */
 	constructor(
 		private readonly _execute: TExecute,
-		opts?: CommandConstructorOptions,
+		state: Signal<CanExecuteState>,
 	) {
-		this.#state = opts?.canExecute ?? ENABLED_STATE;
+		this.#state = state;
 	}
 
 	/** Execute function to invoke. Returns Promise if the execute function returns Observable, otherwise returns the original type. */
 	execute(...args: Parameters<TExecute>): ExecuteReturnType<TExecute> {
 		if (!this.$canExecute()) {
 			throw new Error("Command cannot execute in its current state.");
-			// return Promise.reject() as ReturnType<TExecute>;
 		}
 		this.$isExecuting.set(true);
-
-		// console.warn("[command::execute]", args);
 
 		try {
 			const result = args.length > 0 ? this._execute(...args) : this._execute();

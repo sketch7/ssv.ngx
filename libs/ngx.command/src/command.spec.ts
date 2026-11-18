@@ -3,6 +3,7 @@ import { BehaviorSubject, EMPTY, of, throwError } from "rxjs";
 import { vi } from "vitest";
 
 import { command } from "./command";
+import * as api from "./index";
 import type { CommandDisabledReason } from "./command.model";
 
 interface Hero {
@@ -18,13 +19,26 @@ describe("CommandSpecs", () => {
 		injector?.destroy();
 	});
 
+	describe("public api", () => {
+		it("should not export a Command class, only command() creates commands", () => {
+			expect("Command" in api).toBe(false);
+		});
+
+		it("should not expose the snapshot getters", () => {
+			const cmd = command(vi.fn(), undefined, { injector });
+			expect("isExecuting" in cmd).toBe(false);
+			expect("canExecute" in cmd).toBe(false);
+			expect(api.isCommand(cmd)).toBe(true);
+		});
+	});
+
 	describe("given a command without canExecute$ param", () => {
 		const executeFn = vi.fn();
 		const cmd = command(executeFn, undefined, { injector });
 
 		describe("when command is initialized", () => {
 			it("should have canExecute set to true", () => {
-				expect(cmd.canExecute).toBe(true);
+				expect(cmd.$canExecute()).toBe(true);
 			});
 
 			it("should have $canExecute signal set to true", () => {
@@ -36,11 +50,11 @@ describe("CommandSpecs", () => {
 			cmd.execute();
 
 			it("should have isExecuting set to false after execute finishes", () => {
-				expect(cmd.isExecuting).toBe(false);
+				expect(cmd.$isExecuting()).toBe(false);
 			});
 
 			it("should have canExecute set to true after execute finishes", () => {
-				expect(cmd.canExecute).toBe(true);
+				expect(cmd.$canExecute()).toBe(true);
 			});
 
 			it("should invoke execute function", () => {
@@ -68,7 +82,7 @@ describe("CommandSpecs", () => {
 				await cmd.execute();
 				await cmd.execute();
 
-				expect(cmd.isExecuting).toBeFalsy();
+				expect(cmd.$isExecuting()).toBeFalsy();
 				expect(executeFn).toHaveBeenCalledTimes(2);
 			});
 		});
@@ -86,7 +100,7 @@ describe("CommandSpecs", () => {
 				const cmd = command(executeFn, () => true, { injector });
 				expect(() => cmd.execute()).toThrow();
 				expect(() => cmd.execute()).toThrow();
-				expect(cmd.isExecuting).toBeFalsy();
+				expect(cmd.$isExecuting()).toBeFalsy();
 				expect(executeFn).toHaveBeenCalledTimes(2);
 			});
 
@@ -112,7 +126,7 @@ describe("CommandSpecs", () => {
 		const cmd = command(executeFn, canExecute$, { injector });
 
 		it("should have canExecute set to true", () => {
-			expect(cmd.canExecute).toBe(true);
+			expect(cmd.$canExecute()).toBe(true);
 		});
 
 		it("should have $canExecute signal set to true", () => {
@@ -125,7 +139,7 @@ describe("CommandSpecs", () => {
 			});
 
 			it("should update canExecute", () => {
-				expect(cmd.canExecute).toBe(false);
+				expect(cmd.$canExecute()).toBe(false);
 			});
 
 			it("should update $canExecute signal", () => {
@@ -139,7 +153,7 @@ describe("CommandSpecs", () => {
 		const cmd = command(executeFn, new BehaviorSubject(false), { injector });
 
 		it("should have canExecute set to false", () => {
-			expect(cmd.canExecute).toBe(false);
+			expect(cmd.$canExecute()).toBe(false);
 		});
 
 		it("should have $canExecute signal set to false", () => {
@@ -300,7 +314,7 @@ describe("CommandSpecs", () => {
 				const result = cmd.execute(5);
 
 				expect(result).toBe(10);
-				expect(cmd.isExecuting).toBe(false);
+				expect(cmd.$isExecuting()).toBe(false);
 			});
 
 			it("should return void for void functions", () => {
@@ -325,11 +339,11 @@ describe("CommandSpecs", () => {
 
 				const resultPromise = cmd.execute(1);
 
-				expect(cmd.isExecuting).toBe(true);
+				expect(cmd.$isExecuting()).toBe(true);
 				expect(resultPromise).toBeInstanceOf(Promise);
 				const result = await resultPromise;
 				expect(result).toEqual({ id: 1, name: "User" });
-				expect(cmd.isExecuting).toBe(false);
+				expect(cmd.$isExecuting()).toBe(false);
 			});
 
 			it("should handle Promise rejection", async () => {
@@ -337,7 +351,7 @@ describe("CommandSpecs", () => {
 				const cmd = command(execute, undefined, { injector });
 
 				await expect(cmd.execute()).rejects.toThrow("Failed");
-				expect(cmd.isExecuting).toBe(false);
+				expect(cmd.$isExecuting()).toBe(false);
 			});
 
 			afterAll(() => {
@@ -357,12 +371,12 @@ describe("CommandSpecs", () => {
 
 				const result = cmd.execute("test");
 
-				expect(cmd.isExecuting).toBe(true);
+				expect(cmd.$isExecuting()).toBe(true);
 				expect(result).toBeInstanceOf(Promise);
 
 				const value = await result;
 				expect(value).toEqual({ result: "test" });
-				expect(cmd.isExecuting).toBe(false);
+				expect(cmd.$isExecuting()).toBe(false);
 			});
 
 			it("should handle Observable errors (converted to Promise rejection)", async () => {
@@ -372,14 +386,14 @@ describe("CommandSpecs", () => {
 				await expect(async () => {
 					await cmd.execute();
 				}).rejects.toThrow("Observable error");
-				expect(cmd.isExecuting).toBe(false);
+				expect(cmd.$isExecuting()).toBe(false);
 			});
 
 			it("should complete isExecuting after observable completes", async () => {
 				const execute = vi.fn(() => of(1, 2, 3));
 				const cmd = command(execute, undefined, { injector });
 
-				expect(cmd.isExecuting).toBe(false);
+				expect(cmd.$isExecuting()).toBe(false);
 				const result = cmd.execute();
 
 				expect(result).toBeInstanceOf(Promise);
@@ -387,7 +401,7 @@ describe("CommandSpecs", () => {
 				const value = await result;
 
 				expect(value).toBe(3);
-				expect(cmd.isExecuting).toBe(false);
+				expect(cmd.$isExecuting()).toBe(false);
 			});
 
 			afterAll(() => {

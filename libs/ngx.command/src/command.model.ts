@@ -60,25 +60,11 @@ export type CommandInput<TArgs = unknown, R = unknown> =
 	? Command<(...args: TArgs) => R>
 	: TArgs extends readonly [infer Single]  // Single-element tuple?
 	? Command<(arg: Single) => R>
-	// : TArgs extends any[]  // Array type (not a tuple)?
-	// 	? never  // Ambiguous - use [T[]] wrapper instead
-	// 	: Command<(arg: TArgs) => R>;  // Single non-array type
 	: Command<(arg: TArgs) => R>;  // Single non-array type
 
-// todo: rename to Command and Command to CommandImpl or similar
 export interface ICommand<TExecute extends ExecuteFn = ExecuteFn> {
-	/** Determines whether the command is currently executing, as a snapshot value.
-	 * @deprecated Use {@link $isExecuting} signal instead.
-	*/
-	readonly isExecuting: boolean;
-
 	/** Determines whether the command is currently executing, as a signal. */
 	readonly $isExecuting: Signal<boolean>;
-
-	/** Determines whether the command can execute or not, as a snapshot value.
-	 * @deprecated Use {@link $canExecute} signal instead.
-	*/
-	readonly canExecute: boolean;
 
 	/** Determines whether the command can execute or not, as a signal. */
 	readonly $canExecute: Signal<boolean>;
