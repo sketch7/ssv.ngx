@@ -6,6 +6,7 @@ import { expectTypeOf } from "vitest";
 import type { CanExecute, CanExecuteResult, CommandCreator, CommandDisabledReason, ICommand } from "./command.model";
 import type { Command } from "./index";
 import type { SsvCommand } from "./command.directive";
+import type { SsvCommandRef } from "./command-ref.directive";
 import { canExecuteFromNgForm, canExecuteFromSignals } from "./command.util";
 
 declare const isBanned: boolean;
@@ -77,5 +78,11 @@ describe("Command", () => {
 describe("SsvCommand", () => {
 	it("types command as possibly undefined (it is until ngOnInit)", () => {
 		expectTypeOf<SsvCommand["command"]>().toEqualTypeOf<Signal<ICommand | undefined>>();
+	});
+});
+
+describe("SsvCommandRef", () => {
+	it("types command as possibly undefined (it is until ngOnInit)", () => {
+		expectTypeOf<SsvCommandRef["command"]>().toEqualTypeOf<Signal<ICommand | undefined>>();
 	});
 });

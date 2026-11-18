@@ -36,8 +36,8 @@ export class SsvCommandRef<TExecute extends ExecuteFn = ExecuteFn> implements On
 		alias: `ssvCommandRef`
 	});
 
-	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-	readonly #command = signal<ICommand<TExecute>>(undefined!);
+	readonly #command = signal<ICommand<TExecute> | undefined>(undefined);
+	/** The created command: `undefined` until `ngOnInit`; `[ssvCommand]` accepts that as "no command yet". */
 	readonly command = this.#command.asReadonly();
 
 	// todo: use afterNextRender

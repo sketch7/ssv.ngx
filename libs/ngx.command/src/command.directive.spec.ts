@@ -6,6 +6,7 @@ import { vi } from "vitest";
 
 import { SsvCommand } from "./command.directive";
 import { command } from "./command";
+import type { ICommand } from "./command.model";
 
 // Test host component for button element
 @Component({
@@ -119,6 +120,17 @@ class SwapHostComponent {
 	readonly jainaCmd = command(this.recruitJaina);
 	readonly thrallCmd = command(vi.fn(), [{ code: "hero.banned" }]);
 	readonly cmd = signal(this.rexxarCmd);
+}
+
+// Test host component whose command comes later (e.g. `[ssvCommand]="ref.command()"`) and can be cleared
+@Component({
+	imports: [SsvCommand],
+	template: `<button [ssvCommand]="cmd()" data-testid="pending-btn">Recruit</button>`,
+})
+class PendingHostComponent {
+	readonly recruit = vi.fn();
+	readonly recruitCmd = command(this.recruit);
+	readonly cmd = signal<ICommand | undefined>(undefined);
 }
 
 // Reads the command while the element's directives are created, before inputs are set
@@ -520,6 +532,57 @@ describe("SsvCommand Directive", () => {
 			buttonEl.click();
 			expect(component.recruitJaina).toHaveBeenCalledTimes(1);
 			expect(component.recruitRexxar).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("when no command is bound yet", () => {
+		let fixture: ComponentFixture<PendingHostComponent>;
+		let component: PendingHostComponent;
+		let directive: SsvCommand;
+		let buttonEl: HTMLButtonElement;
+
+		beforeEach(async () => {
+			await TestBed.configureTestingModule({ imports: [PendingHostComponent] }).compileComponents();
+			fixture = TestBed.createComponent(PendingHostComponent);
+			component = fixture.componentInstance;
+			fixture.detectChanges();
+			const el = fixture.debugElement.query(By.css("[data-testid='pending-btn']"));
+			buttonEl = el.nativeElement;
+			directive = el.injector.get(SsvCommand);
+		});
+
+		it("should have no command and not be executable", () => {
+			expect(directive.command()).toBeUndefined();
+			expect(buttonEl.disabled).toBe(true);
+		});
+
+		it("should follow the command once bound", () => {
+			component.cmd.set(component.recruitCmd);
+			fixture.detectChanges();
+
+			expect(buttonEl.disabled).toBe(false);
+			buttonEl.click();
+			expect(component.recruit).toHaveBeenCalledTimes(1);
+		});
+
+		describe("when the bound command is cleared", () => {
+			beforeEach(() => {
+				component.cmd.set(component.recruitCmd);
+				fixture.detectChanges();
+				component.cmd.set(undefined);
+				fixture.detectChanges();
+			});
+
+			it("should drop the previous command", () => {
+				expect(directive.command()).toBeUndefined();
+				expect(buttonEl.disabled).toBe(true);
+			});
+
+			it("should not execute the previous command on click", () => {
+				buttonEl.disabled = false;
+				buttonEl.click();
+				expect(component.recruit).not.toHaveBeenCalled();
+			});
 		});
 	});
 

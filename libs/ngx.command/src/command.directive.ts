@@ -96,7 +96,8 @@ export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements O
 	readonly #cdr = inject(ChangeDetectorRef);
 	readonly #injector = inject(Injector);
 
-	readonly commandOrCreator = input.required<T extends ICommand ? T : (ICommand<ExtractExecuteFn<T>> | CommandCreator<ExtractExecuteFn<T>>)>({
+	/** The command, or a command creator; `undefined` is "no command yet": not executable, and a click does nothing. */
+	readonly commandOrCreator = input.required<(T extends ICommand ? T : (ICommand<ExtractExecuteFn<T>> | CommandCreator<ExtractExecuteFn<T>>)) | undefined>({
 		alias: `ssvCommand`
 	});
 	readonly ssvCommandOptions = input<Partial<CommandOptions>>(this.#options);
@@ -126,21 +127,22 @@ export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements O
 
 	// the input is read from ngOnInit on, so reading `command()` earlier (e.g. while the host is created) gives undefined, not NG0950
 	readonly #initialized = signal(false);
-	// a bound command follows the input, so it can be swapped; a creator's command is built once, in ngOnInit
+	// a bound command follows the input, so it can be swapped or cleared; a creator's command is built once, in ngOnInit
 	readonly #command = linkedSignal<unknown, ICommand<ExtractExecuteFn<T>> | undefined>({
 		source: () => this.#initialized() ? this.commandOrCreator() : undefined,
-		computation: (source, previous) => isCommand<ICommand<ExtractExecuteFn<T>>>(source) ? source : previous?.value,
+		computation: (source, previous) => source === undefined || isCommand<ICommand<ExtractExecuteFn<T>>>(source)
+			? source
+			: previous?.value,
 	});
-	/** The bound command (or the one built from a command creator): `undefined` until `ngOnInit`. */
+	/** The bound command (or the one built from a command creator): `undefined` until `ngOnInit`, or while none is bound. */
 	readonly command = this.#command.asReadonly();
 
 	constructor() {
 		effect(() => {
-			const canExecute = this.#command()?.$canExecute();
-			if (canExecute === undefined) {
+			if (!this.#initialized()) {
 				return;
 			}
-			this.trySetDisabled(!canExecute);
+			this.trySetDisabled(!(this.#command()?.$canExecute() ?? false));
 			this.#cdr.markForCheck();
 		});
 	}
@@ -149,7 +151,7 @@ export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements O
 	ngOnInit(): void {
 		this.#initialized.set(true);
 		const commandOrCreator = this.commandOrCreator();
-		if (isCommand(commandOrCreator)) {
+		if (commandOrCreator === undefined || isCommand(commandOrCreator)) {
 			// followed by #command
 			return;
 		} else if (isCommandCreator(commandOrCreator)) {

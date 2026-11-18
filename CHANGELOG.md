@@ -12,6 +12,7 @@
 ### Bug Fixes
 
 - **command:** `ssvCommand` follows a bound command swapped after init (previously the first command stayed bound); command creators are still read once
+- **command:** `ssvCommand` accepts `undefined` as "no command yet" (previously it threw `[ssvCommand] is not defined properly!`): not executable (`disabled`) and a click does nothing; clearing a bound command back to `undefined` drops it, so strict templates can bind `[ssvCommand]="ref.command()"`
 
 ### BREAKING CHANGES
 
@@ -20,6 +21,7 @@
 - **command:** `Command` is now a type (`ICommand`), not a class: there is no public constructor and no `instanceof Command`; create instances only with `command()` (`new Command(execute, canExecute$, injector)` becomes `command(execute, canExecute$, { injector })`)
 - **command:** remove the deprecated snapshot getters `isExecuting` and `canExecute` from `Command`/`ICommand` - use the `$isExecuting()` / `$canExecute()` signals
 - **command:** `SsvCommand.command` is now `Signal<ICommand | undefined>` (was `Signal<ICommand>`, though it was `undefined` before `ngOnInit`): handle `undefined` when reading it, or drop an existing `| undefined` workaround
+- **command:** `SsvCommandRef.command` is now `Signal<ICommand | undefined>` (was `Signal<ICommand>`, though it was `undefined` before `ngOnInit`); `[ssvCommand]` accepts it as is
 - **command:** remove `commandAsync` (deprecated in 5.0.0) - use `command`
 - **command:** `canExecuteFromSignals` returns `Signal<CanExecuteResult>` (was `Signal<boolean>`) and `canExecuteFromNgForm` returns `Observable<CanExecuteResult>` (was `Observable<boolean>`): `true`, or the reasons (`form.invalid`, `form.unchanged`); passing them to `command()` is unchanged, reading them as a boolean is not (use `cmd.$canExecute()`)
 

@@ -126,7 +126,7 @@ await cmd.execute(); // Returns Promise for async
 ## Anti-Patterns
 
 ❌ `Command` has no constructor and no `isExecuting`/`canExecute` snapshot getters - use `command()` and the `$` signals
-❌ `ssvCommand`'s `command()` is `undefined` until `ngOnInit` (`Signal<ICommand | undefined>`) - handle it when reading early
+❌ `ssvCommand`'s and `ssvCommandRef`'s `command()` are `undefined` until `ngOnInit` (`Signal<ICommand | undefined>`) - handle it when reading early; `[ssvCommand]` itself accepts `undefined` ("no command yet": disabled, click does nothing)
 ❌ `[ssvCommandParams]="[items]"` spreads - use `[[items]]`
 ❌ Sharing `isExecuting` in loops - use command creator `{host, execute, params}`
 
