@@ -1,8 +1,10 @@
-import { computed, createEnvironmentInjector, signal } from "@angular/core";
+import { computed, createEnvironmentInjector, isSignal, signal } from "@angular/core";
 import { BehaviorSubject, EMPTY, of, throwError } from "rxjs";
 import { vi } from "vitest";
 
 import { command } from "./command";
+import * as api from "./index";
+import type { CommandDisabledReason } from "./command.model";
 
 interface Hero {
 	name: string;
@@ -17,17 +19,33 @@ describe("CommandSpecs", () => {
 		injector?.destroy();
 	});
 
+	describe("public api", () => {
+		it("should not export a Command class, only command() creates commands", () => {
+			expect("Command" in api).toBe(false);
+		});
+
+		it("should expose the state as signals, without the $ prefix", () => {
+			const cmd = command(vi.fn(), undefined, { injector });
+			expect(isSignal(cmd.isExecuting)).toBe(true);
+			expect(isSignal(cmd.canExecute)).toBe(true);
+			expect(isSignal(cmd.disabledReasons)).toBe(true);
+			expect("$isExecuting" in cmd).toBe(false);
+			expect("$canExecute" in cmd).toBe(false);
+			expect("$disabledReasons" in cmd).toBe(false);
+		});
+	});
+
 	describe("given a command without canExecute$ param", () => {
 		const executeFn = vi.fn();
 		const cmd = command(executeFn, undefined, { injector });
 
 		describe("when command is initialized", () => {
 			it("should have canExecute set to true", () => {
-				expect(cmd.canExecute).toBe(true);
+				expect(cmd.canExecute()).toBe(true);
 			});
 
-			it("should have $canExecute signal set to true", () => {
-				expect(cmd.$canExecute()).toBe(true);
+			it("should have canExecute signal set to true", () => {
+				expect(cmd.canExecute()).toBe(true);
 			});
 		});
 
@@ -35,11 +53,11 @@ describe("CommandSpecs", () => {
 			cmd.execute();
 
 			it("should have isExecuting set to false after execute finishes", () => {
-				expect(cmd.isExecuting).toBe(false);
+				expect(cmd.isExecuting()).toBe(false);
 			});
 
 			it("should have canExecute set to true after execute finishes", () => {
-				expect(cmd.canExecute).toBe(true);
+				expect(cmd.canExecute()).toBe(true);
 			});
 
 			it("should invoke execute function", () => {
@@ -67,7 +85,7 @@ describe("CommandSpecs", () => {
 				await cmd.execute();
 				await cmd.execute();
 
-				expect(cmd.isExecuting).toBeFalsy();
+				expect(cmd.isExecuting()).toBeFalsy();
 				expect(executeFn).toHaveBeenCalledTimes(2);
 			});
 		});
@@ -85,7 +103,7 @@ describe("CommandSpecs", () => {
 				const cmd = command(executeFn, () => true, { injector });
 				expect(() => cmd.execute()).toThrow();
 				expect(() => cmd.execute()).toThrow();
-				expect(cmd.isExecuting).toBeFalsy();
+				expect(cmd.isExecuting()).toBeFalsy();
 				expect(executeFn).toHaveBeenCalledTimes(2);
 			});
 
@@ -111,11 +129,11 @@ describe("CommandSpecs", () => {
 		const cmd = command(executeFn, canExecute$, { injector });
 
 		it("should have canExecute set to true", () => {
-			expect(cmd.canExecute).toBe(true);
+			expect(cmd.canExecute()).toBe(true);
 		});
 
-		it("should have $canExecute signal set to true", () => {
-			expect(cmd.$canExecute()).toBe(true);
+		it("should have canExecute signal set to true", () => {
+			expect(cmd.canExecute()).toBe(true);
 		});
 
 		describe("when the canExecute observable changes", () => {
@@ -124,11 +142,11 @@ describe("CommandSpecs", () => {
 			});
 
 			it("should update canExecute", () => {
-				expect(cmd.canExecute).toBe(false);
+				expect(cmd.canExecute()).toBe(false);
 			});
 
-			it("should update $canExecute signal", () => {
-				expect(cmd.$canExecute()).toBe(false);
+			it("should update canExecute signal", () => {
+				expect(cmd.canExecute()).toBe(false);
 			});
 		});
 	});
@@ -138,11 +156,11 @@ describe("CommandSpecs", () => {
 		const cmd = command(executeFn, new BehaviorSubject(false), { injector });
 
 		it("should have canExecute set to false", () => {
-			expect(cmd.canExecute).toBe(false);
+			expect(cmd.canExecute()).toBe(false);
 		});
 
-		it("should have $canExecute signal set to false", () => {
-			expect(cmd.$canExecute()).toBe(false);
+		it("should have canExecute signal set to false", () => {
+			expect(cmd.canExecute()).toBe(false);
 		});
 	});
 
@@ -151,8 +169,8 @@ describe("CommandSpecs", () => {
 		const executeFn = vi.fn();
 		const cmd = command(executeFn, canExecuteSignal, { injector });
 
-		it("should have $canExecute signal set to true", () => {
-			expect(cmd.$canExecute()).toBe(true);
+		it("should have canExecute signal set to true", () => {
+			expect(cmd.canExecute()).toBe(true);
 		});
 
 		describe("when the canExecute signal changes", () => {
@@ -160,8 +178,8 @@ describe("CommandSpecs", () => {
 				canExecuteSignal.set(false);
 			});
 
-			it("should update $canExecute signal", () => {
-				expect(cmd.$canExecute()).toBe(false);
+			it("should update canExecute signal", () => {
+				expect(cmd.canExecute()).toBe(false);
 			});
 		});
 	});
@@ -172,8 +190,8 @@ describe("CommandSpecs", () => {
 		const executeFn = vi.fn();
 		const cmd = command(executeFn, canExecuteComputed, { injector });
 
-		it("should have $canExecute signal set to false initially", () => {
-			expect(cmd.$canExecute()).toBe(false);
+		it("should have canExecute signal set to false initially", () => {
+			expect(cmd.canExecute()).toBe(false);
 		});
 
 		describe("when the computed signal changes to true", () => {
@@ -181,8 +199,8 @@ describe("CommandSpecs", () => {
 				isValid.set(true);
 			});
 
-			it("should update $canExecute signal to true", () => {
-				expect(cmd.$canExecute()).toBe(true);
+			it("should update canExecute signal to true", () => {
+				expect(cmd.canExecute()).toBe(true);
 			});
 		});
 
@@ -191,8 +209,8 @@ describe("CommandSpecs", () => {
 				isValid.set(false);
 			});
 
-			it("should update $canExecute signal to false", () => {
-				expect(cmd.$canExecute()).toBe(false);
+			it("should update canExecute signal to false", () => {
+				expect(cmd.canExecute()).toBe(false);
 			});
 		});
 	});
@@ -201,8 +219,8 @@ describe("CommandSpecs", () => {
 		const executeFn = vi.fn();
 		const cmd = command(executeFn, false, { injector });
 
-		it("should have $canExecute signal set to false", () => {
-			expect(cmd.$canExecute()).toBe(false);
+		it("should have canExecute signal set to false", () => {
+			expect(cmd.canExecute()).toBe(false);
 		});
 	});
 
@@ -299,7 +317,7 @@ describe("CommandSpecs", () => {
 				const result = cmd.execute(5);
 
 				expect(result).toBe(10);
-				expect(cmd.isExecuting).toBe(false);
+				expect(cmd.isExecuting()).toBe(false);
 			});
 
 			it("should return void for void functions", () => {
@@ -324,11 +342,11 @@ describe("CommandSpecs", () => {
 
 				const resultPromise = cmd.execute(1);
 
-				expect(cmd.isExecuting).toBe(true);
+				expect(cmd.isExecuting()).toBe(true);
 				expect(resultPromise).toBeInstanceOf(Promise);
 				const result = await resultPromise;
 				expect(result).toEqual({ id: 1, name: "User" });
-				expect(cmd.isExecuting).toBe(false);
+				expect(cmd.isExecuting()).toBe(false);
 			});
 
 			it("should handle Promise rejection", async () => {
@@ -336,7 +354,7 @@ describe("CommandSpecs", () => {
 				const cmd = command(execute, undefined, { injector });
 
 				await expect(cmd.execute()).rejects.toThrow("Failed");
-				expect(cmd.isExecuting).toBe(false);
+				expect(cmd.isExecuting()).toBe(false);
 			});
 
 			afterAll(() => {
@@ -356,12 +374,12 @@ describe("CommandSpecs", () => {
 
 				const result = cmd.execute("test");
 
-				expect(cmd.isExecuting).toBe(true);
+				expect(cmd.isExecuting()).toBe(true);
 				expect(result).toBeInstanceOf(Promise);
 
 				const value = await result;
 				expect(value).toEqual({ result: "test" });
-				expect(cmd.isExecuting).toBe(false);
+				expect(cmd.isExecuting()).toBe(false);
 			});
 
 			it("should handle Observable errors (converted to Promise rejection)", async () => {
@@ -371,14 +389,14 @@ describe("CommandSpecs", () => {
 				await expect(async () => {
 					await cmd.execute();
 				}).rejects.toThrow("Observable error");
-				expect(cmd.isExecuting).toBe(false);
+				expect(cmd.isExecuting()).toBe(false);
 			});
 
 			it("should complete isExecuting after observable completes", async () => {
 				const execute = vi.fn(() => of(1, 2, 3));
 				const cmd = command(execute, undefined, { injector });
 
-				expect(cmd.isExecuting).toBe(false);
+				expect(cmd.isExecuting()).toBe(false);
 				const result = cmd.execute();
 
 				expect(result).toBeInstanceOf(Promise);
@@ -386,7 +404,7 @@ describe("CommandSpecs", () => {
 				const value = await result;
 
 				expect(value).toBe(3);
-				expect(cmd.isExecuting).toBe(false);
+				expect(cmd.isExecuting()).toBe(false);
 			});
 
 			afterAll(() => {
@@ -414,6 +432,82 @@ describe("CommandSpecs", () => {
 				expect(result.heroes).toHaveLength(1);
 				expect(result.count).toBe(1);
 				expect(result.metadata.timestamp).toBeInstanceOf(Date);
+			});
+		});
+	});
+
+	describe("disabled reasons", () => {
+		const banned = { code: "hero.banned" } as const;
+		const notOwner = { code: "hero.notOwner", params: { owner: "Thrall" } } as const;
+
+		describe("given a constant canExecute result", () => {
+			const noReasons = command(() => 1, undefined, { injector }).disabledReasons();
+
+			it.each([
+				["undefined", undefined],
+				["true", true],
+				["[]", []],
+				["() => []", () => []],
+			] as const)("should be enabled with the shared frozen empty reasons for %s", (_, canExecute) => {
+				const cmd = command(() => 1, canExecute, { injector });
+				expect(cmd.canExecute()).toBe(true);
+				expect(cmd.disabledReasons()).toBe(noReasons);
+				expect(Object.isFrozen(cmd.disabledReasons())).toBe(true);
+			});
+
+			it("should be disabled without reasons for false", () => {
+				const cmd = command(() => 1, false, { injector });
+				expect(cmd.canExecute()).toBe(false);
+				expect(cmd.disabledReasons()).toBe(noReasons);
+			});
+
+			it("should be disabled with exactly the given reasons for a non-empty array", () => {
+				const reasons = [banned, notOwner];
+				const cmd = command(() => 1, reasons, { injector });
+				expect(cmd.canExecute()).toBe(false);
+				expect(cmd.disabledReasons()).toBe(reasons);
+			});
+		});
+
+		describe("given a function reading a signal", () => {
+			const isBanned = signal(true);
+			const cmd = command(() => 1, () => isBanned() ? [banned] : true, { injector });
+
+			it("should be disabled with the reasons while it returns some", () => {
+				isBanned.set(true);
+				expect(cmd.canExecute()).toBe(false);
+				expect(cmd.disabledReasons()).toEqual([banned]);
+				expect(() => cmd.execute()).toThrow();
+			});
+
+			it("should become enabled with no reasons when it returns true", () => {
+				isBanned.set(false);
+				expect(cmd.canExecute()).toBe(true);
+				expect(cmd.disabledReasons()).toEqual([]);
+			});
+		});
+
+		describe("given an observable of reasons", () => {
+			it("should follow its emissions", () => {
+				const canExecute$ = new BehaviorSubject<boolean | readonly CommandDisabledReason[]>([notOwner]);
+				const cmd = command(() => 1, canExecute$, { injector });
+				expect(cmd.canExecute()).toBe(false);
+				expect(cmd.disabledReasons()).toEqual([notOwner]);
+
+				canExecute$.next(true);
+				expect(cmd.canExecute()).toBe(true);
+				expect(cmd.disabledReasons()).toEqual([]);
+			});
+		});
+
+		describe("when executing", () => {
+			it("should not be able to execute, without adding a reason", async () => {
+				const cmd = command(() => Promise.resolve(), true, { injector });
+				const result = cmd.execute();
+				expect(cmd.canExecute()).toBe(false);
+				expect(cmd.disabledReasons()).toEqual([]);
+				await result;
+				expect(cmd.canExecute()).toBe(true);
 			});
 		});
 	});
