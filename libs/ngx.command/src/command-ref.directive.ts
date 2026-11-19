@@ -25,7 +25,6 @@ const NAME_CAMEL = "ssvCommandRef";
 @Directive({
 	selector: `[${NAME_CAMEL}]`,
 	exportAs: NAME_CAMEL,
-	standalone: true,
 })
 export class SsvCommandRef<TExecute extends ExecuteFn = ExecuteFn> implements OnInit {
 

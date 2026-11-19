@@ -83,7 +83,6 @@ const NAME_CAMEL = "ssvCommand";
 	},
 	// todo: handle keydown/enter?
 	exportAs: NAME_CAMEL,
-	standalone: true,
 })
 export class SsvCommand<T extends Command | ExecuteFn = ExecuteFn> implements OnInit {
 
@@ -117,7 +116,7 @@ export class SsvCommand<T extends Command | ExecuteFn = ExecuteFn> implements On
 		// Normalize single param to array format for consistent handling
 		return this.#normalizeParams(params as CommandParams<ExtractExecuteFn<T>>);
 	});
-	readonly _hostClasses = computed(() => ["ssv-command", this.#executingClass()]);
+	readonly _hostClasses = computed(() => this.#executingClass());
 	readonly #executingClass = computed(() => this.#command()?.isExecuting() ? this.commandOptions().executingCssClass : "");
 
 	readonly #creatorParams = signal<Parameters<ExtractExecuteFn<T>> | undefined>(undefined);

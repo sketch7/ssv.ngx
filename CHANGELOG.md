@@ -17,11 +17,13 @@
 
 ### BREAKING CHANGES
 
+- **command:** requires Angular 20+ (peer range raised from `>=17.0.0`; uses `linkedSignal`)
+- **command:** `ssvCommand` no longer adds the always-on `ssv-command` host class (`executingCssClass` still applies)
 - **command:** the command signals drop the `$` prefix: `$isExecuting` → `isExecuting`, `$canExecute` → `canExecute` (and the new `disabledReasons`). The 5.x boolean getters `isExecuting`/`canExecute` are removed, and their names now hold the signals.
   > [!WARNING]
   > A read without `()` still compiles and is always truthy: `!cmd.canExecute` is always `false` and `cmd.isExecuting` always "loading". Templates only warn (NG8109), and nothing reports it on a directive input with a transform (e.g. `[loading]="cmd.isExecuting"`). Set `angularCompilerOptions.extendedDiagnostics.checks.interpolatedSignalNotInvoked: "error"` in `tsconfig.json`, and search for `.isExecuting` / `.canExecute` / `.disabledReasons` not followed by `(`.
 - **command:** remove `ICommand`: `Command` is the only command type. It is a type, not a class: there is no public constructor and no `instanceof Command`; create instances only with `command()` (`new Command(execute, canExecute$, injector)` becomes `command(execute, canExecute$, { injector })`)
-- **command:** `Command` requires `disabledReasons: Signal<readonly CommandDisabledReason[]>` (hand-written implementations and test doubles must add it, e.g. `disabledReasons: signal([])`)
+- **command:** `Command` requires `disabledReasons: Signal<readonly CommandDisabledReason[]>` (a hand-written `Command` is type-level only, since the directives accept only `command()` instances, and must add it; build test doubles with `command()`)
 - **command:** remove `SsvCommandModule` (deprecated) - import the standalone `SsvCommand` / `SsvCommandRef`
 - **command:** `isCommand` / `isCommandCreator` are no longer exported (internal)
 - **command:** `CanExecute` is now `CanExecuteResult | (() => CanExecuteResult) | Observable<CanExecuteResult>` (the redundant `Signal<boolean>` member is removed; signals still work, since they are functions)

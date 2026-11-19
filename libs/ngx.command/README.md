@@ -20,6 +20,7 @@ Choose the version corresponding to your Angular version:
 
  | library | Angular |
  | ------- | ------- |
+ | 6.x+    | 20+     |
  | 5.x+    | 17+     |
  | 4.x+    | 17+     |
  | 3.x+    | 17+     |

@@ -1,10 +1,9 @@
 import { type AbstractControl, PristineChangeEvent, StatusChangeEvent } from "@angular/forms";
-import { Observable, map, distinctUntilChanged, filter, combineLatest, of, defer, concat } from "rxjs";
+import { Observable, map, distinctUntilChanged, filter, combineLatest, of, defer, concat, isObservable } from "rxjs";
 
 import type { CanExecute, CanExecuteResult, CommandCreator, CommandDisabledReason, Command, ExecuteFn } from "./command.model";
 import { command, CommandImpl } from "./command";
 import { type Injector, type Signal, computed, untracked } from "@angular/core";
-import { isObservable } from "rxjs";
 
 /** Determines whether the arg object is a `Command` (created by `command()`). @internal */
 export function isCommand<T extends Command>(arg: unknown | T): arg is T {

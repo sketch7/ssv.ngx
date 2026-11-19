@@ -28,8 +28,8 @@
     "url": "https://github.com/sketch7/ssv.ngx.git"
   },
   "peerDependencies": {
-    "@angular/core": ">=17.0.0",
-    "@angular/forms": ">=17.0.0",
+    "@angular/core": ">=20.0.0",
+    "@angular/forms": ">=20.0.0",
     "rxjs": ">=6.0.0"
   },
   "sideEffects": false

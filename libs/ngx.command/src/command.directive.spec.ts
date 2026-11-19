@@ -180,10 +180,6 @@ describe("SsvCommand Directive", () => {
 				expect(buttonEl.disabled).toBe(false);
 			});
 
-			it("should have ssv-command class", () => {
-				expect(buttonEl.classList.contains("ssv-command")).toBe(true);
-			});
-
 			it("should not have executing class initially", () => {
 				expect(buttonEl.classList.contains("executing")).toBe(false);
 			});
@@ -280,10 +276,6 @@ describe("SsvCommand Directive", () => {
 		});
 
 		describe("when initialized", () => {
-			it("should have ssv-command class", () => {
-				expect(divEl.classList.contains("ssv-command")).toBe(true);
-			});
-
 			it("should not have executing class initially", () => {
 				expect(divEl.classList.contains("executing")).toBe(false);
 			});
