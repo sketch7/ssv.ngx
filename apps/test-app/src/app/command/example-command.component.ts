@@ -59,6 +59,8 @@ export class ExampleCommandComponent {
 		this.isValidRedux$,
 	);
 	readonly containerDestroySaveCmd = command(() => this.save$());
+	readonly $isBanned = signal(true);
+	readonly recruitCmd = command(() => this.save$(), () => this.$isBanned() ? [{ code: "hero.banned" }] : true);
 
 	heroes: Hero[] = [
 		{ key: "rexxar", name: "Rexxar" },
@@ -156,6 +158,16 @@ export class ExampleCommandComponent {
 			map(x => !!x.isInvulnerable),
 			tap(x => console.warn(">>>> canRemoveHero$ change", x, hero)),
 		);
+	}
+
+	recruitHero$(hero: Hero) {
+		return timer(2000).pipe(
+			tap(() => console.warn("recruitHero$", "execute complete", hero)),
+		);
+	}
+
+	canRecruitHero(hero: Hero) {
+		return this.$isBanned() ? [{ code: "hero.banned", params: { name: hero.name } }] : true;
 	}
 
 	toggleHeroVulnerability(): void {

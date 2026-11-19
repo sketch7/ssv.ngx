@@ -9,26 +9,22 @@ import {
 	input,
 	Injector,
 	computed,
+	linkedSignal,
 	signal,
 } from "@angular/core";
 
 import { type CommandOptions, COMMAND_OPTIONS } from "./command.options";
-import { command, type Command } from "./command";
-import { isCommand, isCommandCreator } from "./command.util";
-import { CommandCreator, type ICommand, type CanExecute, type ExecuteFn, type CommandParams, type Simplify } from "./command.model";
+import { commandFromCreator, isCommand, isCommandCreator } from "./command.util";
+import type { CommandCreator, Command, ExecuteFn, CommandParams, Simplify } from "./command.model";
 
-/** Helper type to extract ExecuteFn from ICommand/Command or use ExecuteFn directly */
+/** Helper type to extract ExecuteFn from Command or use ExecuteFn directly */
 type ExtractExecuteFn<T> = T extends Command<infer TExec>
-	? TExec
-	: T extends ICommand<infer TExec>
 	? TExec
 	: T extends ExecuteFn
 	? T
 	: never;
 
 const NAME_CAMEL = "ssvCommand";
-
-// let nextUniqueId = 0;
 
 /**
  * Controls the state of a component in sync with `Command`.
@@ -87,18 +83,17 @@ const NAME_CAMEL = "ssvCommand";
 	},
 	// todo: handle keydown/enter?
 	exportAs: NAME_CAMEL,
-	standalone: true,
 })
-export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements OnInit {
+export class SsvCommand<T extends Command | ExecuteFn = ExecuteFn> implements OnInit {
 
-	// readonly id = `${NAME_CAMEL}-${nextUniqueId++}`;
 	readonly #options = inject(COMMAND_OPTIONS);
 	readonly #renderer = inject(Renderer2);
 	readonly #element = inject(ElementRef);
 	readonly #cdr = inject(ChangeDetectorRef);
 	readonly #injector = inject(Injector);
 
-	readonly commandOrCreator = input.required<T extends ICommand ? T : (ICommand<ExtractExecuteFn<T>> | CommandCreator<ExtractExecuteFn<T>>)>({
+	/** The command, or a command creator; `undefined` is "no command yet": not executable, and a click does nothing. */
+	readonly commandOrCreator = input.required<(T extends Command ? T : (Command<ExtractExecuteFn<T>> | CommandCreator<ExtractExecuteFn<T>>)) | undefined>({
 		alias: `ssvCommand`
 	});
 	readonly ssvCommandOptions = input<Partial<CommandOptions>>(this.#options);
@@ -121,53 +116,44 @@ export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements O
 		// Normalize single param to array format for consistent handling
 		return this.#normalizeParams(params as CommandParams<ExtractExecuteFn<T>>);
 	});
-	readonly _hostClasses = computed(() => ["ssv-command", this.#executingClass()]);
-	readonly #executingClass = computed(() => this.#command().$isExecuting() ? this.commandOptions().executingCssClass : "");
+	readonly _hostClasses = computed(() => this.#executingClass());
+	readonly #executingClass = computed(() => this.#command()?.isExecuting() ? this.commandOptions().executingCssClass : "");
 
 	readonly #creatorParams = signal<Parameters<ExtractExecuteFn<T>> | undefined>(undefined);
 
-	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-	readonly #command = signal<ICommand<ExtractExecuteFn<T>>>(undefined!);
+	// the input is read from ngOnInit on, so reading `command()` earlier (e.g. while the host is created) gives undefined, not NG0950
+	readonly #initialized = signal(false);
+	// a bound command follows the input, so it can be swapped or cleared; a creator's command is built once, in ngOnInit
+	readonly #command = linkedSignal<unknown, Command<ExtractExecuteFn<T>> | undefined>({
+		source: () => this.#initialized() ? this.commandOrCreator() : undefined,
+		computation: (source, previous) => source === undefined || isCommand<Command<ExtractExecuteFn<T>>>(source)
+			? source
+			: previous?.value,
+	});
+	/** The bound command (or the one built from a command creator): `undefined` until `ngOnInit`, or while none is bound. */
 	readonly command = this.#command.asReadonly();
 
 	constructor() {
 		effect(() => {
-			const canExecute = this.#command().$canExecute();
-			this.trySetDisabled(!canExecute);
-			// console.log("[ssvCommand::canExecute$]", { canExecute: x });
+			if (!this.#initialized()) {
+				return;
+			}
+			this.trySetDisabled(!(this.#command()?.canExecute() ?? false));
 			this.#cdr.markForCheck();
 		});
 	}
 
 	// todo: afterNextRender
 	ngOnInit(): void {
+		this.#initialized.set(true);
 		const commandOrCreator = this.commandOrCreator();
-		// console.log("[ssvCommand::init]", this.#options);
-		if (isCommand(commandOrCreator)) {
-			this.#command.set(commandOrCreator);
+		if (commandOrCreator === undefined || isCommand(commandOrCreator)) {
+			// followed by #command
+			return;
 		} else if (isCommandCreator(commandOrCreator)) {
 			this.#creatorParams.set(this.#normalizeParams(commandOrCreator.params as CommandParams<ExtractExecuteFn<T>>));
 
-			// todo: find something like this for ivy (or angular10+)
-			// const hostComponent = (this.viewContainer as any)._view.component;
-
-			const execFn = commandOrCreator.execute.bind(commandOrCreator.host) as ExtractExecuteFn<T>;
-			const params = this.commandParams();
-
-			let canExec: CanExecute | undefined;
-			if (commandOrCreator.canExecute instanceof Function) {
-				const boundFn = commandOrCreator.canExecute.bind(commandOrCreator.host);
-				const result = Array.isArray(params) ? boundFn(...params) : boundFn();
-				canExec = result as CanExecute;
-			} else {
-				canExec = commandOrCreator.canExecute;
-			}
-
-			// console.log("[ssvCommand::init] command creator", {
-			// 	firstParam: params ? params[0] : null,
-			// 	params
-			// });
-			const cmd = command(execFn, canExec, { injector: this.#injector });
+			const cmd = commandFromCreator(commandOrCreator, this.#injector, () => this.commandParams());
 			this.#command.set(cmd);
 		} else {
 			throw new Error(`${NAME_CAMEL}: [${NAME_CAMEL}] is not defined properly!`);
@@ -175,19 +161,21 @@ export class SsvCommand<T extends ICommand | ExecuteFn = ExecuteFn> implements O
 	}
 
 	_handleClick(): void {
+		const cmd = this.#command();
+		if (!cmd) {
+			return;
+		}
 		const commandParams = this.commandParams();
-		// console.log("[ssvCommand::onClick]", commandParams);
 		if (Array.isArray(commandParams)) {
-			this.#command().execute(...commandParams);
+			cmd.execute(...commandParams);
 		} else {
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			(this.#command().execute as any)();
+			(cmd.execute as any)();
 		}
 	}
 
 	private trySetDisabled(disabled: boolean) {
 		if (this.commandOptions().handleDisabled) {
-			// console.warn(">>>> disabled", { id: this.id, disabled });
 			this.#renderer.setProperty(this.#element.nativeElement, "disabled", disabled);
 		}
 	}

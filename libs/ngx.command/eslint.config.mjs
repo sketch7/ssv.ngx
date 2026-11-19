@@ -13,6 +13,7 @@ export default [
 					ignoredFiles: [
 						"{projectRoot}/eslint.config.{js,cjs,mjs}",
 						"{projectRoot}/**/*.spec.ts",
+						"{projectRoot}/**/*.test-d.ts",
 						"{projectRoot}/vitest.config.ts",
 						"{projectRoot}/src/test-setup.ts",
 					],
