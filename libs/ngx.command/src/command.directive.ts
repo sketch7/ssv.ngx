@@ -9,6 +9,7 @@ import {
 	input,
 	Injector,
 	computed,
+	ErrorHandler,
 	linkedSignal,
 	signal,
 } from "@angular/core";
@@ -91,6 +92,7 @@ export class SsvCommand<T extends Command | ExecuteFn = ExecuteFn> implements On
 	readonly #element = inject(ElementRef);
 	readonly #cdr = inject(ChangeDetectorRef);
 	readonly #injector = inject(Injector);
+	readonly #errorHandler = inject(ErrorHandler);
 
 	/** The command, or a command creator; `undefined` is "no command yet": not executable, and a click does nothing. */
 	readonly commandOrCreator = input.required<(T extends Command ? T : (Command<ExtractExecuteFn<T>> | CommandCreator<ExtractExecuteFn<T>>)) | undefined>({
@@ -166,11 +168,13 @@ export class SsvCommand<T extends Command | ExecuteFn = ExecuteFn> implements On
 			return;
 		}
 		const commandParams = this.commandParams();
-		if (Array.isArray(commandParams)) {
-			cmd.execute(...commandParams);
-		} else {
+		const result: unknown = Array.isArray(commandParams)
+			? cmd.execute(...commandParams)
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			(cmd.execute as any)();
+			: (cmd.execute as any)();
+		// nobody else holds the click's promise: a rejection goes to ErrorHandler, not to the unhandled-rejection log
+		if (typeof (result as PromiseLike<unknown> | undefined)?.then === "function") {
+			(result as PromiseLike<unknown>).then(undefined, (err: unknown) => this.#errorHandler.handleError(err));
 		}
 	}
 

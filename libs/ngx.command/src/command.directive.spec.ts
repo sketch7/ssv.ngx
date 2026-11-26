@@ -1,4 +1,4 @@
-import { Component, Directive, inject, signal } from "@angular/core";
+import { Component, Directive, ErrorHandler, inject, signal } from "@angular/core";
 import { ComponentFixture, fakeAsync, TestBed } from "@angular/core/testing";
 import { By } from "@angular/platform-browser";
 import { BehaviorSubject, Observable, of, delay } from "rxjs";
@@ -605,6 +605,31 @@ describe("SsvCommand Directive", () => {
 
 			expect(el.injector.get(EarlyReadDirective).command).toBeUndefined();
 			expect(el.injector.get(SsvCommand).command()).toBe(fixture.componentInstance.recruitCmd);
+		});
+	});
+
+	describe("when an async execution fails", () => {
+		@Component({
+			imports: [SsvCommand],
+			template: `<button [ssvCommand]="failCmd">Fail</button>`,
+		})
+		class FailHostComponent {
+			readonly failCmd = command(() => Promise.reject(new Error("rift")));
+		}
+
+		it("should report the error to ErrorHandler and stop executing", async () => {
+			const handleError = vi.fn();
+			TestBed.configureTestingModule({
+				imports: [FailHostComponent],
+				providers: [{ provide: ErrorHandler, useValue: { handleError } }],
+			});
+			const fixture = TestBed.createComponent(FailHostComponent);
+			fixture.detectChanges();
+
+			fixture.nativeElement.querySelector("button").click();
+
+			await vi.waitFor(() => expect(handleError).toHaveBeenCalledWith(new Error("rift")));
+			expect(fixture.componentInstance.failCmd.isExecuting()).toBe(false);
 		});
 	});
 
