@@ -349,6 +349,20 @@ describe("CommandSpecs", () => {
 				expect(cmd.isExecuting()).toBe(false);
 			});
 
+			it("should stay executing for a promise of another realm, as a native async function under zone.js", async () => {
+				// zone.js replaces the global Promise, so a native `async` result is not `instanceof Promise`
+				let resolve!: (value: string) => void;
+				const foreign: PromiseLike<string> = { then: (onfulfilled, onrejected) => new Promise<string>(r => resolve = r).then(onfulfilled, onrejected) };
+				const cmd = command(() => foreign, undefined, { injector });
+
+				const resultPromise = cmd.execute();
+
+				expect(cmd.isExecuting()).toBe(true);
+				resolve("done");
+				expect(await resultPromise).toBe("done");
+				expect(cmd.isExecuting()).toBe(false);
+			});
+
 			it("should handle Promise rejection", async () => {
 				const execute = vi.fn(() => Promise.reject(new Error("Failed")));
 				const cmd = command(execute, undefined, { injector });

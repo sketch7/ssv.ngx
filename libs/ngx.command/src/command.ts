@@ -96,9 +96,9 @@ export class CommandImpl<TExecute extends ExecuteFn = ExecuteFn> implements Comm
 				const promise = lastValueFrom(result, { defaultValue: undefined })
 					.finally(() => this.isExecuting.set(false));
 				return promise as ExecuteReturnType<TExecute>;
-			} else if (result instanceof Promise) {
-				// Return promise with proper cleanup
-				return result
+			} else if (typeof (result as PromiseLike<unknown> | undefined)?.then === "function") {
+				// any thenable, not `instanceof Promise`: zone.js swaps the global Promise, so a native `async` result fails that check
+				return Promise.resolve(result)
 					.finally(() => this.isExecuting.set(false)) as ExecuteReturnType<TExecute>;
 			}
 			// Sync execution

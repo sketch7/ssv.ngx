@@ -11,6 +11,7 @@
 
 ### Bug Fixes
 
+- **command:** `execute()` tracks any thenable result, not only `instanceof Promise`: under zone.js a native `async` function's promise failed that check, so `isExecuting` went false at once
 - **command:** `ssvCommand` follows a bound command swapped after init (previously the first command stayed bound); command creators are still read once
 - **command:** `ssvCommand` accepts `undefined` as "no command yet" (previously it threw `[ssvCommand] is not defined properly!`): not executable (`disabled`) and a click does nothing; clearing a bound command back to `undefined` drops it, so strict templates can bind `[ssvCommand]="ref.command()"`
 - **command:** `ssvCommandRef` builds its command the same way as `ssvCommand`: `execute` and a `canExecute` function are bound to `host`, and a `canExecute` function returning an observable or a signal is followed (previously such a function was treated as always executable)
