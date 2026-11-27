@@ -83,7 +83,12 @@ Observables, that's the last emission on completion or `undefined` if empty. `on
 source's `error`. Only calls admitted through the decorator fire hooks.
 
 Use synchronous callbacks. Returned promises are ignored. If a hook throws, its error propagates
-and the decorator unlocks. A throw from `onStart` stops the action before it runs.
+and the decorator unlocks. A throw from `onError` replaces the original error. A throw from
+`onStart` stops the action before it runs. If `onStart` disables the source, the source's execution guard
+throws before running the action and `onError` receives that guard error.
+
+Use `CommandLifecycle<typeof save>` to type hooks declared separately, where `save` is the function
+passed to `command()`.
 
 ## Command Attribute (Directive)
 Handles the command `canExecute`, `isExecuting` and `execute` functions of the `Command`, in order to

@@ -43,7 +43,9 @@ readonly saveAndNotify = withCommandLifecycle(this.saveCmd, {
 });
 ```
 
-Bind the returned command to `[ssvCommand]` or call its `execute(...args)`. Hooks fire only for calls admitted through that command. All hooks receive `params`; success also receives the resolved `result` (the last Observable value on completion, or `undefined` if empty), and error receives `error` as `unknown`. Hooks run synchronously when called. Hook throws propagate and release the local lock. Keep asynchronous work in the action because promises returned from hooks are ignored.
+Bind the returned command to `[ssvCommand]` or call its `execute(...args)`. Hooks fire only for calls admitted through that command. All hooks receive `params`; success also receives the resolved `result` (the last Observable value on completion, or `undefined` if empty), and error receives `error` as `unknown`. Use the exported `CommandLifecycle<typeof action>` type when declaring hooks separately.
+
+Hook throws propagate and release the local lock. If `onError` throws, its error replaces the original error. If `onStart` disables the source, the source's guard throws before running the action and `onError` receives that guard error. Keep asynchronous work in the action because promises returned from hooks are ignored.
 
 ## Disabled Reasons
 

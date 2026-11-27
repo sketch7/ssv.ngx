@@ -190,6 +190,23 @@ describe("CommandSpecs", () => {
 			expect(decorated.canExecute()).toBe(true);
 		});
 
+		it("replaces an async rejection with the error thrown by onError and releases the lock", async () => {
+			const actionError = new Error("Action failed");
+			const hookError = new Error("Hook failed");
+			const source = command(() => Promise.reject(actionError), undefined, { injector });
+			const onError = vi.fn(() => {
+				throw hookError;
+			});
+			const decorated = api.withCommandLifecycle(source, { onError });
+
+			const execution = decorated.execute();
+			expect(decorated.isExecuting()).toBe(true);
+			await expect(execution).rejects.toBe(hookError);
+			expect(onError).toHaveBeenCalledExactlyOnceWith({ params: [], error: actionError });
+			expect(decorated.isExecuting()).toBe(false);
+			expect(decorated.canExecute()).toBe(true);
+		});
+
 		it("shares live reasons and skips hooks when the source is disabled", () => {
 			const guard = new BehaviorSubject<boolean | readonly CommandDisabledReason[]>(false);
 			const execute = vi.fn();

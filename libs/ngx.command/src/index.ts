@@ -1,5 +1,5 @@
 export { provideSsvCommandOptions, COMMAND_OPTIONS, type CommandOptions } from "./command.options";
-export { command, withCommandLifecycle, type CommandCreateOptions } from "./command";
+export { command, withCommandLifecycle, type CommandCreateOptions, type CommandLifecycle } from "./command";
 export { SsvCommand } from "./command.directive";
 export { SsvCommandRef } from "./command-ref.directive";
 export { type CanExecuteFormOptions, CommandFormReason, canExecuteFromNgForm, canExecuteFromSignals } from "./command.util";
