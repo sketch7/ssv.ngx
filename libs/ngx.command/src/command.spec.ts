@@ -1,5 +1,5 @@
 import { computed, createEnvironmentInjector, isSignal, signal } from "@angular/core";
-import { BehaviorSubject, EMPTY, of, throwError } from "rxjs";
+import { BehaviorSubject, EMPTY, of, Subject, throwError } from "rxjs";
 import { vi } from "vitest";
 
 import { command } from "./command";
@@ -32,6 +32,227 @@ describe("CommandSpecs", () => {
 			expect("$isExecuting" in cmd).toBe(false);
 			expect("$canExecute" in cmd).toBe(false);
 			expect("$disabledReasons" in cmd).toBe(false);
+		});
+	});
+
+	describe("withCommandLifecycle", () => {
+		it("locks before start and forwards the original args and sync result once", () => {
+			const heroes = [{ name: "Rexxar" }];
+			const party = { heroes };
+			const execute = vi.fn<(heroes: Hero[], leader?: string) => typeof party>(() => party);
+			const source = command(execute, undefined, { injector });
+			const onStart = vi.fn(() => {
+				expect(decorated.isExecuting()).toBe(true);
+				expect(decorated.canExecute()).toBe(false);
+				expect(execute).not.toHaveBeenCalled();
+				expect(() => decorated.execute(heroes)).toThrow();
+			});
+			const onSuccess = vi.fn(() => {
+				expect(decorated.isExecuting()).toBe(true);
+				expect(() => decorated.execute(heroes)).toThrow();
+			});
+			const onError = vi.fn();
+			const decorated = api.withCommandLifecycle(source, { onStart, onSuccess, onError });
+			const sourceExecute = vi.spyOn(source, "execute");
+
+			expect(decorated.execute(heroes, "Jaina")).toBe(party);
+
+			expect(sourceExecute).toHaveBeenCalledExactlyOnceWith(heroes, "Jaina");
+			expect(sourceExecute.mock.calls[0][0]).toBe(heroes);
+			expect(execute).toHaveBeenCalledExactlyOnceWith(heroes, "Jaina");
+			expect(onStart).toHaveBeenCalledExactlyOnceWith({ params: [heroes, "Jaina"] });
+			expect(onSuccess).toHaveBeenCalledExactlyOnceWith({ params: [heroes, "Jaina"], result: party });
+			expect(onError).not.toHaveBeenCalled();
+			expect(decorated.canExecute()).toBe(true);
+		});
+
+		it("settles a foreign thenable without waiting for promises returned by hooks", async () => {
+			const result = { name: "Jaina" };
+			const pendingHook = new Promise<void>(() => {
+				// Keep the hook pending while the command settles.
+			});
+			const execute = () => ({
+				then: (resolve: (hero: Hero) => void) => resolve(result),
+			});
+			const source = command(execute, undefined, { injector });
+			const onStart = vi.fn(() => pendingHook);
+			const onSuccess = vi.fn(() => pendingHook);
+			const onError = vi.fn();
+			const decorated = api.withCommandLifecycle(source, { onStart, onSuccess, onError });
+
+			const execution = decorated.execute();
+			expect(decorated.isExecuting()).toBe(true);
+			expect(onStart).toHaveBeenCalledOnce();
+			expect(onSuccess).not.toHaveBeenCalled();
+
+			await expect(Promise.resolve(execution)).resolves.toBe(result);
+			expect(onSuccess).toHaveBeenCalledExactlyOnceWith({ params: [], result });
+			expect(onError).not.toHaveBeenCalled();
+			expect(decorated.isExecuting()).toBe(false);
+		});
+
+		it("calls success only after Observable completion, with the last value", async () => {
+			const heroes = new Subject<Hero>();
+			const source = command(() => heroes, undefined, { injector });
+			const onSuccess = vi.fn();
+			const decorated = api.withCommandLifecycle(source, { onSuccess });
+			const last = { name: "Jaina" };
+
+			const execution = decorated.execute();
+			heroes.next({ name: "Rexxar" });
+			heroes.next(last);
+			await Promise.resolve();
+			expect(onSuccess).not.toHaveBeenCalled();
+			expect(decorated.isExecuting()).toBe(true);
+
+			heroes.complete();
+			await expect(execution).resolves.toBe(last);
+			expect(onSuccess).toHaveBeenCalledExactlyOnceWith({ params: [], result: last });
+			expect(decorated.isExecuting()).toBe(false);
+		});
+
+		it("calls success with undefined on empty Observable completion", async () => {
+			const source = command(() => EMPTY, undefined, { injector });
+			const onSuccess = vi.fn();
+			const decorated = api.withCommandLifecycle(source, { onSuccess });
+
+			await expect(decorated.execute()).resolves.toBeUndefined();
+			expect(onSuccess).toHaveBeenCalledExactlyOnceWith({ params: [], result: undefined });
+		});
+
+		it("calls error and rethrows the original synchronous error", () => {
+			const error = new Error("Rift unavailable");
+			const execute = vi.fn<(hero: Hero) => never>(() => {
+				throw error;
+			});
+			const source = command(execute, undefined, { injector });
+			const onError = vi.fn(() => expect(decorated.isExecuting()).toBe(true));
+			const onSuccess = vi.fn();
+			const decorated = api.withCommandLifecycle(source, { onSuccess, onError });
+			const hero = { name: "Rexxar" };
+
+			expect(() => decorated.execute(hero)).toThrow(expect.toSatisfy(value => value === error));
+			expect(onError).toHaveBeenCalledExactlyOnceWith({ params: [hero], error });
+			expect(onSuccess).not.toHaveBeenCalled();
+			expect(decorated.canExecute()).toBe(true);
+		});
+
+		it.each([
+			{ kind: "Promise", fail: (error: Error) => Promise.reject(error) },
+			{ kind: "Observable", fail: (error: Error) => throwError(() => error) },
+		])("calls error and preserves the original $kind rejection", async ({ fail }) => {
+			const error = new Error("Rift unavailable");
+			const source = command(() => fail(error), undefined, { injector });
+			const onError = vi.fn(() => expect(decorated.isExecuting()).toBe(true));
+			const onSuccess = vi.fn();
+			const decorated = api.withCommandLifecycle(source, { onSuccess, onError });
+
+			await expect(decorated.execute()).rejects.toBe(error);
+			expect(onError).toHaveBeenCalledExactlyOnceWith({ params: [], error });
+			expect(onSuccess).not.toHaveBeenCalled();
+			expect(decorated.canExecute()).toBe(true);
+		});
+
+		it.each(["onStart", "onSuccess", "onError"] as const)("propagates a throw from %s and releases the lock", hook => {
+			const failure = new Error("Hook failed");
+			const execute = vi.fn(() => {
+				if (hook === "onError") {
+					throw new Error("Action failed");
+				}
+			});
+			const source = command(execute, undefined, { injector });
+			const throwFromHook = vi.fn(() => {
+				throw failure;
+			});
+			const onError = vi.fn();
+			const decorated = api.withCommandLifecycle(source, { onError, [hook]: throwFromHook });
+
+			expect(() => decorated.execute()).toThrow(expect.toSatisfy(value => value === failure));
+			expect(throwFromHook).toHaveBeenCalledOnce();
+			expect(onError).not.toHaveBeenCalled();
+			expect(execute).toHaveBeenCalledTimes(hook === "onStart" ? 0 : 1);
+			expect(decorated.canExecute()).toBe(true);
+		});
+
+		it("releases the lock when a success hook throws after a Promise resolves", async () => {
+			const failure = new Error("Hook failed");
+			const source = command(() => Promise.resolve("Rexxar"), undefined, { injector });
+			const onError = vi.fn();
+			const decorated = api.withCommandLifecycle(source, {
+				onSuccess: () => {
+					throw failure;
+				},
+				onError,
+			});
+
+			await expect(decorated.execute()).rejects.toBe(failure);
+			expect(onError).not.toHaveBeenCalled();
+			expect(decorated.canExecute()).toBe(true);
+		});
+
+		it("shares live reasons and skips hooks when the source is disabled", () => {
+			const guard = new BehaviorSubject<boolean | readonly CommandDisabledReason[]>(false);
+			const execute = vi.fn();
+			const source = command(execute, guard, { injector });
+			const onStart = vi.fn();
+			const onSuccess = vi.fn();
+			const onError = vi.fn();
+			const decorated = api.withCommandLifecycle(source, { onStart, onSuccess, onError });
+			const reasons = [{ code: "hero.banned" }];
+
+			expect(decorated.disabledReasons).toBe(source.disabledReasons);
+			expect(decorated.disabledReasons()).toEqual([]);
+			expect(decorated.canExecute()).toBe(false);
+			expect(() => decorated.execute()).toThrow();
+			guard.next(reasons);
+			expect(decorated.disabledReasons()).toBe(reasons);
+			expect(decorated.canExecute()).toBe(false);
+			expect(() => decorated.execute()).toThrow();
+			guard.next([]);
+			expect(decorated.canExecute()).toBe(true);
+			expect(execute).not.toHaveBeenCalled();
+			expect(onStart).not.toHaveBeenCalled();
+			expect(onSuccess).not.toHaveBeenCalled();
+			expect(onError).not.toHaveBeenCalled();
+		});
+
+		it("shares the source guard across decorators and keeps hooks local", async () => {
+			const execute = vi.fn(() => Promise.resolve("Rexxar"));
+			const source = command(execute, undefined, { injector });
+			const firstStart = vi.fn();
+			const secondStart = vi.fn();
+			const secondSuccess = vi.fn();
+			const secondError = vi.fn();
+			const first = api.withCommandLifecycle(source, { onStart: firstStart });
+			const second = api.withCommandLifecycle(source, {
+				onStart: secondStart,
+				onSuccess: secondSuccess,
+				onError: secondError,
+			});
+
+			const firstRun = first.execute();
+			expect(first.isExecuting()).toBe(true);
+			expect(second.isExecuting()).toBe(false);
+			expect(second.canExecute()).toBe(false);
+			expect(second.disabledReasons()).toEqual([]);
+			expect(() => second.execute()).toThrow();
+			expect(() => source.execute()).toThrow();
+			await firstRun;
+
+			const directRun = source.execute();
+			expect(first.isExecuting()).toBe(false);
+			expect(() => first.execute()).toThrow();
+			await directRun;
+			expect(firstStart).toHaveBeenCalledOnce();
+			expect(secondStart).not.toHaveBeenCalled();
+			expect(secondSuccess).not.toHaveBeenCalled();
+			expect(secondError).not.toHaveBeenCalled();
+
+			await second.execute();
+			expect(secondStart).toHaveBeenCalledOnce();
+			expect(secondSuccess).toHaveBeenCalledOnce();
+			expect(firstStart).toHaveBeenCalledOnce();
+			expect(execute).toHaveBeenCalledTimes(3);
 		});
 	});
 

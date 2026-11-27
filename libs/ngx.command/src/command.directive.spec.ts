@@ -7,6 +7,7 @@ import { vi } from "vitest";
 import { SsvCommand } from "./command.directive";
 import { command } from "./command";
 import type { Command } from "./command.model";
+import { withCommandLifecycle } from "./index";
 
 // Test host component for button element
 @Component({
@@ -633,4 +634,32 @@ describe("SsvCommand Directive", () => {
 		});
 	});
 
+	it("passes bound args through a decorated command and reports its rejection once", async () => {
+		@Component({
+			imports: [SsvCommand],
+			template: ` <button [ssvCommand]="recruitCmd" [ssvCommandParams]="[hero, 'Horde']">Recruit</button> `,
+		})
+		class LifecycleHostComponent {
+			readonly hero = { name: "Rexxar" };
+			readonly failure = new Error("Rift unavailable");
+			readonly recruit = vi.fn<(hero: typeof this.hero, faction: string) => Promise<never>>(() => Promise.reject(this.failure));
+			readonly onError = vi.fn();
+			readonly recruitCmd = withCommandLifecycle(command(this.recruit), { onError: this.onError });
+		}
+
+		const handleError = vi.fn();
+		TestBed.configureTestingModule({
+			providers: [{ provide: ErrorHandler, useValue: { handleError } }],
+		});
+		const fixture = TestBed.createComponent(LifecycleHostComponent);
+		const { hero, failure, recruit, recruitCmd, onError } = fixture.componentInstance;
+		fixture.detectChanges();
+
+		fixture.nativeElement.querySelector("button").click();
+
+		await vi.waitFor(() => expect(handleError).toHaveBeenCalledExactlyOnceWith(failure));
+		expect(recruit).toHaveBeenCalledExactlyOnceWith(hero, "Horde");
+		expect(onError).toHaveBeenCalledExactlyOnceWith({ params: [hero, "Horde"], error: failure });
+		expect(recruitCmd.canExecute()).toBe(true);
+	});
 });

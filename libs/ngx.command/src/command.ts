@@ -1,5 +1,4 @@
-
-import { isObservable, lastValueFrom } from "rxjs";
+import { isObservable, lastValueFrom, type Observable } from "rxjs";
 import { toSignal } from "@angular/core/rxjs-interop";
 import type { CanExecute, CanExecuteResult, CommandDisabledReason, ExecuteFn, ExecuteReturnType, Command } from "./command.model";
 import { assertInInjectionContext, computed, inject, Injector, signal, type Signal } from "@angular/core";
@@ -33,7 +32,66 @@ export function command<TExecute extends ExecuteFn>(
 		assertInInjectionContext(command);
 	}
 	const injector = opts?.injector ?? inject(Injector);
-	return new CommandImpl(execute, toCanExecuteState(canExecute, injector));
+	const state = toCanExecuteState(canExecute, injector);
+	return new CommandImpl<TExecute>(
+		execute,
+		() => state().enabled,
+		computed(() => state().reasons),
+	);
+}
+
+type ResolvedResult<T> = T extends Observable<infer Value> ? Awaited<Value> | undefined : Awaited<T>;
+
+interface CommandLifecycle<TExecute extends ExecuteFn> {
+	readonly onStart?: (event: { readonly params: Readonly<Parameters<TExecute>> }) => void;
+	readonly onSuccess?: (event: { readonly params: Readonly<Parameters<TExecute>>; readonly result: ResolvedResult<ReturnType<TExecute>> }) => void;
+	readonly onError?: (event: { readonly params: Readonly<Parameters<TExecute>>; readonly error: unknown }) => void;
+}
+
+/**
+ * Wraps a command with synchronous callbacks for calls made through the returned command.
+ * The wrapper tracks its own execution and shares the source's guard and disabled reasons.
+ *
+ * @example
+ * ```ts
+ * const observed = withCommandLifecycle(saveCommand, {
+ *   onSuccess: ({ result }) => showSaved(result),
+ *   onError: ({ error }) => showSaveError(error),
+ * });
+ * ```
+ */
+export function withCommandLifecycle<TExecute extends ExecuteFn>(
+	source: Command<TExecute>,
+	lifecycle: CommandLifecycle<NoInfer<TExecute>>,
+): Command<TExecute> {
+	const execute = (...params: Parameters<TExecute>) => {
+		lifecycle.onStart?.({ params });
+
+		const onError = (error: unknown): never => {
+			lifecycle.onError?.({ params, error });
+			throw error;
+		};
+
+		let result: unknown;
+		try {
+			result = source.execute(...params);
+		} catch (error) {
+			return onError(error);
+		}
+
+		const onSuccess = (value: unknown) => {
+			lifecycle.onSuccess?.({ params, result: value as ResolvedResult<ReturnType<TExecute>> });
+			return value;
+		};
+		return isThenable(result) ? Promise.resolve(result).then(onSuccess, onError) : onSuccess(result);
+	};
+
+	return new CommandImpl<TExecute>(execute, () => source.canExecute(), source.disabledReasons);
+}
+
+function isThenable(value: unknown): value is PromiseLike<unknown> {
+	// Zone.js swaps the global Promise, so a native async result can fail instanceof Promise.
+	return typeof (value as PromiseLike<unknown> | undefined)?.then === "function";
 }
 
 function toState(value: CanExecuteResult | undefined): CanExecuteState {
@@ -63,20 +121,18 @@ function isReasons(value: unknown): value is readonly CommandDisabledReason[] {
 	return Array.isArray(value);
 }
 
-/** The {@link Command} implementation, created only by {@link command}. @internal */
+/** The shared {@link Command} implementation. @internal */
 export class CommandImpl<TExecute extends ExecuteFn = ExecuteFn> implements Command<TExecute> {
 
 	readonly isExecuting = signal(false);
-	readonly canExecute = computed(() => !this.isExecuting() && this.#state().enabled);
-	readonly disabledReasons = computed(() => this.#state().reasons);
-
-	readonly #state: Signal<CanExecuteState>;
+	readonly canExecute: Signal<boolean>;
 
 	constructor(
-		private readonly _execute: TExecute,
-		state: Signal<CanExecuteState>,
+		private readonly _execute: (...args: Parameters<TExecute>) => unknown,
+		canExecute: () => boolean,
+		readonly disabledReasons: Signal<readonly CommandDisabledReason[]>,
 	) {
-		this.#state = state;
+		this.canExecute = computed(() => !this.isExecuting() && canExecute());
 	}
 
 	/** Execute function to invoke. Returns Promise if the execute function returns Observable, otherwise returns the original type. */
@@ -87,7 +143,7 @@ export class CommandImpl<TExecute extends ExecuteFn = ExecuteFn> implements Comm
 		this.isExecuting.set(true);
 
 		try {
-			const result = args.length > 0 ? this._execute(...args) : this._execute();
+			const result = this._execute(...args);
 
 			if (isObservable(result)) {
 				// Convert observable to promise using lastValueFrom
@@ -96,10 +152,8 @@ export class CommandImpl<TExecute extends ExecuteFn = ExecuteFn> implements Comm
 				const promise = lastValueFrom(result, { defaultValue: undefined })
 					.finally(() => this.isExecuting.set(false));
 				return promise as ExecuteReturnType<TExecute>;
-			} else if (typeof (result as PromiseLike<unknown> | undefined)?.then === "function") {
-				// any thenable, not `instanceof Promise`: zone.js swaps the global Promise, so a native `async` result fails that check
-				return Promise.resolve(result)
-					.finally(() => this.isExecuting.set(false)) as ExecuteReturnType<TExecute>;
+			} else if (isThenable(result)) {
+				return Promise.resolve(result).finally(() => this.isExecuting.set(false)) as ExecuteReturnType<TExecute>;
 			}
 			// Sync execution
 			this.isExecuting.set(false);
