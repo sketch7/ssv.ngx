@@ -108,14 +108,15 @@ This repo is the reference implementation of the pattern used across Sketch7 app
 - `command(execute, canExecute?)` — factory function (never `new Command()`), requires an injection
   context and auto-injects `DestroyRef`, so no manual cleanup. Handles sync and async
   (`Promise`/`Observable`) execute functions transparently.
-- State is signals: `$isExecuting`, `$canExecute`. The plain `isExecuting`/`canExecute` getters still
-  exist but are `@deprecated` — new code reads the `$`-prefixed signals.
-- `canExecute` accepts a `Signal`, `Observable`, plain function, or `boolean`;
-  `canExecuteFromNgForm()` / `canExecuteFromSignals()` adapt forms.
+- State is signals: `isExecuting()`, `canExecute()`, `disabledReasons()` (no `$` prefix, no boolean getters). A read
+  without `()` compiles and is always truthy, so always call them.
+- `canExecute` accepts a `boolean` or reasons array (`CanExecuteResult`), a function/signal returning one, or an
+  `Observable` of one; reasons (`{ code, params? }`) are exposed as `disabledReasons()` (translated by the UI, not here);
+  `canExecuteFromNgForm()` / `canExecuteFromSignals()` adapt forms, returning reasons (`CommandFormReason`).
 - `SsvCommand` (`[ssvCommand]`) / `SsvCommandRef` directives wire a command to a control, with
   `[ssvCommandParams]` for arguments — a single array argument must be double-wrapped (`[[arr]]`) or it
   spreads into multiple params.
-- `commandAsync` and the `Command` class remain exported but are `@deprecated` in favour of `command()`.
+- `Command` is a type (the only command type), not a class: create instances with `command()`.
 
 Full patterns live in the `ssv-ngx-command` skill; API docs in `libs/ngx.command/README.md`.
 
@@ -137,13 +138,12 @@ Full patterns live in the `ssv-ngx-ux` skill; API docs in `libs/ngx.ux/README.md
 ### TypeScript / Angular
 
 - `inject()` over constructor injection; private fields use the `#` prefix (`#renderer = inject(Renderer2)`).
-- Standalone only — existing `*.module.ts` files (`command.module.ts`, `ux.module.ts`) are kept for
-  backward-compatible consumers, not a pattern to extend.
+- Standalone only — the existing `ux.module.ts` is kept for backward-compatible consumers, not a pattern to extend.
 - Signals over decorators for state: `signal()`/`computed()`/`effect()`, `DestroyRef` over `ngOnDestroy`.
   Note this is about state, not inputs — older directives such as `viewport-matcher.directive.ts` still use
   `@Input()` setters, and that's fine; check the surrounding file's style before "modernizing" on sight.
 - Double-quoted strings (`@stylistic/ts/quotes`), tabs for indentation (`.editorconfig`).
-- Prefer `unknown` over `any`; use the exported type guards (`isCommand()`, `isCommandCreator()`).
+- Prefer `unknown` over `any`; inside `ngx.command` use its internal type guards (`isCommand()`, `isCommandCreator()`).
 - Custom `ssv` selector prefix (`prefix: "ssv"` in each `project.json`); `@angular-eslint/directive-selector`
   is disabled accordingly.
 - `isolatedModules: true`, target ES2022, `moduleResolution: "bundler"`.

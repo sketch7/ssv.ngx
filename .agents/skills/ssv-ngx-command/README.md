@@ -47,7 +47,7 @@ This skill triggers on:
 ## Key Concepts
 
 ### Factory Functions
-Always use `command()` factory - never `new Command()`. Requires injection context.
+Always use `command()` factory - never construct a `Command` (it is a type). Requires injection context.
 
 ### Array Parameter Wrapping
 **Critical**: Single array arguments must be double-wrapped: `[[items]]`
@@ -56,7 +56,7 @@ Always use `command()` factory - never `new Command()`. Requires injection conte
 Use command creator syntax in loops for per-item `isExecuting` tracking.
 
 ### Signal-Based
-Modern API with `$isExecuting`, `$canExecute` signals. Observable support maintained.
+State is signals: `isExecuting()`, `canExecute()`, `disabledReasons()` (always call them). Observable `canExecute` still supported.
 
 ## Quick Examples
 

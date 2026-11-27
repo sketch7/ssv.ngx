@@ -1,4 +1,4 @@
-import { Component, signal } from "@angular/core";
+import { Component, Directive, ErrorHandler, inject, signal } from "@angular/core";
 import { ComponentFixture, fakeAsync, TestBed } from "@angular/core/testing";
 import { By } from "@angular/platform-browser";
 import { BehaviorSubject, Observable, of, delay } from "rxjs";
@@ -6,6 +6,8 @@ import { vi } from "vitest";
 
 import { SsvCommand } from "./command.directive";
 import { command } from "./command";
+import type { Command } from "./command.model";
+import { withCommandLifecycle } from "./index";
 
 // Test host component for button element
 @Component({
@@ -82,6 +84,80 @@ class CommandCreatorHostComponent {
 	};
 }
 
+// Test host component with command creator whose canExecute reads signals and returns reasons
+@Component({
+	imports: [SsvCommand],
+	template: `
+		<button
+			[ssvCommand]="{host: this, execute: recruit, canExecute: canRecruit, params: hero}"
+			data-testid="recruit-btn">
+			Recruit
+		</button>
+		<button
+			[ssvCommand]="{host: this, execute: recruit, canExecute: isOpen, params: hero}"
+			data-testid="recruit-signal-btn">
+			Recruit
+		</button>
+		<button
+			[ssvCommand]="{host: this, execute: recruitTarget, canExecute: canRecruitTarget}"
+			[ssvCommandParams]="target()"
+			data-testid="recruit-target-btn">
+			Recruit
+		</button>
+	`,
+})
+class CommandCreatorReasonsHostComponent {
+	readonly hero = { name: "Rexxar" };
+	readonly banned = signal(true);
+	readonly isOpen = signal(false);
+	readonly target = signal({ name: "Thrall", banned: true });
+
+	recruitTarget = (hero: { name: string; banned: boolean }): string => hero.name;
+	canRecruitTarget = (hero: { name: string; banned: boolean }) => hero.banned ? [{ code: "hero.banned" }] : true;
+
+	recruit = (hero: typeof this.hero): string => hero.name;
+	canRecruit = (hero: typeof this.hero) => this.banned() ? [{ code: "hero.banned", params: { name: hero.name } }] : true;
+}
+
+// Test host component whose bound command is swapped after init
+@Component({
+	imports: [SsvCommand],
+	template: `<button [ssvCommand]="cmd()" data-testid="swap-btn">Recruit</button>`,
+})
+class SwapHostComponent {
+	readonly recruitRexxar = vi.fn();
+	readonly recruitJaina = vi.fn();
+	readonly rexxarCmd = command(this.recruitRexxar);
+	readonly jainaCmd = command(this.recruitJaina);
+	readonly thrallCmd = command(vi.fn(), [{ code: "hero.banned" }]);
+	readonly cmd = signal(this.rexxarCmd);
+}
+
+// Test host component whose command comes later (e.g. `[ssvCommand]="ref.command()"`) and can be cleared
+@Component({
+	imports: [SsvCommand],
+	template: `<button [ssvCommand]="cmd()" data-testid="pending-btn">Recruit</button>`,
+})
+class PendingHostComponent {
+	readonly recruit = vi.fn();
+	readonly recruitCmd = command(this.recruit);
+	readonly cmd = signal<Command | undefined>(undefined);
+}
+
+// Reads the command while the element's directives are created, before inputs are set
+@Directive({ selector: "[earlyRead]" })
+class EarlyReadDirective {
+	readonly command = inject(SsvCommand).command();
+}
+
+@Component({
+	imports: [SsvCommand, EarlyReadDirective],
+	template: `<button [ssvCommand]="recruitCmd" earlyRead data-testid="early-btn">Recruit</button>`,
+})
+class EarlyReadHostComponent {
+	readonly recruitCmd = command(vi.fn());
+}
+
 describe("SsvCommand Directive", () => {
 
 	describe("on button element", () => {
@@ -103,10 +179,6 @@ describe("SsvCommand Directive", () => {
 		describe("when initialized", () => {
 			it("should not be disabled when canExecute is true", () => {
 				expect(buttonEl.disabled).toBe(false);
-			});
-
-			it("should have ssv-command class", () => {
-				expect(buttonEl.classList.contains("ssv-command")).toBe(true);
 			});
 
 			it("should not have executing class initially", () => {
@@ -149,7 +221,7 @@ describe("SsvCommand Directive", () => {
 			});
 
 			it("should have isExecuting set to true", () => {
-				expect(component.saveCmd.isExecuting).toBe(true);
+				expect(component.saveCmd.isExecuting()).toBe(true);
 			});
 
 			it("should disable the button during execution", () => {
@@ -162,7 +234,7 @@ describe("SsvCommand Directive", () => {
 				buttonEl.click();
 				fixture.detectChanges();
 				await vi.waitFor(() => {
-					expect(component.saveCmd.isExecuting).toBe(false);
+					expect(component.saveCmd.isExecuting()).toBe(false);
 				}, { timeout: 200 });
 				fixture.detectChanges();
 				expect(buttonEl.classList.contains("executing")).toBe(false);
@@ -172,7 +244,7 @@ describe("SsvCommand Directive", () => {
 				buttonEl.click();
 				fixture.detectChanges();
 				await vi.waitFor(() => {
-					expect(component.saveCmd.isExecuting).toBe(false);
+					expect(component.saveCmd.isExecuting()).toBe(false);
 				}, { timeout: 200 });
 			});
 
@@ -180,7 +252,7 @@ describe("SsvCommand Directive", () => {
 				buttonEl.click();
 				fixture.detectChanges();
 				await vi.waitFor(() => {
-					expect(component.saveCmd.isExecuting).toBe(false);
+					expect(component.saveCmd.isExecuting()).toBe(false);
 				}, { timeout: 200 });
 				fixture.detectChanges();
 				expect(buttonEl.disabled).toBe(false);
@@ -205,10 +277,6 @@ describe("SsvCommand Directive", () => {
 		});
 
 		describe("when initialized", () => {
-			it("should have ssv-command class", () => {
-				expect(divEl.classList.contains("ssv-command")).toBe(true);
-			});
-
 			it("should not have executing class initially", () => {
 				expect(divEl.classList.contains("executing")).toBe(false);
 			});
@@ -236,7 +304,7 @@ describe("SsvCommand Directive", () => {
 			});
 
 			it("should have isExecuting set to true", () => {
-				expect(component.actionCmd.isExecuting).toBe(true);
+				expect(component.actionCmd.isExecuting()).toBe(true);
 			});
 		});
 
@@ -245,7 +313,7 @@ describe("SsvCommand Directive", () => {
 				divEl.click();
 				fixture.detectChanges();
 				await vi.waitFor(() => {
-					expect(component.actionCmd.isExecuting).toBe(false);
+					expect(component.actionCmd.isExecuting()).toBe(false);
 				}, { timeout: 200 });
 				fixture.detectChanges();
 				expect(divEl.classList.contains("executing")).toBe(false);
@@ -255,7 +323,7 @@ describe("SsvCommand Directive", () => {
 				divEl.click();
 				fixture.detectChanges();
 				await vi.waitFor(() => {
-					expect(component.actionCmd.isExecuting).toBe(false);
+					expect(component.actionCmd.isExecuting()).toBe(false);
 				}, { timeout: 200 });
 			});
 		});
@@ -343,7 +411,7 @@ describe("SsvCommand Directive", () => {
 				buttonEl.click();
 				fixture.detectChanges();
 				await vi.waitFor(() => {
-					expect(directiveInstance.command().isExecuting).toBe(false);
+					expect(directiveInstance.command()?.isExecuting()).toBe(false);
 				}, { timeout: 150 });
 				fixture.detectChanges();
 			});
@@ -373,7 +441,7 @@ describe("SsvCommand Directive", () => {
 				buttonEl.click();
 				fixture.detectChanges();
 				await vi.waitFor(() => {
-					expect(directiveInstance.command().isExecuting).toBe(false);
+					expect(directiveInstance.command()?.isExecuting()).toBe(false);
 				}, { timeout: 150 });
 				fixture.detectChanges();
 				expect(buttonEl.classList.contains("executing")).toBe(false);
@@ -383,7 +451,7 @@ describe("SsvCommand Directive", () => {
 				buttonEl.click();
 				fixture.detectChanges();
 				await vi.waitFor(() => {
-					expect(directiveInstance.command().isExecuting).toBe(false);
+					expect(directiveInstance.command()?.isExecuting()).toBe(false);
 				}, { timeout: 150 });
 				fixture.detectChanges();
 				expect(buttonEl.disabled).toBe(false);
@@ -391,4 +459,207 @@ describe("SsvCommand Directive", () => {
 		});
 	});
 
+	describe("with command creator returning reasons", () => {
+		let fixture: ComponentFixture<CommandCreatorReasonsHostComponent>;
+		let component: CommandCreatorReasonsHostComponent;
+		const query = (testId: string) => {
+			const el = fixture.debugElement.query(By.css(`[data-testid='${testId}']`));
+			return { button: el.nativeElement as HTMLButtonElement, directive: el.injector.get<SsvCommand>(SsvCommand) };
+		};
+
+		beforeEach(async () => {
+			await TestBed.configureTestingModule({
+				imports: [CommandCreatorReasonsHostComponent],
+			}).compileComponents();
+
+			fixture = TestBed.createComponent(CommandCreatorReasonsHostComponent);
+			component = fixture.componentInstance;
+			fixture.detectChanges();
+		});
+
+		it("should be disabled with the reasons from a canExecute(...params) function", () => {
+			const { button, directive } = query("recruit-btn");
+			expect(button.disabled).toBe(true);
+			expect(directive.command()?.disabledReasons()).toEqual([{ code: "hero.banned", params: { name: "Rexxar" } }]);
+		});
+
+		it("should re-evaluate a canExecute(...params) function when its signals change", () => {
+			const { button, directive } = query("recruit-btn");
+			component.banned.set(false);
+			fixture.detectChanges();
+			expect(button.disabled).toBe(false);
+			expect(directive.command()?.disabledReasons()).toEqual([]);
+		});
+
+		it("should follow a signal canExecute", () => {
+			const { button } = query("recruit-signal-btn");
+			expect(button.disabled).toBe(true);
+			component.isOpen.set(true);
+			fixture.detectChanges();
+			expect(button.disabled).toBe(false);
+		});
+
+		it("should re-evaluate a canExecute(...params) function when [ssvCommandParams] change", () => {
+			const { button } = query("recruit-target-btn");
+			expect(button.disabled).toBe(true);
+			component.target.set({ name: "Jaina", banned: false });
+			fixture.detectChanges();
+			expect(button.disabled).toBe(false);
+		});
+	});
+
+	describe("when the bound command is swapped", () => {
+		let fixture: ComponentFixture<SwapHostComponent>;
+		let component: SwapHostComponent;
+		let directive: SsvCommand;
+		let buttonEl: HTMLButtonElement;
+
+		beforeEach(async () => {
+			await TestBed.configureTestingModule({
+				imports: [SwapHostComponent],
+			}).compileComponents();
+
+			fixture = TestBed.createComponent(SwapHostComponent);
+			component = fixture.componentInstance;
+			fixture.detectChanges();
+			const el = fixture.debugElement.query(By.css("[data-testid='swap-btn']"));
+			buttonEl = el.nativeElement;
+			directive = el.injector.get(SsvCommand);
+			component.cmd.set(component.thrallCmd);
+			fixture.detectChanges();
+		});
+
+		it("should expose the new command", () => {
+			expect(directive.command()).toBe(component.thrallCmd);
+		});
+
+		it("should follow the new command's canExecute", () => {
+			expect(buttonEl.disabled).toBe(true);
+		});
+
+		it("should execute the new command", () => {
+			component.cmd.set(component.jainaCmd);
+			fixture.detectChanges();
+			buttonEl.click();
+			expect(component.recruitJaina).toHaveBeenCalledTimes(1);
+			expect(component.recruitRexxar).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("when no command is bound yet", () => {
+		let fixture: ComponentFixture<PendingHostComponent>;
+		let component: PendingHostComponent;
+		let directive: SsvCommand;
+		let buttonEl: HTMLButtonElement;
+
+		beforeEach(async () => {
+			await TestBed.configureTestingModule({ imports: [PendingHostComponent] }).compileComponents();
+			fixture = TestBed.createComponent(PendingHostComponent);
+			component = fixture.componentInstance;
+			fixture.detectChanges();
+			const el = fixture.debugElement.query(By.css("[data-testid='pending-btn']"));
+			buttonEl = el.nativeElement;
+			directive = el.injector.get(SsvCommand);
+		});
+
+		it("should have no command and not be executable", () => {
+			expect(directive.command()).toBeUndefined();
+			expect(buttonEl.disabled).toBe(true);
+		});
+
+		it("should follow the command once bound", () => {
+			component.cmd.set(component.recruitCmd);
+			fixture.detectChanges();
+
+			expect(buttonEl.disabled).toBe(false);
+			buttonEl.click();
+			expect(component.recruit).toHaveBeenCalledTimes(1);
+		});
+
+		describe("when the bound command is cleared", () => {
+			beforeEach(() => {
+				component.cmd.set(component.recruitCmd);
+				fixture.detectChanges();
+				component.cmd.set(undefined);
+				fixture.detectChanges();
+			});
+
+			it("should drop the previous command", () => {
+				expect(directive.command()).toBeUndefined();
+				expect(buttonEl.disabled).toBe(true);
+			});
+
+			it("should not execute the previous command on click", () => {
+				buttonEl.disabled = false;
+				buttonEl.click();
+				expect(component.recruit).not.toHaveBeenCalled();
+			});
+		});
+	});
+
+	describe("when the command is read before init", () => {
+		it("should be undefined until ngOnInit", async () => {
+			await TestBed.configureTestingModule({ imports: [EarlyReadHostComponent] }).compileComponents();
+			const fixture = TestBed.createComponent(EarlyReadHostComponent);
+			fixture.detectChanges();
+			const el = fixture.debugElement.query(By.css("[data-testid='early-btn']"));
+
+			expect(el.injector.get(EarlyReadDirective).command).toBeUndefined();
+			expect(el.injector.get(SsvCommand).command()).toBe(fixture.componentInstance.recruitCmd);
+		});
+	});
+
+	describe("when an async execution fails", () => {
+		@Component({
+			imports: [SsvCommand],
+			template: `<button [ssvCommand]="failCmd">Fail</button>`,
+		})
+		class FailHostComponent {
+			readonly failCmd = command(() => Promise.reject(new Error("rift")));
+		}
+
+		it("should report the error to ErrorHandler and stop executing", async () => {
+			const handleError = vi.fn();
+			TestBed.configureTestingModule({
+				imports: [FailHostComponent],
+				providers: [{ provide: ErrorHandler, useValue: { handleError } }],
+			});
+			const fixture = TestBed.createComponent(FailHostComponent);
+			fixture.detectChanges();
+
+			fixture.nativeElement.querySelector("button").click();
+
+			await vi.waitFor(() => expect(handleError).toHaveBeenCalledWith(new Error("rift")));
+			expect(fixture.componentInstance.failCmd.isExecuting()).toBe(false);
+		});
+	});
+
+	it("passes bound args through a decorated command and reports its rejection once", async () => {
+		@Component({
+			imports: [SsvCommand],
+			template: ` <button [ssvCommand]="recruitCmd" [ssvCommandParams]="[hero, 'Horde']">Recruit</button> `,
+		})
+		class LifecycleHostComponent {
+			readonly hero = { name: "Rexxar" };
+			readonly failure = new Error("Rift unavailable");
+			readonly recruit = vi.fn<(hero: typeof this.hero, faction: string) => Promise<never>>(() => Promise.reject(this.failure));
+			readonly onError = vi.fn();
+			readonly recruitCmd = withCommandLifecycle(command(this.recruit), { onError: this.onError });
+		}
+
+		const handleError = vi.fn();
+		TestBed.configureTestingModule({
+			providers: [{ provide: ErrorHandler, useValue: { handleError } }],
+		});
+		const fixture = TestBed.createComponent(LifecycleHostComponent);
+		const { hero, failure, recruit, recruitCmd, onError } = fixture.componentInstance;
+		fixture.detectChanges();
+
+		fixture.nativeElement.querySelector("button").click();
+
+		await vi.waitFor(() => expect(handleError).toHaveBeenCalledExactlyOnceWith(failure));
+		expect(recruit).toHaveBeenCalledExactlyOnceWith(hero, "Horde");
+		expect(onError).toHaveBeenCalledExactlyOnceWith({ params: [hero, "Horde"], error: failure });
+		expect(recruitCmd.canExecute()).toBe(true);
+	});
 });
