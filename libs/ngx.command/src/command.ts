@@ -42,11 +42,16 @@ export function command<TExecute extends ExecuteFn>(
 
 type ResolvedResult<T> = T extends Observable<infer Value> ? Awaited<Value> | undefined : Awaited<T>;
 
+/** What every lifecycle hook receives: the readonly arguments the decorated command was called with. */
+export interface CommandLifecycleEvent<TExecute extends ExecuteFn> {
+	readonly params: Readonly<Parameters<TExecute>>;
+}
+
 /** Synchronous hooks for a command decorated with {@link withCommandLifecycle}. */
 export interface CommandLifecycle<TExecute extends ExecuteFn> {
-	readonly onStart?: (event: { readonly params: Readonly<Parameters<TExecute>> }) => void;
-	readonly onSuccess?: (event: { readonly params: Readonly<Parameters<TExecute>>; readonly result: ResolvedResult<ReturnType<TExecute>> }) => void;
-	readonly onError?: (event: { readonly params: Readonly<Parameters<TExecute>>; readonly error: unknown }) => void;
+	readonly onStart?: (event: CommandLifecycleEvent<TExecute>) => void;
+	readonly onSuccess?: (event: CommandLifecycleEvent<TExecute> & { readonly result: ResolvedResult<ReturnType<TExecute>> }) => void;
+	readonly onError?: (event: CommandLifecycleEvent<TExecute> & { readonly error: unknown }) => void;
 }
 
 /**

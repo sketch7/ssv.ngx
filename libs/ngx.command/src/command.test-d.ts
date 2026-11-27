@@ -6,7 +6,7 @@ import { expectTypeOf } from "vitest";
 import type { CanExecute, CanExecuteResult, CommandCreator, CommandDisabledReason } from "./command.model";
 import type * as api from "./index";
 import type { Command } from "./index";
-import { command, withCommandLifecycle } from "./index";
+import { command, withCommandLifecycle, type CommandLifecycle, type CommandLifecycleEvent } from "./index";
 import type { SsvCommand } from "./command.directive";
 import type { SsvCommandRef } from "./command-ref.directive";
 import { canExecuteFromNgForm, canExecuteFromSignals } from "./command.util";
@@ -97,6 +97,16 @@ describe("Command", () => {
 });
 
 describe("withCommandLifecycle", () => {
+	it("exports the shared event type that every hook receives", () => {
+		const save = (heroes: string[], leader?: string) => leader ?? heroes[0];
+		type Hooks = CommandLifecycle<typeof save>;
+
+		expectTypeOf<Parameters<NonNullable<Hooks["onStart"]>>[0]>().toEqualTypeOf<CommandLifecycleEvent<typeof save>>();
+		expectTypeOf<CommandLifecycleEvent<typeof save>["params"]>().toEqualTypeOf<readonly [heroes: string[], leader?: string]>();
+		expectTypeOf<Parameters<NonNullable<Hooks["onSuccess"]>>[0]>().toExtend<CommandLifecycleEvent<typeof save>>();
+		expectTypeOf<Parameters<NonNullable<Hooks["onError"]>>[0]>().toExtend<CommandLifecycleEvent<typeof save>>();
+	});
+
 	it("preserves the optional tuple, array argument and synchronous result", () => {
 		const source = command((heroes: string[], leader?: string) => leader ?? heroes[0]);
 		const decorated = withCommandLifecycle(source, {

@@ -88,7 +88,7 @@ and the decorator unlocks. A throw from `onError` replaces the original error. A
 throws before running the action and `onError` receives that guard error.
 
 Use `CommandLifecycle<typeof save>` to type hooks declared separately, where `save` is the function
-passed to `command()`.
+passed to `command()`. `CommandLifecycleEvent<typeof save>` types the `{ params }` event shared by all hooks.
 
 ## Command Attribute (Directive)
 Handles the command `canExecute`, `isExecuting` and `execute` functions of the `Command`, in order to

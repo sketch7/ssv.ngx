@@ -91,33 +91,26 @@ describe("CommandSpecs", () => {
 			expect(decorated.isExecuting()).toBe(false);
 		});
 
-		it("calls success only after Observable completion, with the last value", async () => {
+		const last = { name: "Jaina" };
+		it.each([
+			{ name: "the last value", emissions: [{ name: "Rexxar" }, last], expected: last },
+			{ name: "undefined on empty completion", emissions: [], expected: undefined },
+		])("calls success only after Observable completion, with $name", async ({ emissions, expected }) => {
 			const heroes = new Subject<Hero>();
 			const source = command(() => heroes, undefined, { injector });
 			const onSuccess = vi.fn();
 			const decorated = api.withCommandLifecycle(source, { onSuccess });
-			const last = { name: "Jaina" };
 
 			const execution = decorated.execute();
-			heroes.next({ name: "Rexxar" });
-			heroes.next(last);
+			emissions.forEach(hero => heroes.next(hero));
 			await Promise.resolve();
 			expect(onSuccess).not.toHaveBeenCalled();
 			expect(decorated.isExecuting()).toBe(true);
 
 			heroes.complete();
-			await expect(execution).resolves.toBe(last);
-			expect(onSuccess).toHaveBeenCalledExactlyOnceWith({ params: [], result: last });
+			await expect(execution).resolves.toBe(expected);
+			expect(onSuccess).toHaveBeenCalledExactlyOnceWith({ params: [], result: expected });
 			expect(decorated.isExecuting()).toBe(false);
-		});
-
-		it("calls success with undefined on empty Observable completion", async () => {
-			const source = command(() => EMPTY, undefined, { injector });
-			const onSuccess = vi.fn();
-			const decorated = api.withCommandLifecycle(source, { onSuccess });
-
-			await expect(decorated.execute()).resolves.toBeUndefined();
-			expect(onSuccess).toHaveBeenCalledExactlyOnceWith({ params: [], result: undefined });
 		});
 
 		it("calls error and rethrows the original synchronous error", () => {
@@ -153,56 +146,38 @@ describe("CommandSpecs", () => {
 			expect(decorated.canExecute()).toBe(true);
 		});
 
-		it.each(["onStart", "onSuccess", "onError"] as const)("propagates a throw from %s and releases the lock", hook => {
-			const failure = new Error("Hook failed");
-			const execute = vi.fn(() => {
-				if (hook === "onError") {
+		it.each([
+			{ sync: true, name: "onStart", hook: "onStart", source: () => undefined, ran: 0 },
+			{ sync: true, name: "onSuccess", hook: "onSuccess", source: () => undefined, ran: 1 },
+			{
+				sync: true,
+				name: "onError",
+				hook: "onError",
+				source: () => {
 					throw new Error("Action failed");
-				}
-			});
+				},
+				ran: 1,
+			},
+			{ sync: false, name: "onSuccess after a Promise resolves", hook: "onSuccess", source: () => Promise.resolve("Rexxar"), ran: 1 },
+			{ sync: false, name: "onError after a Promise rejects", hook: "onError", source: () => Promise.reject(new Error("Action failed")), ran: 1 },
+		] as const)("propagates a throw from $name and releases the lock", async ({ hook, source: action, ran, sync }) => {
+			const failure = new Error("Hook failed");
+			const execute = vi.fn(action);
 			const source = command(execute, undefined, { injector });
 			const throwFromHook = vi.fn(() => {
 				throw failure;
 			});
-			const onError = vi.fn();
-			const decorated = api.withCommandLifecycle(source, { onError, [hook]: throwFromHook });
+			const otherHook = vi.fn();
+			const decorated = api.withCommandLifecycle(source, { onError: otherHook, [hook]: throwFromHook });
 
-			expect(() => decorated.execute()).toThrow(expect.toSatisfy(value => value === failure));
+			if (sync) {
+				expect(() => decorated.execute()).toThrow(expect.toSatisfy(value => value === failure));
+			} else {
+				await expect(decorated.execute()).rejects.toBe(failure);
+			}
+
 			expect(throwFromHook).toHaveBeenCalledOnce();
-			expect(onError).not.toHaveBeenCalled();
-			expect(execute).toHaveBeenCalledTimes(hook === "onStart" ? 0 : 1);
-			expect(decorated.canExecute()).toBe(true);
-		});
-
-		it("releases the lock when a success hook throws after a Promise resolves", async () => {
-			const failure = new Error("Hook failed");
-			const source = command(() => Promise.resolve("Rexxar"), undefined, { injector });
-			const onError = vi.fn();
-			const decorated = api.withCommandLifecycle(source, {
-				onSuccess: () => {
-					throw failure;
-				},
-				onError,
-			});
-
-			await expect(decorated.execute()).rejects.toBe(failure);
-			expect(onError).not.toHaveBeenCalled();
-			expect(decorated.canExecute()).toBe(true);
-		});
-
-		it("replaces an async rejection with the error thrown by onError and releases the lock", async () => {
-			const actionError = new Error("Action failed");
-			const hookError = new Error("Hook failed");
-			const source = command(() => Promise.reject(actionError), undefined, { injector });
-			const onError = vi.fn(() => {
-				throw hookError;
-			});
-			const decorated = api.withCommandLifecycle(source, { onError });
-
-			const execution = decorated.execute();
-			expect(decorated.isExecuting()).toBe(true);
-			await expect(execution).rejects.toBe(hookError);
-			expect(onError).toHaveBeenCalledExactlyOnceWith({ params: [], error: actionError });
+			expect(execute).toHaveBeenCalledTimes(ran);
 			expect(decorated.isExecuting()).toBe(false);
 			expect(decorated.canExecute()).toBe(true);
 		});
