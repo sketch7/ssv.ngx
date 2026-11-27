@@ -29,7 +29,23 @@ readonly simpleCmd = command(() => this.action()); // No validation
 readonly outsideCmd = command(() => this.save$(), this.isValid, { injector: this.#injector });
 ```
 
-`canExecute` result: `true`/`[]` enabled; `false` disabled (no reason); non-empty `CommandDisabledReason[]` (`{ code, params? }`) disabled with reasons. A function/signal is reactive. `commandAsync` and the `Command` constructor are removed: `Command` is a type and `command()` is the only way to create one.
+`canExecute` result: `true`/`[]` enabled; `false` disabled (no reason); non-empty `CommandDisabledReason[]` (`{ code, params? }`) disabled with reasons. A function/signal is reactive. `commandAsync` and the `Command` constructor are removed: `Command` is a type.
+
+## Command Lifecycle
+
+```typescript
+import { withCommandLifecycle } from "@ssv/ngx.command";
+
+readonly saveAndNotify = withCommandLifecycle(this.saveCmd, {
+  onStart: () => this.dismissBlocked.set(true),
+  onSuccess: () => this.close(),
+  onError: () => this.dismissBlocked.set(false),
+});
+```
+
+Bind the returned command to `[ssvCommand]` or call its `execute(...args)`. Hooks fire only for calls admitted through that command. All hooks receive `params`; success also receives the resolved `result` (the last Observable value on completion, or `undefined` if empty), and error receives `error` as `unknown`. Use the exported `CommandLifecycle<typeof action>` type when declaring hooks separately.
+
+Hook throws propagate and release the local lock. If `onError` throws, its error replaces the original error. If `onStart` disables the source, the source's guard throws before running the action and `onError` receives that guard error. Keep asynchronous work in the action because promises returned from hooks are ignored.
 
 ## Disabled Reasons
 

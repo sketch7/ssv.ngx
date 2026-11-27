@@ -31,7 +31,8 @@ Choose the version corresponding to your Angular version:
 # Usage
 
 ## Command
-Create a `Command` with `command()` (the only way to create one: `Command` is a type, there is no constructor).
+
+Create a `Command` with `command()`. `Command` is a type.
 It must be used in an injection context, or be given an `injector` (`command(execute, canExecute, { injector })`).
 
 ```ts
@@ -57,6 +58,37 @@ saveCmd = command(() => this.save(), () => isBanned() ? [{ code: "hero.banned" }
 Its state is signals: `isExecuting()`, `canExecute()` and `disabledReasons()`. Always call them:
 `!saveCmd.canExecute` (no `()`) compiles and is always `false`, and `saveCmd.isExecuting` is always truthy.
 Set Angular's `extendedDiagnostics.checks.interpolatedSignalNotInvoked` to `"error"` to catch it in templates.
+
+### Command lifecycle
+
+```ts
+import { withCommandLifecycle } from "@ssv/ngx.command";
+
+const saveAndNotify = withCommandLifecycle(saveCmd, {
+  onStart: () => setBusy(true),
+  onSuccess: ({ result }) => {
+    setBusy(false);
+    showSaved(result);
+  },
+  onError: () => setBusy(false),
+});
+```
+
+Call `saveAndNotify.execute(...args)` or bind it with `[ssvCommand]="saveAndNotify"`. The decorator needs no
+injector. It has its own `isExecuting()` and follows the source's `canExecute()` and live `disabledReasons`.
+
+Each hook receives the readonly argument tuple as `params`. `onStart` runs synchronously after the
+decorated command locks and before the source runs. `onSuccess` receives `result` on settlement. For
+Observables, that's the last emission on completion or `undefined` if empty. `onError` receives the
+source's `error`. Only calls admitted through the decorator fire hooks.
+
+Use synchronous callbacks. Returned promises are ignored. If a hook throws, its error propagates
+and the decorator unlocks. A throw from `onError` replaces the original error. A throw from
+`onStart` stops the action before it runs. If `onStart` disables the source, the source's execution guard
+throws before running the action and `onError` receives that guard error.
+
+Use `CommandLifecycle<typeof save>` to type hooks declared separately, where `save` is the function
+passed to `command()`. `CommandLifecycleEvent<typeof save>` types the `{ params }` event shared by all hooks.
 
 ## Command Attribute (Directive)
 Handles the command `canExecute`, `isExecuting` and `execute` functions of the `Command`, in order to

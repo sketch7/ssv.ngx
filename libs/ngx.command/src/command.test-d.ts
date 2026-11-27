@@ -6,6 +6,7 @@ import { expectTypeOf } from "vitest";
 import type { CanExecute, CanExecuteResult, CommandCreator, CommandDisabledReason } from "./command.model";
 import type * as api from "./index";
 import type { Command } from "./index";
+import { command, withCommandLifecycle, type CommandLifecycle, type CommandLifecycleEvent } from "./index";
 import type { SsvCommand } from "./command.directive";
 import type { SsvCommandRef } from "./command-ref.directive";
 import { canExecuteFromNgForm, canExecuteFromSignals } from "./command.util";
@@ -92,6 +93,78 @@ describe("Command", () => {
 	it("is a type: only command() creates instances", () => {
 		// @ts-expect-error `Command` only refers to a type
 		new Command(() => undefined);
+	});
+});
+
+describe("withCommandLifecycle", () => {
+	it("exports the shared event type that every hook receives", () => {
+		const save = (heroes: string[], leader?: string) => leader ?? heroes[0];
+		type Hooks = CommandLifecycle<typeof save>;
+
+		expectTypeOf<Parameters<NonNullable<Hooks["onStart"]>>[0]>().toEqualTypeOf<CommandLifecycleEvent<typeof save>>();
+		expectTypeOf<CommandLifecycleEvent<typeof save>["params"]>().toEqualTypeOf<readonly [heroes: string[], leader?: string]>();
+		expectTypeOf<Parameters<NonNullable<Hooks["onSuccess"]>>[0]>().toExtend<CommandLifecycleEvent<typeof save>>();
+		expectTypeOf<Parameters<NonNullable<Hooks["onError"]>>[0]>().toExtend<CommandLifecycleEvent<typeof save>>();
+	});
+
+	it("preserves the optional tuple, array argument and synchronous result", () => {
+		const source = command((heroes: string[], leader?: string) => leader ?? heroes[0]);
+		const decorated = withCommandLifecycle(source, {
+			onStart: ({ params }) => {
+				expectTypeOf(params).toEqualTypeOf<readonly [heroes: string[], leader?: string]>();
+				// @ts-expect-error The tuple slots are readonly.
+				params[0] = [];
+			},
+			onSuccess: ({ params, result }) => {
+				expectTypeOf(params).toEqualTypeOf<readonly [heroes: string[], leader?: string]>();
+				expectTypeOf(result).toEqualTypeOf<string>();
+			},
+			onError: ({ params, error }) => {
+				expectTypeOf(params).toEqualTypeOf<readonly [heroes: string[], leader?: string]>();
+				expectTypeOf(error).toBeUnknown();
+			},
+		});
+
+		expectTypeOf(decorated).toEqualTypeOf<typeof source>();
+		expectTypeOf(decorated.execute(["Rexxar"])).toEqualTypeOf<string>();
+		expectTypeOf(decorated.execute(["Rexxar"], "Jaina")).toEqualTypeOf<string>();
+		// @ts-expect-error A single string cannot replace the array argument.
+		decorated.execute("Rexxar");
+	});
+
+	it("infers the resolved payload of Promise and Observable actions", () => {
+		const promise = withCommandLifecycle(
+			command(async () => 42),
+			{
+				onSuccess: ({ params, result }) => {
+					expectTypeOf(params).toEqualTypeOf<readonly []>();
+					expectTypeOf(result).toEqualTypeOf<number>();
+				},
+			},
+		);
+		const observable = withCommandLifecycle(
+			command(() => of("Jaina")),
+			{
+				onSuccess: ({ result }) => {
+					expectTypeOf(result).toEqualTypeOf<string | undefined>();
+				},
+			},
+		);
+
+		expectTypeOf(promise.execute()).toEqualTypeOf<Promise<number>>();
+		expectTypeOf(observable.execute()).toEqualTypeOf<Promise<string>>();
+	});
+
+	it("rejects callback payloads incompatible with the source", () => {
+		const source = command((hero: string) => hero);
+		withCommandLifecycle(source, {
+			// @ts-expect-error Parameter types come from the source command.
+			onStart: (event: { params: readonly [number] }) => void event.params,
+			// @ts-expect-error Success receives a string payload.
+			onSuccess: (event: { result: number }) => void event.result,
+			// @ts-expect-error Errors are unknown.
+			onError: (event: { error: Error }) => void event.error,
+		});
 	});
 });
 
